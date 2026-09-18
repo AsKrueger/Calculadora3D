@@ -1,0 +1,2 @@
+-- Estructura inicial para 3D Cost Manager
+-- Las tablas de catálogo (Machine, Material, Tool) y proyectos se definirán en la siguiente issue.

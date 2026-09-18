@@ -1,0 +1,37 @@
+# Archivos de entorno / Credenciales
+.env
+
+# Android / Gradle
+.gradle/
+build/
+*.iml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries/
+.idea/caches/
+local.properties
+.cxx/
+*.apk
+*.aar
+*.bundle
+
+# Backend / Maven / Java
+target/
+*.class
+*.log
+*.ctxt
+.mtj.tmp/
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# OS específicos
+.DS_Store
+Thumbs.db
