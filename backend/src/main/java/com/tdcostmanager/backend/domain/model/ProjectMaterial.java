@@ -28,6 +28,11 @@ public class ProjectMaterial {
     @Column(name = "quantity_used", nullable = false, precision = 19, scale = 4)
     private BigDecimal quantityUsed;
 
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private UnitType unit;
+
     public ProjectMaterial() {}
 
     public Long getId() { return id; }
@@ -41,4 +46,7 @@ public class ProjectMaterial {
 
     public BigDecimal getQuantityUsed() { return quantityUsed; }
     public void setQuantityUsed(BigDecimal quantityUsed) { this.quantityUsed = quantityUsed; }
+
+    public UnitType getUnit() { return unit; }
+    public void setUnit(UnitType unit) { this.unit = unit; }
 }

@@ -2,9 +2,12 @@ package com.tdcostmanager.backend.domain.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +43,16 @@ public class Project {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @NotNull
+    @PositiveOrZero
+    @Column(name = "labor_hours", nullable = false, precision = 19, scale = 4)
+    private BigDecimal laborHours = BigDecimal.ZERO;
+
+    @NotNull
+    @PositiveOrZero
+    @Column(name = "labor_cost_per_hour", nullable = false, precision = 19, scale = 4)
+    private BigDecimal laborCostPerHour = BigDecimal.ZERO;
+
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProjectMachine> projectMachines = new ArrayList<>();
 
@@ -68,6 +81,12 @@ public class Project {
 
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+
+    public BigDecimal getLaborHours() { return laborHours; }
+    public void setLaborHours(BigDecimal laborHours) { this.laborHours = laborHours; }
+
+    public BigDecimal getLaborCostPerHour() { return laborCostPerHour; }
+    public void setLaborCostPerHour(BigDecimal laborCostPerHour) { this.laborCostPerHour = laborCostPerHour; }
 
     public List<ProjectMachine> getProjectMachines() { return projectMachines; }
     public void addProjectMachine(ProjectMachine pm) {
