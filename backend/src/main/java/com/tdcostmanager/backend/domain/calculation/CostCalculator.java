@@ -6,6 +6,7 @@ import com.tdcostmanager.backend.domain.model.ProjectMaterial;
 import com.tdcostmanager.backend.domain.model.ProjectTool;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -24,21 +25,22 @@ public final class CostCalculator {
     }
 
     /**
-     * Performs a full cost calculation for a project.
+     * Performs a full cost calculation for a project on a specific date and time.
      */
     public static CostCalculationResult calculate(
             Project project,
+            LocalDateTime calculationDateTime,
             BigDecimal marginPercentage,
             BigDecimal safetyPercentage,
             ElectricityPriceProvider priceProvider) {
 
-        validateInputs(project, marginPercentage, safetyPercentage, priceProvider);
+        validateInputs(project, calculationDateTime, marginPercentage, safetyPercentage, priceProvider);
 
         BigDecimal materialCost = calculateMaterialCost(project);
         BigDecimal machineCost = calculateMachineCost(project);
         BigDecimal toolCost = calculateToolCost(project);
         BigDecimal laborCost = calculateLaborCost(project);
-        BigDecimal electricityCost = calculateElectricityCost(project, priceProvider);
+        BigDecimal electricityCost = calculateElectricityCost(project, calculationDateTime, priceProvider);
 
         BigDecimal baseCost = materialCost
                 .add(machineCost)
@@ -70,8 +72,9 @@ public final class CostCalculator {
         );
     }
 
-    private static void validateInputs(Project project, BigDecimal margin, BigDecimal safety, ElectricityPriceProvider provider) {
+    private static void validateInputs(Project project, LocalDateTime dateTime, BigDecimal margin, BigDecimal safety, ElectricityPriceProvider provider) {
         Objects.requireNonNull(project, "Project cannot be null");
+        Objects.requireNonNull(dateTime, "Calculation date and time cannot be null");
         Objects.requireNonNull(margin, "Margin percentage cannot be null");
         Objects.requireNonNull(safety, "Safety percentage cannot be null");
         Objects.requireNonNull(provider, "Price provider cannot be null");
@@ -97,7 +100,6 @@ public final class CostCalculator {
             BigDecimal unitPrice = material.getPurchasePrice()
                     .divide(material.getQuantity(), INTERNAL_SCALE, RoundingMode.HALF_UP);
 
-            // Normalize quantity used to material unit (e.g. G used vs KG bought)
             BigDecimal normalizedQuantity = UnitConverter.convert(pm.getQuantityUsed(), pm.getUnit(), material.getUnit());
             
             BigDecimal cost = normalizedQuantity.multiply(unitPrice);
@@ -155,7 +157,7 @@ public final class CostCalculator {
                 .setScale(INTERNAL_SCALE, RoundingMode.HALF_UP);
     }
 
-    private static BigDecimal calculateElectricityCost(Project project, ElectricityPriceProvider priceProvider) {
+    private static BigDecimal calculateElectricityCost(Project project, LocalDateTime calculationDateTime, ElectricityPriceProvider priceProvider) {
         BigDecimal totalKWh = BigDecimal.ZERO.setScale(INTERNAL_SCALE, RoundingMode.HALF_UP);
 
         for (ProjectMachine pm : project.getProjectMachines()) {
@@ -168,7 +170,7 @@ public final class CostCalculator {
             totalKWh = totalKWh.add(energyKWh);
         }
 
-        BigDecimal price = priceProvider.getPricePerKWh();
+        BigDecimal price = priceProvider.getPricePerKWh(calculationDateTime);
         if (price.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Electricity price cannot be negative");
         }

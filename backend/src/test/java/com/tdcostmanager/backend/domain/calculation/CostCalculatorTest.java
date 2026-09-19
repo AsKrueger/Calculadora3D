@@ -3,11 +3,13 @@ package com.tdcostmanager.backend.domain.calculation;
 import com.tdcostmanager.backend.domain.model.*;
 import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CostCalculatorTest {
+
+    private final LocalDateTime testDateTime = LocalDateTime.of(2026, 9, 17, 12, 0);
 
     @Test
     void shouldPerformFullCalculationWithKnownValues() {
@@ -57,26 +59,13 @@ class CostCalculatorTest {
         // 5. Electricity (0.20€ / kWh)
         // Consumption: (350W / 1000) * 10h = 3.5 kWh
         // Cost: 3.5 * 0.20 = 0.70€
-        ElectricityPriceProvider priceProvider = () -> new BigDecimal("0.2000");
+        ElectricityPriceProvider priceProvider = (dt) -> new BigDecimal("0.2000");
 
         // 6. Margins (5% safety, 20% profit)
         BigDecimal safety = new BigDecimal("5.00");
         BigDecimal margin = new BigDecimal("20.00");
 
-        // EXPECTED TOTALS:
-        // Materials: 2.00
-        // Machine: 1.50
-        // Tools: 2.20
-        // Labor: 15.00
-        // Electricity: 0.70
-        // -----------------
-        // BASE COST: 21.40
-        // Safety (5% of 21.40): 1.07
-        // ADJUSTED COST: 22.47
-        // Profit (20% of 22.47): 4.494
-        // FINAL PRICE: 26.964 -> 26.9640 (scale 4)
-
-        CostCalculationResult result = CostCalculator.calculate(project, margin, safety, priceProvider);
+        CostCalculationResult result = CostCalculator.calculate(project, testDateTime, margin, safety, priceProvider);
 
         assertThat(result.materialCost()).isEqualByComparingTo("2.0000");
         assertThat(result.machineCost()).isEqualByComparingTo("1.5000");
@@ -93,9 +82,9 @@ class CostCalculatorTest {
     @Test
     void shouldHandleEmptyProject() {
         Project project = new Project();
-        ElectricityPriceProvider provider = () -> BigDecimal.TEN;
+        ElectricityPriceProvider provider = (dt) -> BigDecimal.TEN;
         
-        CostCalculationResult result = CostCalculator.calculate(project, BigDecimal.ZERO, BigDecimal.ZERO, provider);
+        CostCalculationResult result = CostCalculator.calculate(project, testDateTime, BigDecimal.ZERO, BigDecimal.ZERO, provider);
         
         assertThat(result.finalPrice()).isEqualByComparingTo(BigDecimal.ZERO);
     }
@@ -112,7 +101,7 @@ class CostCalculatorTest {
         pm.setEstimatedHours(BigDecimal.ONE);
         project.addProjectMachine(pm);
 
-        assertThatThrownBy(() -> CostCalculator.calculate(project, BigDecimal.ZERO, BigDecimal.ZERO, () -> BigDecimal.ONE))
+        assertThatThrownBy(() -> CostCalculator.calculate(project, testDateTime, BigDecimal.ZERO, BigDecimal.ZERO, (dt) -> BigDecimal.ONE))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Machine useful life must be greater than zero");
     }
@@ -121,7 +110,6 @@ class CostCalculatorTest {
     void shouldHandleNonExactDivisionsWithoutError() {
         Project project = new Project();
         
-        // 10€ / 3 units = 3.33333333...
         Material material = new Material();
         material.setPurchasePrice(BigDecimal.TEN);
         material.setQuantity(new BigDecimal("3"));
@@ -133,16 +121,15 @@ class CostCalculatorTest {
         pm.setUnit(UnitType.UNIT);
         project.addProjectMaterial(pm);
 
-        CostCalculationResult result = CostCalculator.calculate(project, BigDecimal.ZERO, BigDecimal.ZERO, () -> BigDecimal.ONE);
+        CostCalculationResult result = CostCalculator.calculate(project, testDateTime, BigDecimal.ZERO, BigDecimal.ZERO, (dt) -> BigDecimal.ONE);
         
-        // Result should be 3.3333 (scale 4)
         assertThat(result.finalPrice()).isEqualByComparingTo("3.3333");
     }
 
     @Test
     void shouldValidateNegativeInputs() {
         Project project = new Project();
-        assertThatThrownBy(() -> CostCalculator.calculate(project, new BigDecimal("-1"), BigDecimal.ZERO, () -> BigDecimal.ONE))
+        assertThatThrownBy(() -> CostCalculator.calculate(project, testDateTime, new BigDecimal("-1"), BigDecimal.ZERO, (dt) -> BigDecimal.ONE))
             .isInstanceOf(IllegalArgumentException.class);
     }
 }
