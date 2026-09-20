@@ -127,6 +127,51 @@ class CostCalculatorTest {
     }
 
     @Test
+    void shouldHandleZeroMargins() {
+        Project project = new Project();
+        Material material = new Material();
+        material.setPurchasePrice(BigDecimal.TEN);
+        material.setQuantity(BigDecimal.ONE);
+        material.setUnit(UnitType.UNIT);
+        
+        ProjectMaterial pm = new ProjectMaterial();
+        pm.setMaterial(material);
+        pm.setQuantityUsed(BigDecimal.ONE);
+        pm.setUnit(UnitType.UNIT);
+        project.addProjectMaterial(pm);
+
+        CostCalculationResult result = CostCalculator.calculate(project, testDateTime, BigDecimal.ZERO, BigDecimal.ZERO, (dt) -> BigDecimal.ONE);
+        
+        assertThat(result.baseCost()).isEqualByComparingTo("10.0000");
+        assertThat(result.finalPrice()).isEqualByComparingTo("10.0000");
+    }
+
+    @Test
+    void shouldHandleOneHundredPercentMargins() {
+        Project project = new Project();
+        Material material = new Material();
+        material.setPurchasePrice(BigDecimal.TEN);
+        material.setQuantity(BigDecimal.ONE);
+        material.setUnit(UnitType.UNIT);
+        
+        ProjectMaterial pm = new ProjectMaterial();
+        pm.setMaterial(material);
+        pm.setQuantityUsed(BigDecimal.ONE);
+        pm.setUnit(UnitType.UNIT);
+        project.addProjectMaterial(pm);
+
+        // 10€ base + 100% safety (10€) = 20€ adjusted. 20€ + 100% profit (20€) = 40€ final.
+        BigDecimal hundred = new BigDecimal("100");
+        CostCalculationResult result = CostCalculator.calculate(project, testDateTime, hundred, hundred, (dt) -> BigDecimal.ZERO);
+        
+        assertThat(result.baseCost()).isEqualByComparingTo("10.0000");
+        assertThat(result.safetyAmount()).isEqualByComparingTo("10.0000");
+        assertThat(result.adjustedCost()).isEqualByComparingTo("20.0000");
+        assertThat(result.profitAmount()).isEqualByComparingTo("20.0000");
+        assertThat(result.finalPrice()).isEqualByComparingTo("40.0000");
+    }
+
+    @Test
     void shouldValidateNegativeInputs() {
         Project project = new Project();
         assertThatThrownBy(() -> CostCalculator.calculate(project, testDateTime, new BigDecimal("-1"), BigDecimal.ZERO, (dt) -> BigDecimal.ONE))

@@ -17,9 +17,15 @@ class UnitConverterTest {
         "500, G, KG, 0.50000000",
         "0.25, KG, G, 250.00000000",
         "0, G, KG, 0.00000000",
-        "123.456, G, KG, 0.12345600"
+        "123.456, G, KG, 0.12345600",
+        "1000, ML, L, 1.00000000",
+        "1, L, ML, 1000.00000000",
+        "250, ML, L, 0.25000000",
+        "0.75, L, ML, 750.00000000",
+        "10, UNIT, UNIT, 10.00000000",
+        "5, H, H, 5.00000000"
     })
-    void shouldConvertMassUnits(String value, UnitType from, UnitType to, String expected) {
+    void shouldConvertUnits(String value, UnitType from, UnitType to, String expected) {
         BigDecimal result = UnitConverter.convert(new BigDecimal(value), from, to);
         assertThat(result).isEqualByComparingTo(expected);
         assertThat(result.scale()).isEqualTo(8);

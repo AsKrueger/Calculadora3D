@@ -4,6 +4,8 @@ import com.tdcostmanager.backend.application.dto.ApiError;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -35,6 +37,30 @@ public class GlobalExceptionHandler {
                 HttpStatus.CONFLICT.value(),
                 "Conflict",
                 ex.getMessage(),
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ApiError handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
+        return new ApiError(
+                Instant.now(),
+                HttpStatus.UNAUTHORIZED.value(),
+                "Unauthorized",
+                "Credenciales inválidas",
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiError handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+        return new ApiError(
+                Instant.now(),
+                HttpStatus.FORBIDDEN.value(),
+                "Forbidden",
+                "No tiene permisos para acceder a este recurso",
                 request.getRequestURI()
         );
     }
