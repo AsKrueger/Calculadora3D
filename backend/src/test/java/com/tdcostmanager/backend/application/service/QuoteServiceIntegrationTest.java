@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
+import org.springframework.test.util.ReflectionTestUtils;
+import com.tdcostmanager.backend.infrastructure.electricity.EsiosElectricityProvider;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,6 +31,9 @@ class QuoteServiceIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private RestClient.Builder restClientBuilder;
 
+    @Autowired
+    private EsiosElectricityProvider esiosProvider;
+
     @Test
     void shouldGenerateAndPersistQuoteIntegratingEsiosMock() {
         // 1. Arrange: Create a project
@@ -39,8 +44,13 @@ class QuoteServiceIntegrationTest extends BaseIntegrationTest {
         project.setLaborCostPerHour(BigDecimal.TEN);
         Project savedProject = projectRepository.save(project);
 
-        // 2. Mock ESIOS HTTP Response
+        // 2. Mock ESIOS HTTP Response correctly for RestClient
+        // We bind the MockRestServiceServer to a NEW builder to get a mocked RestClient
         MockRestServiceServer mockServer = MockRestServiceServer.bindTo(restClientBuilder).build();
+        RestClient mockedClient = restClientBuilder.build();
+        
+        // Swap the real RestClient in the provider with the mocked one using reflection
+        ReflectionTestUtils.setField(esiosProvider, "restClient", mockedClient);
         
         String mockResponseJson = """
                 {

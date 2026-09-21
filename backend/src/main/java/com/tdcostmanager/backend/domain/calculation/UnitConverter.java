@@ -44,13 +44,23 @@ public final class UnitConverter {
             }
         }
 
-        // Note: L is not yet in UnitType, so ML <-> L is not implementable with current UnitType.
-        // If a project uses ML, it must match the Material unit ML for now.
+        // Volume: ML <-> L
+        if (isVolume(from) && isVolume(to)) {
+            if (from == UnitType.ML && to == UnitType.L) {
+                return value.divide(THOUSAND, CALCULATION_SCALE, RoundingMode.HALF_UP);
+            } else if (from == UnitType.L && to == UnitType.ML) {
+                return value.multiply(THOUSAND).setScale(CALCULATION_SCALE, RoundingMode.HALF_UP);
+            }
+        }
 
-        throw new IllegalArgumentException(String.format("Incompatible units or conversion not supported for V1: %s to %s", from, to));
+        throw new IllegalArgumentException(String.format("Incompatible units or conversion not supported: %s to %s", from, to));
     }
 
     private static boolean isMass(UnitType unit) {
         return unit == UnitType.G || unit == UnitType.KG;
+    }
+
+    private static boolean isVolume(UnitType unit) {
+        return unit == UnitType.ML || unit == UnitType.L;
     }
 }
