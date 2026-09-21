@@ -40,6 +40,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {
@@ -62,6 +63,12 @@ dependencies {
     
     // Lifecycle ViewModel for Compose
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    
+    // Navigation
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+
+    // Security - Encrypted SharedPreferences
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     // Retrofit + Kotlinx Serialization
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
