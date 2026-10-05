@@ -4,6 +4,7 @@ public enum UnitType {
     G,
     KG,
     ML,
+    L,
     UNIT,
     H
 }

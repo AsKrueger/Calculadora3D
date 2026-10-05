@@ -4,9 +4,7 @@ import com.tdcostmanager.backend.domain.model.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
-import java.time.Instant;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ProjectRepositoryTest extends BaseRepositoryTest {
 
@@ -54,6 +52,7 @@ public class ProjectRepositoryTest extends BaseRepositoryTest {
         ProjectMaterial pm = new ProjectMaterial();
         pm.setMaterial(material);
         pm.setQuantityUsed(new BigDecimal("450.5000"));
+        pm.setUnit(UnitType.G);
         savedProject.addProjectMaterial(pm);
         projectMaterialRepository.save(pm);
 
@@ -100,6 +99,7 @@ public class ProjectRepositoryTest extends BaseRepositoryTest {
         pm.setProject(project);
         pm.setMaterial(material);
         pm.setQuantityUsed(new BigDecimal("50.00"));
+        pm.setUnit(UnitType.ML);
         projectMaterialRepository.save(pm);
 
         entityManager.flush();
