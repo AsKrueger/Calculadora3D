@@ -44,8 +44,8 @@ public class ProjectRepositoryTest extends BaseRepositoryTest {
 
         // Setup Project
         Project project = new Project();
-        project.setName("Death Star Lamp");
-        project.setStatus(ProjectStatus.DRAFT);
+        project.updateDetails("Death Star Lamp", null);
+        project.updateStatus(ProjectStatus.DRAFT);
         Project savedProject = projectRepository.save(project);
 
         // Add Resource to Project
@@ -57,14 +57,15 @@ public class ProjectRepositoryTest extends BaseRepositoryTest {
         projectMaterialRepository.save(pm);
 
         // Create Quote
-        Quote quote = new Quote();
-        quote.setProject(savedProject);
-        quote.setMarginPercentage(new BigDecimal("20.00"));
-        quote.setSafetyPercentage(new BigDecimal("5.00"));
-        quote.setBaseCost(new BigDecimal("15.7500"));
-        quote.setAdjustedCost(new BigDecimal("16.5375"));
-        quote.setFinalPrice(new BigDecimal("19.8450"));
-        quote.setStatus(QuoteStatus.DRAFT);
+        Quote quote = Quote.create(
+                savedProject,
+                new BigDecimal("20.00"),
+                new BigDecimal("5.00"),
+                new BigDecimal("15.7500"),
+                new BigDecimal("16.5375"),
+                new BigDecimal("19.8450"),
+                QuoteStatus.DRAFT
+        );
         quoteRepository.save(quote);
 
         entityManager.flush();
@@ -91,8 +92,8 @@ public class ProjectRepositoryTest extends BaseRepositoryTest {
         materialRepository.save(material);
 
         Project project = new Project();
-        project.setName("Miniature Hero");
-        project.setStatus(ProjectStatus.DRAFT);
+        project.updateDetails("Miniature Hero", null);
+        project.updateStatus(ProjectStatus.DRAFT);
         projectRepository.save(project);
 
         ProjectMaterial pm = new ProjectMaterial();

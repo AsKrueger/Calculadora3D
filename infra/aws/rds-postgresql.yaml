@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: '3D Cost Manager - RDS PostgreSQL Database Infrastructure (DB Subnet Group, RDS Instance in Private Subnets)'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: '3d-cost-manager'
+    Description: 'Environment name prefix for resources'
+
+  DbName:
+    Type: String
+    Default: 'costmanager'
+    Description: 'PostgreSQL database name'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+
+  DbUsername:
+    Type: String
+    Default: 'dbadmin'
+    Description: 'PostgreSQL master username'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+
+  DbPassword:
+    Type: String
+    NoEcho: true
+    Description: 'PostgreSQL master password (managed via Parameter Store later)'
+    MinLength: 8
+
+  DbInstanceClass:
+    Type: String
+    Default: 'db.t4g.micro'
+    Description: 'RDS instance class (e.g. db.t4g.micro or db.t3.micro)'
+
+Resources:
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: 'Private subnets for 3D Cost Manager RDS instance'
+      SubnetIds:
+        - Fn::ImportValue: !Sub '${EnvironmentName}-PrivateSubnet1Id'
+        - Fn::ImportValue: !Sub '${EnvironmentName}-PrivateSubnet2Id'
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-db-subnet-group'
+
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Sub '${EnvironmentName}-postgres'
+      Engine: postgres
+      EngineVersion: '16'
+      DBInstanceClass: !Ref DbInstanceClass
+      AllocatedStorage: 20
+      MaxAllocatedStorage: 50
+      StorageType: gp2
+      MasterUsername: !Ref DbUsername
+      MasterUserPassword: !Ref DbPassword
+      DBName: !Ref DbName
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VpcSecurityGroupIds:
+        - Fn::ImportValue: !Sub '${EnvironmentName}-RdsSecurityGroupId'
+      PubliclyAccessible: false
+      MultiAZ: false
+      StorageEncrypted: true
+      BackupRetentionPeriod: 7
+      AutoMinorVersionUpgrade: true
+      DeletionProtection: false
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-postgres'
+
+Outputs:
+  RDSEndpoint:
+    Description: 'RDS PostgreSQL Endpoint Address'
+    Value: !GetAtt RDSInstance.Endpoint.Address
+    Export:
+      Name: !Sub '${EnvironmentName}-RDSEndpoint'
+
+  RDSPort:
+    Description: 'RDS PostgreSQL Port'
+    Value: !GetAtt RDSInstance.Endpoint.Port
+    Export:
+      Name: !Sub '${EnvironmentName}-RDSPort'

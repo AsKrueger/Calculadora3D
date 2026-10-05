@@ -31,7 +31,8 @@ class QuoteServiceTest {
         Long projectId = 1L;
         Project archivedProject = new Project();
         archivedProject.setId(projectId);
-        archivedProject.setStatus(ProjectStatus.ARCHIVED);
+        archivedProject.updateDetails("Archived", null);
+        archivedProject.archive();
 
         QuoteCreateRequest request = new QuoteCreateRequest(
                 BigDecimal.TEN, BigDecimal.ONE, LocalDateTime.now()

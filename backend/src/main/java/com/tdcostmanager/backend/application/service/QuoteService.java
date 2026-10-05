@@ -2,6 +2,7 @@ package com.tdcostmanager.backend.application.service;
 
 import com.tdcostmanager.backend.application.dto.QuoteCreateRequest;
 import com.tdcostmanager.backend.application.dto.QuoteResponse;
+import com.tdcostmanager.backend.domain.calculation.CostCalculationInput;
 import com.tdcostmanager.backend.domain.calculation.CostCalculationResult;
 import com.tdcostmanager.backend.domain.calculation.CostCalculator;
 import com.tdcostmanager.backend.domain.calculation.ElectricityPriceProvider;
@@ -42,9 +43,49 @@ public class QuoteService {
             throw new IllegalStateException("No se pueden generar presupuestos para un proyecto archivado");
         }
 
+        List<CostCalculationInput.MaterialInput> materialInputs = project.getProjectMaterials().stream()
+                .map(pm -> new CostCalculationInput.MaterialInput(
+                        pm.getQuantityUsed(),
+                        pm.getUnit(),
+                        pm.getMaterial().getPurchasePrice(),
+                        pm.getMaterial().getQuantity(),
+                        pm.getMaterial().getUnit(),
+                        pm.getMaterial().getName()
+                ))
+                .collect(Collectors.toList());
+
+        List<CostCalculationInput.MachineInput> machineInputs = project.getProjectMachines().stream()
+                .map(pm -> new CostCalculationInput.MachineInput(
+                        pm.getEstimatedHours(),
+                        pm.getMachine().getAcquisitionCost(),
+                        pm.getMachine().getUsefulLifeHours(),
+                        pm.getMachine().getPowerWatts(),
+                        pm.getMachine().getMaintenanceCostPerHour(),
+                        pm.getMachine().getName()
+                ))
+                .collect(Collectors.toList());
+
+        List<CostCalculationInput.ToolInput> toolInputs = project.getProjectTools().stream()
+                .map(pt -> new CostCalculationInput.ToolInput(
+                        pt.getUses(),
+                        pt.getTool().getAcquisitionCost(),
+                        pt.getTool().getEstimatedUses(),
+                        pt.getTool().getMaintenancePercentage(),
+                        pt.getTool().getName()
+                ))
+                .collect(Collectors.toList());
+
+        CostCalculationInput input = new CostCalculationInput(
+                project.getLaborHours(),
+                project.getLaborCostPerHour(),
+                materialInputs,
+                machineInputs,
+                toolInputs
+        );
+
         // Ejecutar motor de cálculo del dominio
         CostCalculationResult result = CostCalculator.calculate(
-                project,
+                input,
                 request.calculationDateTime(),
                 request.marginPercentage(),
                 request.safetyPercentage(),
@@ -52,14 +93,15 @@ public class QuoteService {
         );
 
         // Mapear resultado a entidad persistible
-        Quote quote = new Quote();
-        quote.setProject(project);
-        quote.setMarginPercentage(request.marginPercentage());
-        quote.setSafetyPercentage(request.safetyPercentage());
-        quote.setBaseCost(result.baseCost());
-        quote.setAdjustedCost(result.adjustedCost());
-        quote.setFinalPrice(result.finalPrice());
-        quote.setStatus(QuoteStatus.DRAFT);
+        Quote quote = Quote.create(
+                project,
+                request.marginPercentage(),
+                request.safetyPercentage(),
+                result.baseCost(),
+                result.adjustedCost(),
+                result.finalPrice(),
+                QuoteStatus.DRAFT
+        );
 
         Quote saved = quoteRepository.save(quote);
         return mapToResponse(saved);

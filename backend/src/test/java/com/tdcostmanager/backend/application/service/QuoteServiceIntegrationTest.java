@@ -38,10 +38,9 @@ class QuoteServiceIntegrationTest extends BaseIntegrationTest {
     void shouldGenerateAndPersistQuoteIntegratingEsiosMock() {
         // 1. Arrange: Create a project
         Project project = new Project();
-        project.setName("Integration Project");
-        project.setStatus(ProjectStatus.DRAFT);
-        project.setLaborHours(BigDecimal.ONE);
-        project.setLaborCostPerHour(BigDecimal.TEN);
+        project.updateDetails("Integration Project", null);
+        project.updateStatus(ProjectStatus.DRAFT);
+        project.updateLabor(BigDecimal.ONE, BigDecimal.TEN);
         Project savedProject = projectRepository.save(project);
 
         // 2. Mock ESIOS HTTP Response correctly for RestClient

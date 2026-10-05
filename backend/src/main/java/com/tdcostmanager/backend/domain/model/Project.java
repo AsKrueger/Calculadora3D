@@ -10,7 +10,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "projects")
@@ -68,13 +70,10 @@ public class Project {
     public void setId(Long id) { this.id = id; }
 
     public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
 
     public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
 
     public ProjectStatus getStatus() { return status; }
-    public void setStatus(ProjectStatus status) { this.status = status; }
 
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
@@ -83,25 +82,80 @@ public class Project {
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 
     public BigDecimal getLaborHours() { return laborHours; }
-    public void setLaborHours(BigDecimal laborHours) { this.laborHours = laborHours; }
 
     public BigDecimal getLaborCostPerHour() { return laborCostPerHour; }
-    public void setLaborCostPerHour(BigDecimal laborCostPerHour) { this.laborCostPerHour = laborCostPerHour; }
 
-    public List<ProjectMachine> getProjectMachines() { return projectMachines; }
-    public void addProjectMachine(ProjectMachine pm) {
-        projectMachines.add(pm);
-        pm.setProject(this);
+    public List<ProjectMachine> getProjectMachines() { return Collections.unmodifiableList(projectMachines); }
+
+    public List<ProjectMaterial> getProjectMaterials() { return Collections.unmodifiableList(projectMaterials); }
+
+    public List<ProjectTool> getProjectTools() { return Collections.unmodifiableList(projectTools); }
+
+    // --- Domain Operations & Invariants ---
+
+    public void updateDetails(String name, String description) {
+        ensureNotArchived();
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Project name cannot be null or blank");
+        }
+        this.name = name;
+        this.description = description;
     }
 
-    public List<ProjectMaterial> getProjectMaterials() { return projectMaterials; }
+    public void updateLabor(BigDecimal laborHours, BigDecimal laborCostPerHour) {
+        ensureNotArchived();
+        if (laborHours == null || laborHours.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Labor hours cannot be negative");
+        }
+        if (laborCostPerHour == null || laborCostPerHour.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Labor cost per hour cannot be negative");
+        }
+        this.laborHours = laborHours;
+        this.laborCostPerHour = laborCostPerHour;
+    }
+
+    public void updateStatus(ProjectStatus status) {
+        if (status == null) {
+            throw new IllegalArgumentException("Project status cannot be null");
+        }
+        if (this.status == ProjectStatus.ARCHIVED && status == ProjectStatus.ARCHIVED) {
+            return; // idempotent
+        }
+        ensureNotArchived();
+        this.status = status;
+    }
+
+    public void archive() {
+        this.status = ProjectStatus.ARCHIVED;
+    }
+
+    public boolean isArchived() {
+        return this.status == ProjectStatus.ARCHIVED;
+    }
+
+    private void ensureNotArchived() {
+        if (isArchived()) {
+            throw new IllegalStateException("No se puede modificar un proyecto archivado");
+        }
+    }
+
     public void addProjectMaterial(ProjectMaterial pm) {
+        ensureNotArchived();
+        Objects.requireNonNull(pm, "Project material cannot be null");
         projectMaterials.add(pm);
         pm.setProject(this);
     }
 
-    public List<ProjectTool> getProjectTools() { return projectTools; }
+    public void addProjectMachine(ProjectMachine pm) {
+        ensureNotArchived();
+        Objects.requireNonNull(pm, "Project machine cannot be null");
+        projectMachines.add(pm);
+        pm.setProject(this);
+    }
+
     public void addProjectTool(ProjectTool pt) {
+        ensureNotArchived();
+        Objects.requireNonNull(pt, "Project tool cannot be null");
         projectTools.add(pt);
         pt.setProject(this);
     }

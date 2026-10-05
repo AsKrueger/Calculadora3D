@@ -45,11 +45,9 @@ public class ProjectService {
     @Transactional
     public ProjectResponse create(ProjectCreateRequest request) {
         Project project = new Project();
-        project.setName(request.name());
-        project.setDescription(request.description());
-        project.setLaborHours(request.laborHours());
-        project.setLaborCostPerHour(request.laborCostPerHour());
-        project.setStatus(ProjectStatus.DRAFT);
+        project.updateDetails(request.name(), request.description());
+        project.updateLabor(request.laborHours(), request.laborCostPerHour());
+        project.updateStatus(ProjectStatus.DRAFT);
 
         if (request.materials() != null) {
             for (ProjectMaterialRequest req : request.materials()) {
@@ -94,15 +92,9 @@ public class ProjectService {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Proyecto no encontrado con ID: " + id));
 
-        if (project.getStatus() == ProjectStatus.ARCHIVED) {
-            throw new IllegalStateException("No se puede modificar un proyecto archivado");
-        }
-
-        project.setName(request.name());
-        project.setDescription(request.description());
-        project.setStatus(request.status());
-        project.setLaborHours(request.laborHours());
-        project.setLaborCostPerHour(request.laborCostPerHour());
+        project.updateDetails(request.name(), request.description());
+        project.updateLabor(request.laborHours(), request.laborCostPerHour());
+        project.updateStatus(request.status());
 
         return mapToResponse(projectRepository.save(project));
     }
@@ -112,7 +104,7 @@ public class ProjectService {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Proyecto no encontrado con ID: " + id));
         
-        project.setStatus(ProjectStatus.ARCHIVED);
+        project.archive();
         projectRepository.save(project);
     }
 
