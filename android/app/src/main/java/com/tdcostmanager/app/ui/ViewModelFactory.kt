@@ -9,11 +9,13 @@ import com.tdcostmanager.app.data.repository.HealthRepository
 import com.tdcostmanager.app.data.repository.MachineRepository
 import com.tdcostmanager.app.data.repository.MaterialRepository
 import com.tdcostmanager.app.data.repository.ProjectRepository
+import com.tdcostmanager.app.data.repository.ToolRepository
 import com.tdcostmanager.app.ui.auth.AuthViewModel
 import com.tdcostmanager.app.ui.health.HealthViewModel
 import com.tdcostmanager.app.ui.machine.MachineViewModel
 import com.tdcostmanager.app.ui.material.MaterialViewModel
 import com.tdcostmanager.app.ui.project.ProjectViewModel
+import com.tdcostmanager.app.ui.tool.ToolViewModel
 
 class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
     
@@ -36,6 +38,9 @@ class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory
             }
             modelClass.isAssignableFrom(MachineViewModel::class.java) -> {
                 MachineViewModel(MachineRepository()) as T
+            }
+            modelClass.isAssignableFrom(ToolViewModel::class.java) -> {
+                ToolViewModel(ToolRepository()) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class")
         }

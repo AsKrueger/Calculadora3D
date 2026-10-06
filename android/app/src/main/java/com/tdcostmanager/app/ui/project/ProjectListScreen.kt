@@ -24,7 +24,8 @@ fun ProjectListScreen(
     onProjectClick: (Long) -> Unit,
     onCreateProject: () -> Unit,
     onNavigateToMaterials: () -> Unit,
-    onNavigateToMachines: () -> Unit
+    onNavigateToMachines: () -> Unit,
+    onNavigateToTools: () -> Unit
 ) {
     val projectsState by viewModel.projectsState.collectAsState()
 
@@ -35,6 +36,7 @@ fun ProjectListScreen(
                 actions = {
                     TextButton(onClick = onNavigateToMaterials) { Text("Materiales") }
                     TextButton(onClick = onNavigateToMachines) { Text("Máquinas") }
+                    TextButton(onClick = onNavigateToTools) { Text("Herramientas") }
                 }
             )
         },

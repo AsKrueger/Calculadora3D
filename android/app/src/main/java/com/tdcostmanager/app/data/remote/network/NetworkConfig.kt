@@ -9,6 +9,7 @@ import com.tdcostmanager.app.data.remote.api.HealthApi
 import com.tdcostmanager.app.data.remote.api.MachineApi
 import com.tdcostmanager.app.data.remote.api.MaterialApi
 import com.tdcostmanager.app.data.remote.api.ProjectApi
+import com.tdcostmanager.app.data.remote.api.ToolApi
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -73,5 +74,9 @@ object NetworkConfig {
 
     val machineApi: MachineApi by lazy {
         getRetrofit().create(MachineApi::class.java)
+    }
+
+    val toolApi: ToolApi by lazy {
+        getRetrofit().create(ToolApi::class.java)
     }
 }
