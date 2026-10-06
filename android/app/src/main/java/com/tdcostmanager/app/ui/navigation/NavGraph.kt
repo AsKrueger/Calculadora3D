@@ -13,8 +13,6 @@ import com.tdcostmanager.app.ui.ViewModelFactory
 import com.tdcostmanager.app.ui.auth.AuthViewModel
 import com.tdcostmanager.app.ui.auth.LoginScreen
 import com.tdcostmanager.app.ui.auth.RegisterScreen
-import com.tdcostmanager.app.ui.health.HealthScreen
-import com.tdcostmanager.app.ui.health.HealthViewModel
 import com.tdcostmanager.app.ui.machine.MachineDetailScreen
 import com.tdcostmanager.app.ui.machine.MachineFormScreen
 import com.tdcostmanager.app.ui.machine.MachineListScreen
@@ -27,6 +25,10 @@ import com.tdcostmanager.app.ui.project.ProjectDetailScreen
 import com.tdcostmanager.app.ui.project.ProjectFormScreen
 import com.tdcostmanager.app.ui.project.ProjectListScreen
 import com.tdcostmanager.app.ui.project.ProjectViewModel
+import com.tdcostmanager.app.ui.tool.ToolDetailScreen
+import com.tdcostmanager.app.ui.tool.ToolFormScreen
+import com.tdcostmanager.app.ui.tool.ToolListScreen
+import com.tdcostmanager.app.ui.tool.ToolViewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 
@@ -54,6 +56,13 @@ sealed class Screen(val route: String) {
     }
     data object MachineForm : Screen("machine_form?id={id}") {
         fun createRoute(id: Long? = null) = if (id != null) "machine_form?id=$id" else "machine_form"
+    }
+    data object ToolList : Screen("tool_list")
+    data object ToolDetail : Screen("tool_detail/{id}") {
+        fun createRoute(id: Long) = "tool_detail/$id"
+    }
+    data object ToolForm : Screen("tool_form?id={id}") {
+        fun createRoute(id: Long? = null) = if (id != null) "tool_form?id=$id" else "tool_form"
     }
 }
 
@@ -90,7 +99,8 @@ fun NavGraph(
                 onProjectClick = { id -> navController.navigate(Screen.ProjectDetail.createRoute(id)) },
                 onCreateProject = { navController.navigate(Screen.ProjectForm.createRoute()) },
                 onNavigateToMaterials = { navController.navigate(Screen.MaterialList.route) },
-                onNavigateToMachines = { navController.navigate(Screen.MachineList.route) }
+                onNavigateToMachines = { navController.navigate(Screen.MachineList.route) },
+                onNavigateToTools = { navController.navigate(Screen.ToolList.route) }
             )
         }
         composable(Screen.MaterialList.route) {
@@ -158,6 +168,40 @@ fun NavGraph(
             MachineFormScreen(
                 id = id,
                 viewModel = machineViewModel,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.ToolList.route) {
+            val toolViewModel: ToolViewModel = viewModel(factory = factory)
+            ToolListScreen(
+                viewModel = toolViewModel,
+                onToolClick = { id -> navController.navigate(Screen.ToolDetail.createRoute(id)) },
+                onCreateTool = { navController.navigate(Screen.ToolForm.createRoute()) },
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(
+            route = Screen.ToolDetail.route,
+            arguments = listOf(navArgument("id") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong("id") ?: 0L
+            val toolViewModel: ToolViewModel = viewModel(factory = factory)
+            ToolDetailScreen(
+                id = id,
+                viewModel = toolViewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onEditClick = { tid -> navController.navigate(Screen.ToolForm.createRoute(tid)) }
+            )
+        }
+        composable(
+            route = Screen.ToolForm.route,
+            arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong("id").let { if (it == -1L) null else it }
+            val toolViewModel: ToolViewModel = viewModel(factory = factory)
+            ToolFormScreen(
+                id = id,
+                viewModel = toolViewModel,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
