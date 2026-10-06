@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: '3D Cost Manager - AWS Systems Manager Parameter Store Configuration (Database, JWT, ESIOS)'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: '3d-cost-manager'
+    Description: 'Environment name prefix for parameters'
+
+  DatabaseUrl:
+    Type: String
+    Description: 'JDBC URL for RDS PostgreSQL'
+    Default: 'jdbc:postgresql://rds-endpoint:5432/costmanager'
+
+  DatabaseUsername:
+    Type: String
+    Description: 'Database master username'
+    Default: 'dbadmin'
+
+  DatabasePassword:
+    Type: String
+    NoEcho: true
+    Description: 'Database master password (SecureString)'
+    Default: 'changeme'
+
+  JwtSecret:
+    Type: String
+    NoEcho: true
+    Description: 'JWT Secret key (SecureString)'
+    Default: 'change_jwt_secret_in_production_min_256_bits'
+
+  EsiosApiToken:
+    Type: String
+    NoEcho: true
+    Description: 'ESIOS API Token (SecureString)'
+    Default: 'change_esios_token'
+
+Resources:
+  ParamDatabaseUrl:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/${EnvironmentName}/database/url'
+      Type: String
+      Value: !Ref DatabaseUrl
+      Description: 'JDBC URL for PostgreSQL'
+
+  ParamDatabaseUsername:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/${EnvironmentName}/database/username'
+      Type: String
+      Value: !Ref DatabaseUsername
+      Description: 'Database username'
+
+  ParamDatabasePassword:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/${EnvironmentName}/database/password'
+      Type: SecureString
+      Value: !Ref DatabasePassword
+      Description: 'Database password'
+
+  ParamJwtSecret:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/${EnvironmentName}/jwt/secret'
+      Type: SecureString
+      Value: !Ref JwtSecret
+      Description: 'JWT secret key'
+
+  ParamEsiosToken:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/${EnvironmentName}/esios/token'
+      Type: SecureString
+      Value: !Ref EsiosApiToken
+      Description: 'ESIOS API Token'
+
+Outputs:
+  ParameterNamespace:
+    Description: 'Parameter Store Namespace Prefix'
+    Value: !Sub '/${EnvironmentName}/'
+    Export:
+      Name: !Sub '${EnvironmentName}-ParamNamespace'
