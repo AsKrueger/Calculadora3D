@@ -30,7 +30,8 @@ class ProjectServiceTest {
         Long projectId = 1L;
         Project archivedProject = new Project();
         archivedProject.setId(projectId);
-        archivedProject.setStatus(ProjectStatus.ARCHIVED);
+        archivedProject.updateDetails("Archived", null);
+        archivedProject.archive();
 
         ProjectUpdateRequest request = new ProjectUpdateRequest(
                 "Updated Name", "Desc", ProjectStatus.COMPLETED, BigDecimal.ONE, BigDecimal.TEN

@@ -1,6 +1,8 @@
 package com.tdcostmanager.app.ui.health
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -11,13 +13,24 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HealthScreen(viewModel: HealthViewModel) {
+fun HealthScreen(
+    viewModel: HealthViewModel,
+    onLogout: () -> Unit
+) {
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("3D Cost Manager") }
+                title = { Text("3D Cost Manager") },
+                actions = {
+                    IconButton(onClick = onLogout) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Logout"
+                        )
+                    }
+                }
             )
         }
     ) { paddingValues ->

@@ -9,6 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Objects;
 
 @Entity
 @Table(name = "quotes")
@@ -61,31 +62,67 @@ public class Quote {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    public Quote() {}
+    protected Quote() {}
+
+    public static Quote create(
+            Project project,
+            BigDecimal marginPercentage,
+            BigDecimal safetyPercentage,
+            BigDecimal baseCost,
+            BigDecimal adjustedCost,
+            BigDecimal finalPrice,
+            QuoteStatus status) {
+        
+        Objects.requireNonNull(project, "Project cannot be null");
+        Objects.requireNonNull(marginPercentage, "Margin percentage cannot be null");
+        Objects.requireNonNull(safetyPercentage, "Safety percentage cannot be null");
+        Objects.requireNonNull(baseCost, "Base cost cannot be null");
+        Objects.requireNonNull(adjustedCost, "Adjusted cost cannot be null");
+        Objects.requireNonNull(finalPrice, "Final price cannot be null");
+        Objects.requireNonNull(status, "Quote status cannot be null");
+
+        if (marginPercentage.compareTo(BigDecimal.ZERO) < 0 || marginPercentage.compareTo(new BigDecimal("100")) > 0) {
+            throw new IllegalArgumentException("Margin percentage must be between 0 and 100");
+        }
+        if (safetyPercentage.compareTo(BigDecimal.ZERO) < 0 || safetyPercentage.compareTo(new BigDecimal("100")) > 0) {
+            throw new IllegalArgumentException("Safety percentage must be between 0 and 100");
+        }
+        if (baseCost.compareTo(BigDecimal.ZERO) < 0 || adjustedCost.compareTo(BigDecimal.ZERO) < 0 || finalPrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Monetary costs cannot be negative");
+        }
+
+        Quote quote = new Quote();
+        quote.project = project;
+        quote.marginPercentage = marginPercentage;
+        quote.safetyPercentage = safetyPercentage;
+        quote.baseCost = baseCost;
+        quote.adjustedCost = adjustedCost;
+        quote.finalPrice = finalPrice;
+        quote.status = status;
+        return quote;
+    }
+
+    public void updateStatus(QuoteStatus status) {
+        Objects.requireNonNull(status, "Quote status cannot be null");
+        this.status = status;
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
     public Project getProject() { return project; }
-    public void setProject(Project project) { this.project = project; }
 
     public BigDecimal getMarginPercentage() { return marginPercentage; }
-    public void setMarginPercentage(BigDecimal marginPercentage) { this.marginPercentage = marginPercentage; }
 
     public BigDecimal getSafetyPercentage() { return safetyPercentage; }
-    public void setSafetyPercentage(BigDecimal safetyPercentage) { this.safetyPercentage = safetyPercentage; }
 
     public BigDecimal getBaseCost() { return baseCost; }
-    public void setBaseCost(BigDecimal baseCost) { this.baseCost = baseCost; }
 
     public BigDecimal getAdjustedCost() { return adjustedCost; }
-    public void setAdjustedCost(BigDecimal adjustedCost) { this.adjustedCost = adjustedCost; }
 
     public BigDecimal getFinalPrice() { return finalPrice; }
-    public void setFinalPrice(BigDecimal finalPrice) { this.finalPrice = finalPrice; }
 
     public QuoteStatus getStatus() { return status; }
-    public void setStatus(QuoteStatus status) { this.status = status; }
 
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }

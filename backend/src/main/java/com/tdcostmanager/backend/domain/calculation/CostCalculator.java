@@ -1,16 +1,12 @@
 package com.tdcostmanager.backend.domain.calculation;
 
-import com.tdcostmanager.backend.domain.model.Project;
-import com.tdcostmanager.backend.domain.model.ProjectMachine;
-import com.tdcostmanager.backend.domain.model.ProjectMaterial;
-import com.tdcostmanager.backend.domain.model.ProjectTool;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
- * Pure domain logic for calculating project costs.
+ * Pure domain logic for calculating project costs based on CostCalculationInput.
  * Precision: Internal calculation uses 8 decimals. Final result uses 4 decimals.
  */
 public final class CostCalculator {
@@ -25,22 +21,22 @@ public final class CostCalculator {
     }
 
     /**
-     * Performs a full cost calculation for a project on a specific date and time.
+     * Performs a full cost calculation for input data on a specific date and time.
      */
     public static CostCalculationResult calculate(
-            Project project,
+            CostCalculationInput input,
             LocalDateTime calculationDateTime,
             BigDecimal marginPercentage,
             BigDecimal safetyPercentage,
             ElectricityPriceProvider priceProvider) {
 
-        validateInputs(project, calculationDateTime, marginPercentage, safetyPercentage, priceProvider);
+        validateInputs(input, calculationDateTime, marginPercentage, safetyPercentage, priceProvider);
 
-        BigDecimal materialCost = calculateMaterialCost(project);
-        BigDecimal machineCost = calculateMachineCost(project);
-        BigDecimal toolCost = calculateToolCost(project);
-        BigDecimal laborCost = calculateLaborCost(project);
-        BigDecimal electricityCost = calculateElectricityCost(project, calculationDateTime, priceProvider);
+        BigDecimal materialCost = calculateMaterialCost(input);
+        BigDecimal machineCost = calculateMachineCost(input);
+        BigDecimal toolCost = calculateToolCost(input);
+        BigDecimal laborCost = calculateLaborCost(input);
+        BigDecimal electricityCost = calculateElectricityCost(input, calculationDateTime, priceProvider);
 
         BigDecimal baseCost = materialCost
                 .add(machineCost)
@@ -72,8 +68,8 @@ public final class CostCalculator {
         );
     }
 
-    private static void validateInputs(Project project, LocalDateTime dateTime, BigDecimal margin, BigDecimal safety, ElectricityPriceProvider provider) {
-        Objects.requireNonNull(project, "Project cannot be null");
+    private static void validateInputs(CostCalculationInput input, LocalDateTime dateTime, BigDecimal margin, BigDecimal safety, ElectricityPriceProvider provider) {
+        Objects.requireNonNull(input, "CostCalculationInput cannot be null");
         Objects.requireNonNull(dateTime, "Calculation date and time cannot be null");
         Objects.requireNonNull(margin, "Margin percentage cannot be null");
         Objects.requireNonNull(safety, "Safety percentage cannot be null");
@@ -82,25 +78,20 @@ public final class CostCalculator {
         if (margin.compareTo(BigDecimal.ZERO) < 0 || safety.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Percentages cannot be negative");
         }
-        if (project.getLaborHours().compareTo(BigDecimal.ZERO) < 0 || 
-            project.getLaborCostPerHour().compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Labor values cannot be negative");
-        }
     }
 
-    private static BigDecimal calculateMaterialCost(Project project) {
+    private static BigDecimal calculateMaterialCost(CostCalculationInput input) {
         BigDecimal total = BigDecimal.ZERO.setScale(INTERNAL_SCALE, RoundingMode.HALF_UP);
 
-        for (ProjectMaterial pm : project.getProjectMaterials()) {
-            var material = pm.getMaterial();
-            if (material.getQuantity().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Material purchased quantity must be greater than zero for: " + material.getName());
+        for (CostCalculationInput.MaterialInput mat : input.materials()) {
+            if (mat.quantity().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Material purchased quantity must be greater than zero for: " + mat.name());
             }
 
-            BigDecimal unitPrice = material.getPurchasePrice()
-                    .divide(material.getQuantity(), INTERNAL_SCALE, RoundingMode.HALF_UP);
+            BigDecimal unitPrice = mat.purchasePrice()
+                    .divide(mat.quantity(), INTERNAL_SCALE, RoundingMode.HALF_UP);
 
-            BigDecimal normalizedQuantity = UnitConverter.convert(pm.getQuantityUsed(), pm.getUnit(), material.getUnit());
+            BigDecimal normalizedQuantity = UnitConverter.convert(mat.quantityUsed(), mat.unit(), mat.materialUnit());
             
             BigDecimal cost = normalizedQuantity.multiply(unitPrice);
             total = total.add(cost);
@@ -108,71 +99,67 @@ public final class CostCalculator {
         return total;
     }
 
-    private static BigDecimal calculateMachineCost(Project project) {
+    private static BigDecimal calculateMachineCost(CostCalculationInput input) {
         BigDecimal total = BigDecimal.ZERO.setScale(INTERNAL_SCALE, RoundingMode.HALF_UP);
 
-        for (ProjectMachine pm : project.getProjectMachines()) {
-            var machine = pm.getMachine();
-            if (machine.getUsefulLifeHours().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Machine useful life must be greater than zero for: " + machine.getName());
+        for (CostCalculationInput.MachineInput mach : input.machines()) {
+            if (mach.usefulLifeHours().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Machine useful life must be greater than zero for: " + mach.name());
             }
 
-            BigDecimal hourlyAmortization = machine.getAcquisitionCost()
-                    .divide(machine.getUsefulLifeHours(), INTERNAL_SCALE, RoundingMode.HALF_UP);
+            BigDecimal hourlyAmortization = mach.acquisitionCost()
+                    .divide(mach.usefulLifeHours(), INTERNAL_SCALE, RoundingMode.HALF_UP);
 
-            BigDecimal hourlyCost = hourlyAmortization.add(machine.getMaintenanceCostPerHour());
+            BigDecimal hourlyCost = hourlyAmortization.add(mach.maintenanceCostPerHour());
             
-            BigDecimal cost = pm.getEstimatedHours().multiply(hourlyCost);
+            BigDecimal cost = mach.estimatedHours().multiply(hourlyCost);
             total = total.add(cost);
         }
         return total;
     }
 
-    private static BigDecimal calculateToolCost(Project project) {
+    private static BigDecimal calculateToolCost(CostCalculationInput input) {
         BigDecimal total = BigDecimal.ZERO.setScale(INTERNAL_SCALE, RoundingMode.HALF_UP);
 
-        for (ProjectTool pt : project.getProjectTools()) {
-            var tool = pt.getTool();
-            if (tool.getEstimatedUses().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Tool estimated uses must be greater than zero for: " + tool.getName());
+        for (CostCalculationInput.ToolInput tool : input.tools()) {
+            if (tool.estimatedUses().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Tool estimated uses must be greater than zero for: " + tool.name());
             }
 
-            BigDecimal costPerUse = tool.getAcquisitionCost()
-                    .divide(tool.getEstimatedUses(), INTERNAL_SCALE, RoundingMode.HALF_UP);
+            BigDecimal costPerUse = tool.acquisitionCost()
+                    .divide(tool.estimatedUses(), INTERNAL_SCALE, RoundingMode.HALF_UP);
 
             BigDecimal maintenanceFactor = BigDecimal.ONE.add(
-                    tool.getMaintenancePercentage().divide(HUNDRED, INTERNAL_SCALE, RoundingMode.HALF_UP)
+                    tool.maintenancePercentage().divide(HUNDRED, INTERNAL_SCALE, RoundingMode.HALF_UP)
             );
 
             BigDecimal totalCostPerUse = costPerUse.multiply(maintenanceFactor);
             
-            BigDecimal cost = pt.getUses().multiply(totalCostPerUse);
+            BigDecimal cost = tool.uses().multiply(totalCostPerUse);
             total = total.add(cost);
         }
         return total;
     }
 
-    private static BigDecimal calculateLaborCost(Project project) {
-        return project.getLaborHours().multiply(project.getLaborCostPerHour())
+    private static BigDecimal calculateLaborCost(CostCalculationInput input) {
+        return input.laborHours().multiply(input.laborCostPerHour())
                 .setScale(INTERNAL_SCALE, RoundingMode.HALF_UP);
     }
 
-    private static BigDecimal calculateElectricityCost(Project project, LocalDateTime calculationDateTime, ElectricityPriceProvider priceProvider) {
+    private static BigDecimal calculateElectricityCost(CostCalculationInput input, LocalDateTime calculationDateTime, ElectricityPriceProvider priceProvider) {
         BigDecimal totalKWh = BigDecimal.ZERO.setScale(INTERNAL_SCALE, RoundingMode.HALF_UP);
 
-        for (ProjectMachine pm : project.getProjectMachines()) {
-            var machine = pm.getMachine();
-            
-            BigDecimal powerKW = machine.getPowerWatts()
+        for (CostCalculationInput.MachineInput mach : input.machines()) {
+            BigDecimal powerKW = mach.powerWatts()
                     .divide(THOUSAND, INTERNAL_SCALE, RoundingMode.HALF_UP);
             
-            BigDecimal energyKWh = powerKW.multiply(pm.getEstimatedHours());
+            BigDecimal energyKWh = powerKW.multiply(mach.estimatedHours());
             totalKWh = totalKWh.add(energyKWh);
         }
 
         BigDecimal price = priceProvider.getPricePerKWh(calculationDateTime);
-        if (price.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Electricity price cannot be negative");
+        if (price == null || price.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Electricity price cannot be null or negative");
         }
 
         return totalKWh.multiply(price).setScale(INTERNAL_SCALE, RoundingMode.HALF_UP);

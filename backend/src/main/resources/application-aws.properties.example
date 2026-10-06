@@ -1,0 +1,21 @@
+# =====================================================================
+# Configuración de producción para AWS (Perfil Spring Boot: 'aws')
+# =====================================================================
+# NOTA: Los valores deben inyectarse mediante variables de entorno o AWS Parameter Store.
+
+spring.datasource.url=${DATABASE_URL}
+spring.datasource.username=${DATABASE_USERNAME}
+spring.datasource.password=${DATABASE_PASSWORD}
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=false
+
+jwt.secret=${JWT_SECRET}
+jwt.expiration=86400000
+
+esios.api.token=${ESIOS_API_TOKEN}
+esios.indicator-id=1001
+
+management.endpoints.web.exposure.include=health,info,metrics
+management.endpoint.health.show-details=when-authorized

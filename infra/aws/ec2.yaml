@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: '3D Cost Manager - EC2 Compute Infrastructure (IAM Role, Instance Profile, EC2 Instance with Docker)'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: '3d-cost-manager'
+    Description: 'Environment name prefix for resources'
+
+  InstanceType:
+    Type: String
+    Default: 't4g.micro'
+    Description: 'EC2 instance type (t4g.micro is Graviton ARM64 and free-tier eligible)'
+
+  AmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64'
+    Description: 'Amazon Linux 2023 AMI ID for ARM64 (Graviton)'
+
+Resources:
+  Ec2IamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${EnvironmentName}-ec2-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub '${EnvironmentName}-ec2-ecr-ssm-policy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/3d-cost-manager/*'
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-ec2-role'
+
+  Ec2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: !Sub '${EnvironmentName}-ec2-instance-profile'
+      Roles:
+        - !Ref Ec2IamRole
+
+  Ec2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref AmiId
+      SubnetId:
+        Fn::ImportValue: !Sub '${EnvironmentName}-PublicSubnetId'
+      SecurityGroupIds:
+        - Fn::ImportValue: !Sub '${EnvironmentName}-Ec2SecurityGroupId'
+      IamInstanceProfile: !Ref Ec2InstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y docker
+          systemctl start docker
+          systemctl enable docker
+          usermod -a -G docker ec2-user
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-ec2-instance'
+
+Outputs:
+  Ec2InstanceId:
+    Description: 'EC2 Instance ID'
+    Value: !Ref Ec2Instance
+    Export:
+      Name: !Sub '${EnvironmentName}-Ec2InstanceId'
+
+  Ec2PublicIp:
+    Description: 'EC2 Public IP Address'
+    Value: !GetAtt Ec2Instance.PublicIp
+    Export:
+      Name: !Sub '${EnvironmentName}-Ec2PublicIp'
