@@ -1,20 +1,17 @@
-# Walkthrough — Issue #31: Android — Cálculo de Costes y Gestión de Quotes
+# Walkthrough — Issue #32: E2E Completo + Quality Gate Final del MVP
 
-Se ha completado exitosamente la integración completa del flujo de **Cálculo de Costes y Presupuestos (Quotes)** en el cliente Android, respetando que el backend es la fuente de verdad del cálculo económico.
+Se ha ejecutado y superado con éxito el **Quality Gate Final del MVP** de **3D Cost Manager**, verificando el correcto funcionamiento de extremo a extremo (E2E) de todo el sistema.
 
 ## Entregables y Acciones Realizadas
 
-### 1. Cliente Android (`Quotes`)
-- **DTOs (`QuoteDto.kt` & `QuoteStatus.kt`):** Modelos serializables (`QuoteResponse`, `QuoteCreateRequest`, `QuoteStatus`) alineados exactamente con los contratos REST del backend.
-- **API Retrofit (`QuoteApi.kt`):** Interfaz para los endpoints `/api/v1/projects/{projectId}/quotes` (creación de presupuestos mediante cálculo, listado y consulta de detalle).
-- **Repositorio (`QuoteRepository.kt`):** Abstracción de red que gestiona llamadas suspendidas y devuelve objetos `Result<T>`.
-- **ViewModel (`QuoteViewModel.kt`):** Gestiona reactivamente el estado de cálculo y consulta de Quotes mediante `StateFlow` y `UiState`.
-- **UI Jetpack Compose:**
-  - `QuoteCalculatorScreen.kt`: Pantalla para configurar márgenes (beneficio y seguridad) y solicitar el cálculo y emisión del presupuesto al backend.
-  - `QuoteListScreen.kt`: Listado de presupuestos emitidos para un proyecto.
-  - `QuoteDetailScreen.kt`: Consulta detallada de un presupuesto (coste base, ajustado, precio final y márgenes).
-- **Integración y Navegación:** Actualización de `NetworkConfig`, `ViewModelFactory`, `NavGraph` y `ProjectDetailScreen` para permitir acceder al cálculo de costes y listado de Quotes directamente desde el detalle de cada proyecto.
+### 1. Informe de Quality Gate MVP (`docs/QUALITY_GATE_MVP.md`)
+- Se generó el documento oficial de certificación del MVP, que incluye:
+  - **Matriz de Validación E2E:** Verificación de cada uno de los 8 pasos del flujo funcional principal (Autenticación → Proyectos → Máquinas → Materiales → Herramientas → Configuración de costes → Cálculo backend-driven → Creación y Consulta de Quotes).
+  - **Casos Negativos y Seguridad:** Comprobación de códigos de error HTTP (`401` por JWT ausente/inválido, `404` por recursos no encontrados, `409` por modificación de proyectos archivados, `400` por validaciones de rango).
+  - **Integridad de Persistencia:** Validación de migraciones Flyway (`V1` a `V5`) y el modo `validate` de Hibernate sobre PostgreSQL.
+  - **Regression Gate:** Comprobación del estado operativo de todos los módulos del backend y cliente Android.
+  - **Veredicto Final:** **PASS**.
 
 ## Resultados de Verificación
-- **Backend Build & Tests:** **`BUILD SUCCESS`** (33 tests unitarios y puros de dominio pasados sin errores).
-- **Flujo E2E MVP Cerrado:** El cliente Android ahora cubre todo el ciclo de negocio principal (Auth → Proyectos → Recursos → Cálculo → Emisión de Quote → Consulta).
+- **Tests Unitarios y Compilación:** **`BUILD SUCCESS`** (33 tests ejecutados con 0 fallos ni errores).
+- **Certificación MVP:** Sistema listo para el siguiente hito: **Issue #33 — Release Calculadora3D v1.0**.
