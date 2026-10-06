@@ -1,4 +1,4 @@
-name: Backend CI/CD to ECR
+name: Backend CI/CD to ECR & EC2
 
 on:
   push:
@@ -39,6 +39,8 @@ jobs:
     needs: build-and-test
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.sha }}
     defaults:
       run:
         working-directory: ./backend
@@ -73,3 +75,74 @@ jobs:
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/3d-cost-manager-backend:${{ github.sha }}
             ${{ steps.login-ecr.outputs.registry }}/3d-cost-manager-backend:latest
+
+      - name: Output Image Tag
+        id: meta
+        run: echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+
+  deploy-to-ec2:
+    needs: build-and-push-ecr
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+
+      - name: Trigger EC2 Deployment via SSM Run Command
+        uses: aws-actions/aws-ssm-send-command@v1
+        with:
+          instance-ids: ${{ secrets.AWS_EC2_INSTANCE_ID }}
+          document-name: "AWS-RunShellScript"
+          parameters: |
+            commands:
+              - |
+                IMAGE_TAG="${{ needs.build-and-push-ecr.outputs.image_tag }}"
+                AWS_REGION="eu-west-1"
+                ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+                REGISTRY_URL="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+                
+                # 1. Login ECR
+                aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REGISTRY_URL
+                
+                # 2. Pull image
+                docker pull $REGISTRY_URL/3d-cost-manager-backend:$IMAGE_TAG
+                
+                # 3. Fetch secrets from Parameter Store
+                DB_URL=$(aws ssm get-parameter --name "/3d-cost-manager/database/url" --query "Parameter.Value" --output text --region $AWS_REGION)
+                DB_USER=$(aws ssm get-parameter --name "/3d-cost-manager/database/username" --query "Parameter.Value" --output text --region $AWS_REGION)
+                DB_PASS=$(aws ssm get-parameter --name "/3d-cost-manager/database/password" --with-decryption --query "Parameter.Value" --output text --region $AWS_REGION)
+                JWT_SEC=$(aws ssm get-parameter --name "/3d-cost-manager/jwt/secret" --with-decryption --query "Parameter.Value" --output text --region $AWS_REGION)
+                ESIOS_TOK=$(aws ssm get-parameter --name "/3d-cost-manager/esios/token" --with-decryption --query "Parameter.Value" --output text --region $AWS_REGION)
+                
+                # 4. Stop and remove old container
+                docker stop cost-manager-backend || true
+                docker rm cost-manager-backend || true
+                
+                # 5. Run new container
+                docker run -d \
+                  --name cost-manager-backend \
+                  -p 8080:8080 \
+                  -e SPRING_DATASOURCE_URL="$DB_URL" \
+                  -e SPRING_DATASOURCE_USERNAME="$DB_USER" \
+                  -e SPRING_DATASOURCE_PASSWORD="$DB_PASS" \
+                  -e JWT_SECRET="$JWT_SEC" \
+                  -e ESIOS_API_TOKEN="$ESIOS_TOK" \
+                  --restart unless-stopped \
+                  $REGISTRY_URL/3d-cost-manager-backend:$IMAGE_TAG
+                
+                # 6. Health check verification
+                sleep 10
+                for i in {1..6}; do
+                  if curl -s http://localhost:8080/api/v1/health | grep -q "UP"; then
+                    echo "Health check passed!"
+                    exit 0
+                  fi
+                  echo "Waiting for application to start..."
+                  sleep 5
+                done
+                echo "Health check failed!"
+                exit 1
