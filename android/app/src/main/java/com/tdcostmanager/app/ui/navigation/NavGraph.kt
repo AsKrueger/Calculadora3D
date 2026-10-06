@@ -25,6 +25,10 @@ import com.tdcostmanager.app.ui.project.ProjectDetailScreen
 import com.tdcostmanager.app.ui.project.ProjectFormScreen
 import com.tdcostmanager.app.ui.project.ProjectListScreen
 import com.tdcostmanager.app.ui.project.ProjectViewModel
+import com.tdcostmanager.app.ui.quote.QuoteCalculatorScreen
+import com.tdcostmanager.app.ui.quote.QuoteDetailScreen
+import com.tdcostmanager.app.ui.quote.QuoteListScreen
+import com.tdcostmanager.app.ui.quote.QuoteViewModel
 import com.tdcostmanager.app.ui.tool.ToolDetailScreen
 import com.tdcostmanager.app.ui.tool.ToolFormScreen
 import com.tdcostmanager.app.ui.tool.ToolListScreen
@@ -63,6 +67,15 @@ sealed class Screen(val route: String) {
     }
     data object ToolForm : Screen("tool_form?id={id}") {
         fun createRoute(id: Long? = null) = if (id != null) "tool_form?id=$id" else "tool_form"
+    }
+    data object QuoteList : Screen("project_quotes/{projectId}") {
+        fun createRoute(projectId: Long) = "project_quotes/$projectId"
+    }
+    data object QuoteCalculator : Screen("quote_calculator/{projectId}") {
+        fun createRoute(projectId: Long) = "quote_calculator/$projectId"
+    }
+    data object QuoteDetail : Screen("project_quotes/{projectId}/detail/{quoteId}") {
+        fun createRoute(projectId: Long, quoteId: Long) = "project_quotes/$projectId/detail/$quoteId"
     }
 }
 
@@ -215,7 +228,9 @@ fun NavGraph(
                 id = id,
                 viewModel = projectViewModel,
                 onNavigateBack = { navController.popBackStack() },
-                onEditClick = { projectId -> navController.navigate(Screen.ProjectForm.createRoute(projectId)) }
+                onEditClick = { projectId -> navController.navigate(Screen.ProjectForm.createRoute(projectId)) },
+                onNavigateToQuotes = { projectId -> navController.navigate(Screen.QuoteList.createRoute(projectId)) },
+                onNavigateToCalculator = { projectId -> navController.navigate(Screen.QuoteCalculator.createRoute(projectId)) }
             )
         }
         composable(
@@ -227,6 +242,52 @@ fun NavGraph(
             ProjectFormScreen(
                 id = id,
                 viewModel = projectViewModel,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(
+            route = Screen.QuoteList.route,
+            arguments = listOf(navArgument("projectId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val projectId = backStackEntry.arguments?.getLong("projectId") ?: 0L
+            val quoteViewModel: QuoteViewModel = viewModel(factory = factory)
+            QuoteListScreen(
+                projectId = projectId,
+                viewModel = quoteViewModel,
+                onQuoteClick = { quoteId -> navController.navigate(Screen.QuoteDetail.createRoute(projectId, quoteId)) },
+                onCreateQuote = { navController.navigate(Screen.QuoteCalculator.createRoute(projectId)) },
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(
+            route = Screen.QuoteCalculator.route,
+            arguments = listOf(navArgument("projectId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val projectId = backStackEntry.arguments?.getLong("projectId") ?: 0L
+            val quoteViewModel: QuoteViewModel = viewModel(factory = factory)
+            QuoteCalculatorScreen(
+                projectId = projectId,
+                viewModel = quoteViewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onQuoteCreated = { quoteId -> navController.navigate(Screen.QuoteDetail.createRoute(projectId, quoteId)) {
+                    popUpTo(Screen.QuoteList.createRoute(projectId))
+                } }
+            )
+        }
+        composable(
+            route = Screen.QuoteDetail.route,
+            arguments = listOf(
+                navArgument("projectId") { type = NavType.LongType },
+                navArgument("quoteId") { type = NavType.LongType }
+            )
+        ) { backStackEntry ->
+            val projectId = backStackEntry.arguments?.getLong("projectId") ?: 0L
+            val quoteId = backStackEntry.arguments?.getLong("quoteId") ?: 0L
+            val quoteViewModel: QuoteViewModel = viewModel(factory = factory)
+            QuoteDetailScreen(
+                projectId = projectId,
+                quoteId = quoteId,
+                viewModel = quoteViewModel,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

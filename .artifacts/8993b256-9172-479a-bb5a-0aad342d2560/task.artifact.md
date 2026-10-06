@@ -1,8 +1,8 @@
-# Tareas - Issue #30: Gestión de Tools en Backend y Android
+# Tareas - Issue #31: Android — Cálculo de Costes y Gestión de Quotes
 
-- [ ] `[ ]` Paso 1: Crear DTOs de Tools en el backend (`ToolCreateRequest`, `ToolUpdateRequest`, `ToolResponse`)
-- [ ] `[ ]` Paso 2: Crear `ToolService.java` y `ToolController.java` en el backend
-- [ ] `[ ]` Paso 3: Crear DTOs (`ToolDto.kt`) y `ToolApi.kt` en Android
-- [ ] `[ ]` Paso 4: Crear `ToolRepository.kt` y `ToolViewModel.kt` en Android
-- [ ] `[ ]` Paso 5: Crear pantallas Compose (`ToolListScreen`, `ToolDetailScreen`, `ToolFormScreen`) y actualizar navegación
-- [ ] `[ ]` Paso 6: Verificar compilación y tests del backend (`mvnw clean verify`)
+- [ ] `[ ]` Paso 1: Crear DTOs de Quotes (`QuoteDto.kt`) en Android
+- [ ] `[ ]` Paso 2: Crear `QuoteApi.kt` y `QuoteRepository.kt` en Android
+- [ ] `[ ]` Paso 3: Crear `QuoteViewModel.kt` en Android
+- [ ] `[ ]` Paso 4: Crear pantallas Compose (`QuoteCalculatorScreen`, `QuoteListScreen`, `QuoteDetailScreen`)
+- [ ] `[ ]` Paso 5: Actualizar `NetworkConfig.kt`, `ViewModelFactory.kt`, `NavGraph.kt` y `ProjectDetailScreen.kt`
+- [ ] `[ ]` Paso 6: Verificar compilación correcta en Android
