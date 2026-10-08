@@ -1,11 +1,11 @@
-# Plan de Implementación (Revisado) — Issue #31: Android — Cálculo de Costes y Gestión de Quotes
+# Plan de Implementación — Issue #35: Refinamiento UX/UI Base y Mensajes de Error Amigables en Android
 
-Este plan detalla los pasos para completar la integración del motor de cálculo y la gestión de presupuestos (`Quotes`) en el cliente Android, respetando estrictamente que el backend es la fuente de verdad del cálculo económico.
+Este plan detalla los pasos para implementar el refinamiento visual en Android (Material 3) y la centralización de mensajes de error amigables para el usuario (mapeando códigos HTTP como 409 a "Este usuario ya existe", 401 a "Correo o contraseña incorrectos", etc.).
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **Cálculo Backend-Driven:** Android no duplicará ninguna fórmula financiera. El flujo enviará los parámetros económicos (`marginPercentage`, `safetyPercentage`, `calculationDateTime`) al endpoint `POST /api/v1/projects/{projectId}/quotes`, donde el backend invocará `CostCalculator` y persistirá la `Quote` resultante.
+> **Traducción de Errores y UI:** `NetworkError.kt` centralizará la conversión de excepciones y códigos HTTP a mensajes limpios y comprensibles, eliminando códigos técnicos (como HTTP 409) de la interfaz de usuario en `LoginScreen`, `RegisterScreen` y `ProjectListScreen`.
 
 ## Open Questions
 
@@ -15,34 +15,21 @@ Este plan detalla los pasos para completar la integración del motor de cálculo
 
 ### Android Client
 
-#### [NEW] [QuoteDto.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/data/remote/dto/quote/QuoteDto.kt)
-- DTOs serializables adaptados exactamente a los contratos del backend (`QuoteResponse`, `QuoteCreateRequest`, `QuoteStatus`).
+#### [MODIFY] [NetworkError.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/domain/util/NetworkError.kt)
+- Centralizar mapeo de códigos HTTP (400, 401, 403, 404, 409, 5xx) a mensajes amigables en español.
 
-#### [NEW] [QuoteApi.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/data/remote/api/QuoteApi.kt)
-- Interfaz Retrofit para endpoints de Quotes bajo `/api/v1/projects/{projectId}/quotes`.
+#### [MODIFY] [LoginScreen.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/ui/auth/LoginScreen.kt)
+#### [MODIFY] [RegisterScreen.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/ui/auth/RegisterScreen.kt)
+- Integrar mensajes amigables y pulir espaciado/jerarquía visual en Material 3.
 
-#### [NEW] [QuoteRepository.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/data/repository/QuoteRepository.kt)
-- Repositorio Android para abstracción de red de Quotes.
-
-#### [NEW] [QuoteViewModel.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/ui/quote/QuoteViewModel.kt)
-- ViewModel reactivo para estado de cálculo y listado/detalle de Quotes (sin lógica financiera duplicada).
-
-#### [NEW] UI Screens (`QuoteCalculatorScreen.kt`, `QuoteListScreen.kt`, `QuoteDetailScreen.kt`)
-- Pantallas Jetpack Compose para configurar márgenes, calcular/generar presupuesto, listar y consultar presupuestos.
-
-#### [MODIFY] [NavGraph.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/ui/navigation/NavGraph.kt)
-#### [MODIFY] [ViewModelFactory.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/ui/ViewModelFactory.kt)
-#### [MODIFY] [ProjectDetailScreen.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/ui/project/ProjectDetailScreen.kt)
-- Integración de navegación, factoría de ViewModels y botones de acceso en el detalle de proyectos.
+#### [MODIFY] [ProjectListScreen.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/ui/project/ProjectListScreen.kt)
+- Refinar tarjetas de proyecto, tipografía y distribución visual.
 
 ## Verification Plan
 
 ### Automated Tests & Verification
-1. Verificación de DTOs contra contratos backend.
-2. Compilación correcta del proyecto Android.
-3. Verificación funcional de:
-   - Creación de Quote (backend-driven).
-   - Listado de Quotes por proyecto.
-   - Detalle de Quote.
-   - Estados de carga, éxito y error en UI.
-   - Autenticación JWT y navegación integrada.
+1. Compilar proyecto Android (`./gradlew assembleDebug` o desde Android Studio).
+2. Verificación en emulador:
+   - Registro con correo existente → mostrar "Este usuario ya existe".
+   - Login con credenciales incorrectas → mostrar "Correo o contraseña incorrectos".
+   - Comprobación visual de pantallas refinadas.

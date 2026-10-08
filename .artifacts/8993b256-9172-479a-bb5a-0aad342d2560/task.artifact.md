@@ -1,8 +1,6 @@
-# Tareas - Issue #31: Android — Cálculo de Costes y Gestión de Quotes
+# Tareas - Refinamiento UX/UI y Errores Amigables
 
-- [ ] `[ ]` Paso 1: Crear DTOs de Quotes (`QuoteDto.kt`) en Android
-- [ ] `[ ]` Paso 2: Crear `QuoteApi.kt` y `QuoteRepository.kt` en Android
-- [ ] `[ ]` Paso 3: Crear `QuoteViewModel.kt` en Android
-- [ ] `[ ]` Paso 4: Crear pantallas Compose (`QuoteCalculatorScreen`, `QuoteListScreen`, `QuoteDetailScreen`)
-- [ ] `[ ]` Paso 5: Actualizar `NetworkConfig.kt`, `ViewModelFactory.kt`, `NavGraph.kt` y `ProjectDetailScreen.kt`
-- [ ] `[ ]` Paso 6: Verificar compilación correcta en Android
+- [ ] `[ ]` Paso 1: Mejorar la traducción de errores HTTP en `NetworkError.kt` (409 -> Usuario ya existe, etc.)
+- [ ] `[ ]` Paso 2: Actualizar `LoginScreen.kt` y `RegisterScreen.kt` para mostrar mensajes legibles y pulir diseño
+- [ ] `[ ]` Paso 3: Mejorar tarjetas y distribución en `ProjectListScreen.kt`
+- [ ] `[ ]` Paso 4: Verificar compilación en Android

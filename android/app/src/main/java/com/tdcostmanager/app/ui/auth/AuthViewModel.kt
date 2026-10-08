@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.tdcostmanager.app.core.session.SessionEvent
 import com.tdcostmanager.app.core.session.SessionEventBus
 import com.tdcostmanager.app.data.repository.AuthRepository
+import com.tdcostmanager.app.domain.util.toFriendlyMessage
+import com.tdcostmanager.app.domain.util.toNetworkError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,7 +48,8 @@ class AuthViewModel(
                     _uiState.value = AuthUiState.Success
                 }
                 .onFailure { error ->
-                    _uiState.value = AuthUiState.Error(error.localizedMessage ?: "Error en el registro")
+                    val friendlyMsg = error.toNetworkError().toFriendlyMessage()
+                    _uiState.value = AuthUiState.Error(friendlyMsg)
                 }
         }
     }
@@ -60,7 +63,8 @@ class AuthViewModel(
                     _uiState.value = AuthUiState.Success
                 }
                 .onFailure { error ->
-                    _uiState.value = AuthUiState.Error(error.localizedMessage ?: "Credenciales inválidas")
+                    val friendlyMsg = error.toNetworkError().toFriendlyMessage()
+                    _uiState.value = AuthUiState.Error(friendlyMsg)
                 }
         }
     }
