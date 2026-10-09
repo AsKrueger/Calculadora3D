@@ -11,6 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -38,7 +40,6 @@ fun RegisterScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
-    var selectedAccountType by remember { mutableStateOf(0) } // 0: Taller/Maker, 1: Empresa/Fábrica
     var selectedSpecialty by remember { mutableStateOf("FDM Industrial") }
     var acceptedTerms by remember { mutableStateOf(true) }
 
@@ -67,21 +68,9 @@ fun RegisterScreen(
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = null, tint = primaryColor, modifier = Modifier.size(16.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = primaryColor, modifier = Modifier.size(16.dp))
                         Text(text = "Volver al Login", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), color = primaryColor)
                     }
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = Color(0xFFE8DEF8)
-                ) {
-                    Text(
-                        text = "V2.4 ENTERPRISE",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = primaryColor,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                    )
                 }
             }
 
@@ -105,11 +94,6 @@ fun RegisterScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF49454F)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Icon(Icons.Default.Cloud, contentDescription = null, tint = primaryColor, modifier = Modifier.size(14.dp))
-                        Text(text = "Sincronización paramétrica en tiempo real", style = MaterialTheme.typography.labelSmall, color = primaryColor)
-                    }
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -155,33 +139,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Account Type Selector Tabs
-            Surface(
-                shape = RoundedCornerShape(24.dp),
-                color = Color(0xFFE7E0EC),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    TabButton(
-                        text = "Taller / Maker",
-                        selected = selectedAccountType == 0,
-                        modifier = Modifier.weight(1f),
-                        onClick = { selectedAccountType = 0 }
-                    )
-                    TabButton(
-                        text = "Empresa / Fábrica",
-                        selected = selectedAccountType == 1,
-                        modifier = Modifier.weight(1f),
-                        onClick = { selectedAccountType = 1 }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
             // Main Form Card
             Card(
                 shape = RoundedCornerShape(24.dp),
@@ -198,7 +155,7 @@ fun RegisterScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "Nombre del Taller o Empresa", style = MaterialTheme.typography.labelMedium, color = primaryColor)
+                        Text(text = "Nombre del Taller / Maker", style = MaterialTheme.typography.labelMedium, color = primaryColor)
                         Text(text = "Requerido", style = MaterialTheme.typography.labelSmall, color = Color(0xFF49454F))
                     }
                     Spacer(modifier = Modifier.height(6.dp))
@@ -220,23 +177,20 @@ fun RegisterScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Professional Email
+                    // Email
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "Correo Electrónico Profesional", style = MaterialTheme.typography.labelMedium, color = primaryColor)
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(12.dp))
-                            Text(text = "Verificable", style = MaterialTheme.typography.labelSmall, color = Color(0xFF10B981))
-                        }
+                        Text(text = "Correo Electrónico", style = MaterialTheme.typography.labelMedium, color = primaryColor)
+                        Text(text = "Requerido", style = MaterialTheme.typography.labelSmall, color = Color(0xFF49454F))
                     }
                     Spacer(modifier = Modifier.height(6.dp))
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        placeholder = { Text("alonsoamadorsanchez@gmail.com") },
+                        placeholder = { Text("usuario@ejemplo.com") },
                         leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color(0xFF49454F)) },
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth(),
@@ -426,51 +380,11 @@ fun RegisterScreen(
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                                     color = Color.White
                                 )
-                                Icon(Icons.Default.ArrowForward, contentDescription = null, tint = Color.White)
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.White)
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // Divider
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE7E0EC))
-                        Text(
-                            text = "  O REGÍSTRATE CON  ",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF49454F)
-                        )
-                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE7E0EC))
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Social buttons
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = {},
-                            shape = RoundedCornerShape(16.dp),
-                            border = ButtonDefaults.outlinedButtonBorder.copy(brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFE7E0EC))),
-                            modifier = Modifier.weight(1f).height(48.dp)
-                        ) {
-                            Text(text = "Workspace", color = Color(0xFF1D1B20), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
-                        }
-                        OutlinedButton(
-                            onClick = {},
-                            shape = RoundedCornerShape(16.dp),
-                            border = ButtonDefaults.outlinedButtonBorder.copy(brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFE7E0EC))),
-                            modifier = Modifier.weight(1f).height(48.dp)
-                        ) {
-                            Text(text = "GitHub", color = Color(0xFF1D1B20), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
-                        }
-                    }
                 }
             }
 
@@ -499,7 +413,7 @@ fun RegisterScreen(
                 ) {
                     Icon(Icons.Default.Security, contentDescription = null, tint = Color(0xFF49454F), modifier = Modifier.size(14.dp))
                     Text(
-                        text = "Cifrado de credenciales BCrypt • AWS SSM Parameter Store",
+                        text = "Almacenamiento Seguro AES-256 (EncryptedSharedPreferences) • JWT Auth",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color(0xFF49454F)
                     )

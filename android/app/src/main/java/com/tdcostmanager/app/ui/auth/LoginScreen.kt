@@ -6,9 +6,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -124,27 +124,6 @@ fun LoginScreenContent(
                 color = Color(0xFF49454F)
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Version Badge
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = Color(0xFFE8DEF8)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Icon(Icons.Default.Cloud, contentDescription = null, tint = primaryColor, modifier = Modifier.size(14.dp))
-                    Text(
-                        text = "v1.0.0 • API Cloud Connected",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-                        color = primaryColor
-                    )
-                }
-            }
-
             Spacer(modifier = Modifier.height(24.dp))
 
             // Segmented Tab Switcher ("Iniciar Sesión" / "Registrar Taller")
@@ -187,33 +166,16 @@ fun LoginScreenContent(
                 Column(
                     modifier = Modifier.padding(20.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Acceso al Taller",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = Color(0xFF1D1B20)
-                        )
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = Color(0xFFE8DEF8)
-                        ) {
-                            Text(
-                                text = "SEGURO",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                color = primaryColor,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
+                    Text(
+                        text = "Acceso al Taller",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color(0xFF1D1B20)
+                    )
 
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = "Introduce tus credenciales para sincronizar proyectos, consumo energético y tarifas horarias ESIOS.",
+                        text = "Introduce tus credenciales para acceder a la gestión del taller.",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF49454F)
                     )
@@ -227,10 +189,7 @@ fun LoginScreenContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(text = "Correo Electrónico", style = MaterialTheme.typography.labelMedium, color = primaryColor)
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(12.dp))
-                            Text(text = "Verificado", style = MaterialTheme.typography.labelSmall, color = Color(0xFF10B981))
-                        }
+                        Text(text = "Requerido", style = MaterialTheme.typography.labelSmall, color = Color(0xFF49454F))
                     }
                     Spacer(modifier = Modifier.height(6.dp))
                     OutlinedTextField(
@@ -316,87 +275,30 @@ fun LoginScreenContent(
                         )
                     }
 
-                    // Main Action Row ("Acceder al Panel" + Fingerprint Button)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    // Main Action Button ("Acceder al Panel")
+                    Button(
+                        onClick = onLoginClick,
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp),
+                        enabled = email.isNotBlank() && password.isNotBlank() && uiState !is AuthUiState.Loading
                     ) {
-                        Button(
-                            onClick = onLoginClick,
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(54.dp),
-                            enabled = email.isNotBlank() && password.isNotBlank() && uiState !is AuthUiState.Loading
-                        ) {
-                            if (uiState is AuthUiState.Loading) {
-                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                            } else {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(
-                                        text = "Acceder al Panel",
-                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                                        color = Color.White
-                                    )
-                                    Icon(Icons.Default.ArrowForward, contentDescription = null, tint = Color.White)
-                                }
+                        if (uiState is AuthUiState.Loading) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                        } else {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Acceder al Panel",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                                    color = Color.White
+                                )
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.White)
                             }
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = Color(0xFFE8DEF8),
-                            modifier = Modifier.size(54.dp)
-                        ) {
-                            IconButton(onClick = {}) {
-                                Icon(Icons.Default.Fingerprint, contentDescription = null, tint = primaryColor)
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // Divider "O continúa con"
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE7E0EC))
-                        Text(
-                            text = "  O continúa con  ",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF49454F)
-                        )
-                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE7E0EC))
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Social / Workspace buttons
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = {},
-                            shape = RoundedCornerShape(16.dp),
-                            border = ButtonDefaults.outlinedButtonBorder.copy(brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFE7E0EC))),
-                            modifier = Modifier.weight(1f).height(48.dp)
-                        ) {
-                            Text(text = "Workspace", color = Color(0xFF1D1B20), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
-                        }
-                        OutlinedButton(
-                            onClick = {},
-                            shape = RoundedCornerShape(16.dp),
-                            border = ButtonDefaults.outlinedButtonBorder.copy(brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFE7E0EC))),
-                            modifier = Modifier.weight(1f).height(48.dp)
-                        ) {
-                            Text(text = "GitHub", color = Color(0xFF1D1B20), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
                         }
                     }
                 }
@@ -416,7 +318,7 @@ fun LoginScreenContent(
                 ) {
                     Icon(Icons.Default.Security, contentDescription = null, tint = Color(0xFF49454F), modifier = Modifier.size(14.dp))
                     Text(
-                        text = "JWT Stateless • AES-256 • AWS Parameter Store",
+                        text = "Almacenamiento Seguro AES-256 • Conexión TLS / JWT",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color(0xFF49454F)
                     )
@@ -474,7 +376,7 @@ fun TabButton(
 fun LoginScreenPreview() {
     MaterialTheme {
         LoginScreenContent(
-            email = "alonsoamadorsanchez@gmail.com",
+            email = "admin@empresa.com",
             onEmailChange = {},
             password = "password123",
             onPasswordChange = {},
