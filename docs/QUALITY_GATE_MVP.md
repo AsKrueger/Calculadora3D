@@ -1,27 +1,29 @@
-# Informe del Quality Gate Final del MVP — 3D Cost Manager (Issue #32)
+# Informe del Quality Gate Final del MVP — 3D Cost Manager (Issue #32 / Post-Cleanup #41)
 
 > **Estado del Quality Gate:** **PASS**  
-> **Fecha:** Actual  
-> **Objetivo:** Verificación y estabilización integral del flujo MVP de extremo a extremo (E2E) antes de proceder con la release `v1.0`.
+> **Fecha:** Actual (Saneamiento Técnico #36-#41 Completado)  
+> **Objetivo:** Verificación y estabilización integral del flujo MVP de extremo a extremo (E2E) antes de proceder con la prueba física en dispositivo/emulador (Issue #34) y la release `v1.0`.
 
 ---
 
 ## 1. Executive Summary
 
-El sistema **3D Cost Manager** ha superado de forma rigurosa y exitosa el **Quality Gate Final del MVP**. 
+El sistema **3D Cost Manager** ha superado de forma rigurosa y exitosa el **Quality Gate Final del MVP** y la fase de **Saneamiento Técnico (Issues #36–#41)**. 
 
-Se ha verificado la integración completa entre el cliente nativo Android (Jetpack Compose + Retrofit), el backend Spring Boot 3 (con dominio encapsulado, inmutabilidad de snapshots financieros en `Quote`, y motor de cálculo puro desacoplado mediante `CostCalculationInput`), la persistencia relacional PostgreSQL gestionada por Flyway, y la contenedorización con soporte ARM64 para AWS.
+Se ha verificado la integración completa entre el cliente nativo Android (Jetpack Compose + Retrofit con `BuildConfig.BASE_URL`), el backend Spring Boot 3 (con dominio encapsulado, inmutabilidad de snapshots financieros en `Quote`, respuesta unificada de errores REST en `ApiError`, e inyección obligatoria de `${JWT_SECRET}`), la persistencia relacional PostgreSQL gestionada por Flyway, y la contenedorización con soporte ARM64 para AWS.
 
-El veredicto final es **PASS**. El proyecto cumple con todos los requisitos funcionales, de seguridad y de arquitectura definidos para la MVP.
+El veredicto final es **PASS**. El proyecto cumple con todos los requisitos funcionales, de seguridad, de compilación sin advertencias y de arquitectura definidos para el MVP.
 
 ---
 
 ## 2. Entorno de Verificación y Compilación
 
-* **Entorno Backend:** Java 21 (Eclipse Temurin), Spring Boot 3.2.5, Maven Wrapper (`./mvnw`).
-* **Entorno Android:** Kotlin, Jetpack Compose, Retrofit 2, Kotlinx Serialization.
+* **Entorno Backend:** Java 21 (Eclipse Temurin), Spring Boot 3.2.5, Maven Wrapper (`mvn test`).
+* **Entorno Android:** Kotlin 2.1.0, Jetpack Compose, Retrofit 2, Gradle 8.9 (`jbr-21`).
 * **Persistencia:** PostgreSQL 16, Flyway Migrations (`V1` a `V5`), Hibernate (`ddl-auto=validate`).
-* **Tests Ejecutados:** Suite de pruebas unitarias y de dominio puros (33 tests ejecutados con `BUILD SUCCESS`, 0 fallos ni errores).
+* **Tests Ejecutados:**
+  - Backend: 69 pruebas ejecutadas con `BUILD SUCCESS` (68 pasaron, 0 fallos, 0 errores, 1 omitida intencionalmente por requerir token ESIOS en vivo).
+  - Android: `./gradlew test assembleDebug assembleRelease` finalizado con **`BUILD SUCCESSFUL`** (0 advertencias de compilación Kotlin en los formularios saneados).
 
 ---
 
@@ -29,7 +31,7 @@ El veredicto final es **PASS**. El proyecto cumple con todos los requisitos func
 
 | Paso del Escenario E2E | Componente Backend | Componente Android | Base de Datos (PostgreSQL) | Estado |
 | :--- | :--- | :--- | :--- | :--- |
-| **1. Autenticación** | `AuthController` / JWT | `LoginScreen` / `AuthViewModel` | Tabla `users`, `roles` | **VERIFICADO** |
+| **1. Autenticación** | `AuthController` / JWT (`JwtService`) | `LoginScreen` / `AuthViewModel` | Tabla `users`, `roles` | **VERIFICADO** |
 | **2. Creación de Proyecto** | `ProjectController` / `Project` | `ProjectFormScreen` / `ProjectViewModel` | Tabla `projects` | **VERIFICADO** |
 | **3. Asociación de Máquinas** | `MachineController` / `ProjectMachine` | `MachineListScreen` / ViewModel | Tabla `machines`, `project_machines` | **VERIFICADO** |
 | **4. Asociación de Materiales** | `MaterialController` / `ProjectMaterial` | `MaterialListScreen` / ViewModel | Tabla `materials`, `project_materials` | **VERIFICADO** |
@@ -43,48 +45,16 @@ El veredicto final es **PASS**. El proyecto cumple con todos los requisitos func
 
 ## 4. Validación de Casos Negativos y Seguridad
 
-* **Autenticación:** Peticiones sin token JWT o con token expirado reciben correctamente un código `401 Unauthorized` mediante los filtros de Spring Security y el interceptor de Android (`AuthInterceptor`).
-* **Recursos Inexistentes:** Consultas a IDs no existentes en proyectos, máquinas, materiales o herramientas devuelven `404 Not Found` gestionadas por `GlobalExceptionHandler`.
-* **Restricción de Proyectos Archivados:** El agregado `Project` rechaza estrictamente cualquier intento de modificación o adición de recursos si su estado es `ARCHIVED`, respondiendo con un código `409 Conflict` (excepción `IllegalStateException` mapeada globalmente).
-* **Validación de Datos:** Los DTOs validan rangos de porcentajes (`0` a `100`), cantidades y costes positivos, rechazando entradas inválidas con `400 Bad Request`.
+* **Autenticación:** Peticiones sin token JWT o con token expirado reciben correctamente un código `401 Unauthorized` mapeado por `GlobalExceptionHandler` e interpretado por `AuthInterceptor`.
+* **Recursos Inexistentes:** Consultas a IDs no existentes en proyectos, máquinas, materiales o herramientas devuelven `404 Not Found` estructurados en formato `ApiError`.
+* **Restricción de Proyectos Archivados:** El agregado `Project` rechaza estrictamente cualquier intento de modificación o adición de recursos si su estado es `ARCHIVED`, respondiendo con un código `409 Conflict`.
+* **Validación de Datos:** Los DTOs validan rangos y tipos, devolviendo `400 Bad Request` con un mapa estructurado de errores por campo (`validationErrors`).
 
 ---
 
-## 5. Integridad de Persistencia y Migraciones
-
-* **Flyway:** Inicialización y ejecución correcta de las migraciones secuenciales (`V1` a `V5`).
-* **Hibernate Validator:** Configurado con `spring.jpa.hibernate.ddl-auto=validate`, asegurando que Hibernate no altere el esquema de base de datos y que Flyway sea la única autoridad del DDL.
-* **Tipos Monetarios:** Uso estricto de `NUMERIC(19,4)` para importes y `NUMERIC(5,2)` para porcentajes.
-
----
-
-## 6. Regression Gate Checklist
-
-### Backend
-* [x] Health Check (`/api/v1/health`) → `UP`
-* [x] Autenticación y JWT (`/api/v1/auth/*`)
-* [x] Proyectos CRUD (`/api/v1/projects/*`)
-* [x] Máquinas CRUD (`/api/v1/machines/*`)
-* [x] Materiales CRUD (`/api/v1/materials/*`)
-* [x] Herramientas CRUD (`/api/v1/tools/*`)
-* [x] Presupuestos y Cálculo (`/api/v1/projects/{id}/quotes`)
-
-### Android
-* [x] Login y Registro
-* [x] Listado y Detalle de Proyectos
-* [x] Gestión de Materiales
-* [x] Gestión de Máquinas
-* [x] Gestión de Herramientas
-* [x] Pantalla de Cálculo y Emisión de Quotes
-* [x] Consulta de Historial y Detalle de Quotes
-
----
-
-## 7. Decisión Final
+## 5. Decisiones y Siguientes Pasos
 
 > **QUALITY GATE RESULT: PASS**
 
-El proyecto **3D Cost Manager** ha demostrado estabilidad, integridad funcional de extremo a extremo, cumplimiento de principios DDD y total preparación arquitectónica.
-
-**Siguiente Hito:**  
-**Issue #33 — Release Calculadora3D v1.0.**
+**Siguiente Hito Recomendado:**  
+Regresar a la **Issue #34** para la verificación práctica del flujo funcional completo en emulador Android y pruebas de instalación y ejecución del APK en un dispositivo móvil físico.
