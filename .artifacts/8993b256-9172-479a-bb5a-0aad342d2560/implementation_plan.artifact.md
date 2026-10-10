@@ -1,11 +1,11 @@
-# Plan de Implementación — Issue #30: Gestión de Tools en Backend y Android
+# Plan de Implementación — Issue #35: Refinamiento UX/UI Base y Mensajes de Error Amigables en Android
 
-Este plan detalla los pasos para completar la gestión de **Tools (Herramientas)** tanto en el backend (creando DTOs, Service y Controller faltantes) como en el cliente Android (`ToolApi`, `ToolRepository`, `ToolViewModel` y pantallas Jetpack Compose).
+Este plan detalla los pasos para implementar el refinamiento visual en Android (Material 3) y la centralización de mensajes de error amigables para el usuario (mapeando códigos HTTP como 409 a "Este usuario ya existe", 401 a "Correo o contraseña incorrectos", etc.).
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **Completitud del Backend:** Aunque la entidad `Tool` y el repositorio existían, faltaban los DTOs, el `ToolService` y el `ToolController`. Esta issue implementará la API REST completa para Tools antes de conectar el cliente Android.
+> **Traducción de Errores y UI:** `NetworkError.kt` centralizará la conversión de excepciones y códigos HTTP a mensajes limpios y comprensibles, eliminando códigos técnicos (como HTTP 409) de la interfaz de usuario en `LoginScreen`, `RegisterScreen` y `ProjectListScreen`.
 
 ## Open Questions
 
@@ -13,42 +13,23 @@ Este plan detalla los pasos para completar la gestión de **Tools (Herramientas)
 
 ## Proposed Changes
 
-### Backend
-
-#### [NEW] [ToolCreateRequest.java](file:///C:/Users/lovei/Documents/XD/Calculadora3D/backend/src/main/java/com/tdcostmanager/backend/application/dto/ToolCreateRequest.java)
-#### [NEW] [ToolUpdateRequest.java](file:///C:/Users/lovei/Documents/XD/Calculadora3D/backend/src/main/java/com/tdcostmanager/backend/application/dto/ToolUpdateRequest.java)
-#### [NEW] [ToolResponse.java](file:///C:/Users/lovei/Documents/XD/Calculadora3D/backend/src/main/java/com/tdcostmanager/backend/application/dto/ToolResponse.java)
-- DTOs de validación y transferencia para Tools.
-
-#### [NEW] [ToolService.java](file:///C:/Users/lovei/Documents/XD/Calculadora3D/backend/src/main/java/com/tdcostmanager/backend/application/service/ToolService.java)
-- Lógica transaccional para CRUD y desactivación de herramientas.
-
-#### [NEW] [ToolController.java](file:///C:/Users/lovei/Documents/XD/Calculadora3D/backend/src/main/java/com/tdcostmanager/backend/application/controller/ToolController.java)
-- Endpoints REST en `/api/v1/tools`.
-
 ### Android Client
 
-#### [NEW] [ToolDto.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/data/remote/dto/tool/ToolDto.kt)
-- DTOs serializables con Kotlinx Serialization para Tools.
+#### [MODIFY] [NetworkError.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/domain/util/NetworkError.kt)
+- Centralizar mapeo de códigos HTTP (400, 401, 403, 404, 409, 5xx) a mensajes amigables en español.
 
-#### [NEW] [ToolApi.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/data/remote/api/ToolApi.kt)
-- Interfaz Retrofit para llamadas a `/api/v1/tools`.
+#### [MODIFY] [LoginScreen.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/ui/auth/LoginScreen.kt)
+#### [MODIFY] [RegisterScreen.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/ui/auth/RegisterScreen.kt)
+- Integrar mensajes amigables y pulir espaciado/jerarquía visual en Material 3.
 
-#### [NEW] [ToolRepository.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/data/repository/ToolRepository.kt)
-- Repositorio Android para abstracción de red de Tools.
-
-#### [NEW] [ToolViewModel.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/ui/tool/ToolViewModel.kt)
-- ViewModel reactivo para estado de herramientas.
-
-#### [NEW] UI Screens (`ToolListScreen.kt`, `ToolDetailScreen.kt`, `ToolFormScreen.kt`)
-- Pantallas Jetpack Compose para listado, detalle y formulario de herramientas.
-
-#### [MODIFY] [NavGraph.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/ui/navigation/NavGraph.kt)
-#### [MODIFY] [ViewModelFactory.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/ui/ViewModelFactory.kt)
-- Integración de navegación y factoría de ViewModels para Tools.
+#### [MODIFY] [ProjectListScreen.kt](file:///C:/Users/lovei/Documents/XD/Calculadora3D/android/app/src/main/java/com/tdcostmanager/app/ui/project/ProjectListScreen.kt)
+- Refinar tarjetas de proyecto, tipografía y distribución visual.
 
 ## Verification Plan
 
-### Automated Tests
-1. Ejecutar tests unitarios y de integración en backend (`./mvnw.cmd clean verify`).
-2. Verificar compilación correcta del proyecto Android.
+### Automated Tests & Verification
+1. Compilar proyecto Android (`./gradlew assembleDebug` o desde Android Studio).
+2. Verificación en emulador:
+   - Registro con correo existente → mostrar "Este usuario ya existe".
+   - Login con credenciales incorrectas → mostrar "Correo o contraseña incorrectos".
+   - Comprobación visual de pantallas refinadas.

@@ -9,6 +9,7 @@ import com.tdcostmanager.app.data.remote.api.HealthApi
 import com.tdcostmanager.app.data.remote.api.MachineApi
 import com.tdcostmanager.app.data.remote.api.MaterialApi
 import com.tdcostmanager.app.data.remote.api.ProjectApi
+import com.tdcostmanager.app.data.remote.api.QuoteApi
 import com.tdcostmanager.app.data.remote.api.ToolApi
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -17,7 +18,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 
 object NetworkConfig {
-    private const val BASE_URL = "http://10.0.2.2:8080/"
+    private val baseUrl: String = BuildConfig.BASE_URL
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -46,7 +47,7 @@ object NetworkConfig {
             .build()
 
         retrofit = Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(baseUrl)
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
@@ -78,5 +79,9 @@ object NetworkConfig {
 
     val toolApi: ToolApi by lazy {
         getRetrofit().create(ToolApi::class.java)
+    }
+
+    val quoteApi: QuoteApi by lazy {
+        getRetrofit().create(QuoteApi::class.java)
     }
 }

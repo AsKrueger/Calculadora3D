@@ -22,7 +22,9 @@ fun ProjectDetailScreen(
     id: Long,
     viewModel: ProjectViewModel,
     onNavigateBack: () -> Unit,
-    onEditClick: (Long) -> Unit
+    onEditClick: (Long) -> Unit,
+    onNavigateToQuotes: (Long) -> Unit,
+    onNavigateToCalculator: (Long) -> Unit
 ) {
     val detailState by viewModel.projectDetailState.collectAsState()
     val operationState by viewModel.operationState.collectAsState()
@@ -91,6 +93,24 @@ fun ProjectDetailScreen(
                         Row(modifier = Modifier.fillMaxWidth()) {
                             InfoItem(label = "Horas Laborales", value = "${project.laborHours} h", modifier = Modifier.weight(1f))
                             InfoItem(label = "Coste/Hora", value = "${project.laborCostPerHour} €", modifier = Modifier.weight(1f))
+                        }
+
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        Button(
+                            onClick = { onNavigateToCalculator(project.id) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Calcular Costes y Generar Presupuesto")
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedButton(
+                            onClick = { onNavigateToQuotes(project.id) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Ver Presupuestos Emitidos")
                         }
                     }
                 }

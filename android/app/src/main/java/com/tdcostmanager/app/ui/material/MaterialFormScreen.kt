@@ -39,7 +39,7 @@ fun MaterialFormScreen(
     val isEdit = id != null
 
     LaunchedEffect(id) {
-        if (isEdit && id != null) viewModel.loadMaterialDetail(id)
+        if (id != null) viewModel.loadMaterialDetail(id)
     }
 
     LaunchedEffect(detailState) {
@@ -130,7 +130,7 @@ fun MaterialFormScreen(
                 onClick = {
                     val p = price.toDoubleOrNull() ?: 0.0
                     val q = quantity.toDoubleOrNull() ?: 0.0
-                    if (isEdit && id != null) {
+                    if (id != null) {
                         viewModel.updateMaterial(id, MaterialUpdateRequest(name, description, p, q, unit, category, active))
                     } else {
                         viewModel.createMaterial(MaterialCreateRequest(name, description, p, q, unit, category))

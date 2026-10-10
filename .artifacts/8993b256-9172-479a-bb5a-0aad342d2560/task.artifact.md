@@ -1,8 +1,6 @@
-# Tareas - Issue #30: Gestión de Tools en Backend y Android
+# Tareas - Refinamiento UX/UI y Errores Amigables
 
-- [ ] `[ ]` Paso 1: Crear DTOs de Tools en el backend (`ToolCreateRequest`, `ToolUpdateRequest`, `ToolResponse`)
-- [ ] `[ ]` Paso 2: Crear `ToolService.java` y `ToolController.java` en el backend
-- [ ] `[ ]` Paso 3: Crear DTOs (`ToolDto.kt`) y `ToolApi.kt` en Android
-- [ ] `[ ]` Paso 4: Crear `ToolRepository.kt` y `ToolViewModel.kt` en Android
-- [ ] `[ ]` Paso 5: Crear pantallas Compose (`ToolListScreen`, `ToolDetailScreen`, `ToolFormScreen`) y actualizar navegación
-- [ ] `[ ]` Paso 6: Verificar compilación y tests del backend (`mvnw clean verify`)
+- [ ] `[ ]` Paso 1: Mejorar la traducción de errores HTTP en `NetworkError.kt` (409 -> Usuario ya existe, etc.)
+- [ ] `[ ]` Paso 2: Actualizar `LoginScreen.kt` y `RegisterScreen.kt` para mostrar mensajes legibles y pulir diseño
+- [ ] `[ ]` Paso 3: Mejorar tarjetas y distribución en `ProjectListScreen.kt`
+- [ ] `[ ]` Paso 4: Verificar compilación en Android
