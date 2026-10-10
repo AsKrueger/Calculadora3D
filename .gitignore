@@ -1,13 +1,18 @@
 # Archivos de entorno / Credenciales
 .env
 
+# Heap Dumps y Diagnósticos
+*.hprof
+java_pid*.hprof
+
 # Android / Gradle
 .gradle/
 build/
+**/build/
+.kotlin/
 *.iml
 .idea/workspace.xml
 .idea/tasks.xml
-.idea/gradle.xml
 .idea/assetWizardSettings.xml
 .idea/dictionaries
 .idea/libraries/
@@ -18,10 +23,13 @@ local.properties
 *.aar
 *.bundle
 
-# Backend / Maven / Java
+# Backend / Maven / Java / Logs
 target/
+**/target/
 *.class
 *.log
+*_log.txt
+*_verification.txt
 *.ctxt
 .mtj.tmp/
 *.jar
@@ -31,8 +39,9 @@ target/
 *.zip
 *.tar.gz
 *.rar
-*.hprof
 
 # OS específicos
 .DS_Store
 Thumbs.db
+*.swp
+*~
