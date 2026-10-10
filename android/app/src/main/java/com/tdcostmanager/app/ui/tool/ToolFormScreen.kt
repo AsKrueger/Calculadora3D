@@ -36,7 +36,7 @@ fun ToolFormScreen(
     val isEdit = id != null
 
     LaunchedEffect(id) {
-        if (isEdit && id != null) viewModel.loadToolDetail(id)
+        if (id != null) viewModel.loadToolDetail(id)
     }
 
     LaunchedEffect(detailState) {
@@ -120,7 +120,7 @@ fun ToolFormScreen(
                     val mp = maintenancePercentage.toDoubleOrNull() ?: 0.0
                     val desc = description.ifBlank { null }
                     
-                    if (isEdit && id != null) {
+                    if (id != null) {
                         viewModel.updateTool(id, ToolUpdateRequest(name, desc, ac, eu, mp, active))
                     } else {
                         viewModel.createTool(ToolCreateRequest(name, desc, ac, eu, mp))

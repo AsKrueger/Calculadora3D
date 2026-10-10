@@ -18,7 +18,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 
 object NetworkConfig {
-    private const val BASE_URL = "http://10.0.2.2:8080/"
+    private val baseUrl: String = BuildConfig.BASE_URL
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -47,7 +47,7 @@ object NetworkConfig {
             .build()
 
         retrofit = Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(baseUrl)
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()

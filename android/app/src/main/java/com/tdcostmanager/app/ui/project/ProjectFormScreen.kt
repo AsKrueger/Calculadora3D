@@ -33,7 +33,7 @@ fun ProjectFormScreen(
     val isEdit = id != null
 
     LaunchedEffect(id) {
-        if (isEdit && id != null) {
+        if (id != null) {
             viewModel.loadProjectDetail(id)
         }
     }
@@ -124,7 +124,7 @@ fun ProjectFormScreen(
                 onClick = {
                     val hours = laborHours.toDoubleOrNull() ?: 0.0
                     val cost = laborCostPerHour.toDoubleOrNull() ?: 0.0
-                    if (isEdit && id != null) {
+                    if (id != null) {
                         viewModel.updateProject(id, ProjectUpdateRequest(name, description, status, hours, cost))
                     } else {
                         viewModel.createProject(name, description, hours, cost)

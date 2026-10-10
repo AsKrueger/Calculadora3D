@@ -36,7 +36,7 @@ fun MachineFormScreen(
     val isEdit = id != null
 
     LaunchedEffect(id) {
-        if (isEdit && id != null) viewModel.loadMachineDetail(id)
+        if (id != null) viewModel.loadMachineDetail(id)
     }
 
     LaunchedEffect(detailState) {
@@ -126,7 +126,7 @@ fun MachineFormScreen(
                     val pw = powerWatts.toDoubleOrNull() ?: 0.0
                     val mcph = maintenanceCostPerHour.toDoubleOrNull() ?: 0.0
                     
-                    if (isEdit && id != null) {
+                    if (id != null) {
                         viewModel.updateMachine(id, MachineUpdateRequest(name, ac, ulh, pw, mcph, active))
                     } else {
                         viewModel.createMachine(MachineCreateRequest(name, ac, ulh, pw, mcph))
