@@ -19,16 +19,17 @@ Cambios pequeños que cierran agujeros de configuración sin tocar el dominio.
 - [x] Tests unitarios de la validación del secreto.
 - [x] Arreglar el CI: `backend/mvnw` no tenía permiso de ejecución y el job fallaba siempre (exit 126).
 
-## Fase 2 — Separar los datos por usuario ⬜
+## Fase 2 — Separar los datos por usuario ✅
 
-El fallo más grave: hoy cualquier usuario registrado ve y modifica los datos de todos.
+El fallo más grave: cualquier usuario registrado veía y modificaba los datos de todos. Issue #42.
 
-- [ ] Migración `V6`: columna `owner_id` (FK a `users`) en materiales, máquinas, herramientas, proyectos y presupuestos, con índices.
-- [ ] Asignar los datos existentes a un usuario (o documentar la limpieza si son datos de prueba).
-- [ ] Obtener el usuario autenticado en los servicios y filtrar todas las consultas por `owner_id`.
-- [ ] Devolver 404 (no 403) al acceder a recursos de otro usuario, para no revelar que existen.
-- [ ] Impedir que un proyecto use materiales o máquinas de otro usuario.
-- [ ] Tests de integración con dos usuarios.
+- [x] Migración `V6__Add_Owner_To_Domain.sql`: columna `owner_id` (FK a `users`, `NOT NULL`) con índice en materiales, máquinas, herramientas y proyectos. Los presupuestos heredan el propietario a través de su proyecto.
+- [x] Datos existentes: se asignan al usuario más antiguo. Si hay datos pero ningún usuario, se crea `legacy-owner@localhost` deshabilitado (no puede iniciar sesión) para no perder información.
+- [x] `CurrentUserProvider` obtiene el usuario autenticado del `SecurityContext`; los servicios asignan el propietario al crear y filtran todas las lecturas, ediciones y borrados por `owner_id`. Nunca se acepta un propietario enviado por el cliente.
+- [x] Devolver 404 (no 403) al acceder a recursos de otro usuario, para no revelar que existen.
+- [x] Impedir que un proyecto use materiales, máquinas o herramientas de otro usuario (404).
+- [x] `GET /projects/{projectId}/quotes/{quoteId}` comprueba que el presupuesto pertenece a ese proyecto y al usuario.
+- [x] Tests de integración con dos usuarios y tokens JWT reales (`OwnershipIsolationIntegrationTest`).
 
 ## Fase 3 — Presupuestos que se puedan auditar ⬜
 

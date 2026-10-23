@@ -7,6 +7,7 @@ import com.tdcostmanager.backend.domain.model.Project;
 import com.tdcostmanager.backend.domain.model.ProjectStatus;
 import com.tdcostmanager.backend.domain.repository.ProjectRepository;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -35,9 +36,11 @@ class QuoteServiceIntegrationTest extends BaseIntegrationTest {
     private EsiosElectricityProvider esiosProvider;
 
     @Test
+    @WithMockUser(username = "owner@test.com")
     void shouldGenerateAndPersistQuoteIntegratingEsiosMock() {
         // 1. Arrange: Create a project
         Project project = new Project();
+        project.setOwner(createUser("owner@test.com"));
         project.updateDetails("Integration Project", null);
         project.updateStatus(ProjectStatus.DRAFT);
         project.updateLabor(BigDecimal.ONE, BigDecimal.TEN);

@@ -7,7 +7,9 @@ import com.tdcostmanager.backend.application.dto.ProjectMaterialRequest;
 import com.tdcostmanager.backend.domain.model.UnitType;
 import com.tdcostmanager.backend.domain.repository.ProjectRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
 import java.util.List;
@@ -22,7 +24,13 @@ class ProjectServiceIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private ProjectRepository projectRepository;
 
+    @BeforeEach
+    void createOwner() {
+        createUser("owner@test.com");
+    }
+
     @Test
+    @WithMockUser(username = "owner@test.com")
     void shouldRollbackProjectCreationWhenMachineIsNotFound() {
         // Arrange
         ProjectCreateRequest request = new ProjectCreateRequest(
