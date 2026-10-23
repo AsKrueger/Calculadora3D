@@ -6,6 +6,7 @@ import com.tdcostmanager.backend.application.dto.MaterialCreateRequest;
 import com.tdcostmanager.backend.application.dto.MaterialUpdateRequest;
 import com.tdcostmanager.backend.domain.model.MaterialCategory;
 import com.tdcostmanager.backend.domain.model.UnitType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -26,8 +27,13 @@ class MaterialControllerIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @BeforeEach
+    void createOwner() {
+        createUser("owner@test.com");
+    }
+
     @Test
-    @WithMockUser
+    @WithMockUser(username = "owner@test.com")
     void shouldPerformFullCrudOnMaterial() throws Exception {
         MaterialCreateRequest createRequest = new MaterialCreateRequest(
                 "PLA Premium",
@@ -87,7 +93,7 @@ class MaterialControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(username = "owner@test.com")
     void shouldReturn404WhenMaterialNotFound() throws Exception {
         mockMvc.perform(get("/api/v1/materials/999"))
                 .andExpect(status().isNotFound());

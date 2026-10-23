@@ -24,6 +24,7 @@ public class CatalogRepositoryTest extends BaseRepositoryTest {
     @Test
     void shouldPersistAndDeactivateMachine() {
         Machine machine = new Machine();
+        machine.setOwner(persistOwner());
         machine.setName("Ender 3 V2");
         machine.setAcquisitionCost(new BigDecimal("250.0000"));
         machine.setUsefulLifeHours(new BigDecimal("2000.0000"));
@@ -43,6 +44,7 @@ public class CatalogRepositoryTest extends BaseRepositoryTest {
     @Test
     void shouldPersistMaterialWithPrecision() {
         Material material = new Material();
+        material.setOwner(persistOwner());
         material.setName("PLA White");
         material.setDescription("High quality PLA");
         material.setPurchasePrice(new BigDecimal("22.5000"));
@@ -58,6 +60,7 @@ public class CatalogRepositoryTest extends BaseRepositoryTest {
     @Test
     void shouldPersistToolWithPercentage() {
         Tool tool = new Tool();
+        tool.setOwner(persistOwner());
         tool.setName("Airbrush");
         tool.setAcquisitionCost(new BigDecimal("85.0000"));
         tool.setEstimatedUses(new BigDecimal("100.0000"));

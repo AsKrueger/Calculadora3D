@@ -5,6 +5,7 @@ import com.tdcostmanager.backend.application.dto.MaterialResponse;
 import com.tdcostmanager.backend.application.dto.MaterialUpdateRequest;
 import com.tdcostmanager.backend.domain.model.Material;
 import com.tdcostmanager.backend.domain.repository.MaterialRepository;
+import com.tdcostmanager.backend.infrastructure.security.CurrentUserProvider;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,23 +18,23 @@ import java.util.stream.Collectors;
 public class MaterialService {
 
     private final MaterialRepository repository;
+    private final CurrentUserProvider currentUserProvider;
 
-    public MaterialService(MaterialRepository repository) {
+    public MaterialService(MaterialRepository repository, CurrentUserProvider currentUserProvider) {
         this.repository = repository;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @Transactional(readOnly = true)
     public List<MaterialResponse> findAll() {
-        return repository.findAll().stream()
+        return repository.findAllByOwnerId(currentUserProvider.getCurrentUserId()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public MaterialResponse findById(Long id) {
-        return repository.findById(id)
-                .map(this::mapToResponse)
-                .orElseThrow(() -> new EntityNotFoundException("Material not found with id: " + id));
+        return mapToResponse(findOwned(id));
     }
 
     public MaterialResponse create(MaterialCreateRequest request) {
@@ -45,13 +46,13 @@ public class MaterialService {
         material.setUnit(request.unit());
         material.setCategory(request.category());
         material.setActive(true);
+        material.setOwner(currentUserProvider.getCurrentUser());
 
         return mapToResponse(repository.save(material));
     }
 
     public MaterialResponse update(Long id, MaterialUpdateRequest request) {
-        Material material = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Material not found with id: " + id));
+        Material material = findOwned(id);
 
         material.setName(request.name());
         material.setDescription(request.description());
@@ -65,10 +66,15 @@ public class MaterialService {
     }
 
     public void deactivate(Long id) {
-        Material material = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Material not found with id: " + id));
+        Material material = findOwned(id);
         material.setActive(false);
         repository.save(material);
+    }
+
+    // Un recurso de otro usuario se trata como inexistente (404) para no revelar que existe
+    private Material findOwned(Long id) {
+        return repository.findByIdAndOwnerId(id, currentUserProvider.getCurrentUserId())
+                .orElseThrow(() -> new EntityNotFoundException("Material not found with id: " + id));
     }
 
     private MaterialResponse mapToResponse(Material material) {

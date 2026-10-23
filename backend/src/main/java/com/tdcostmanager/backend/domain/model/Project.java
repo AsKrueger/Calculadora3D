@@ -64,10 +64,18 @@ public class Project {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProjectTool> projectTools = new ArrayList<>();
 
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false, updatable = false)
+    private User owner;
+
     public Project() {}
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public User getOwner() { return owner; }
+    public void setOwner(User owner) { this.owner = owner; }
 
     public String getName() { return name; }
 

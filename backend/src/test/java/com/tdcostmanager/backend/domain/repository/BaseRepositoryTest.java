@@ -1,5 +1,7 @@
 package com.tdcostmanager.backend.domain.repository;
 
+import com.tdcostmanager.backend.domain.model.Role;
+import com.tdcostmanager.backend.domain.model.User;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
@@ -30,5 +32,14 @@ public abstract class BaseRepositoryTest {
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
         registry.add("spring.flyway.enabled", () -> "true");
+    }
+
+    protected User persistOwner() {
+        User owner = new User();
+        owner.setEmail("owner@test.com");
+        owner.setPasswordHash("not-used-in-tests");
+        owner.setRole(Role.USER);
+        owner.setEnabled(true);
+        return entityManager.persist(owner);
     }
 }

@@ -4,6 +4,7 @@ import com.tdcostmanager.backend.application.dto.QuoteCreateRequest;
 import com.tdcostmanager.backend.domain.model.Project;
 import com.tdcostmanager.backend.domain.model.ProjectStatus;
 import com.tdcostmanager.backend.domain.repository.ProjectRepository;
+import com.tdcostmanager.backend.infrastructure.security.CurrentUserProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,6 +24,9 @@ class QuoteServiceTest {
     @Mock
     private ProjectRepository projectRepository;
 
+    @Mock
+    private CurrentUserProvider currentUserProvider;
+
     @InjectMocks
     private QuoteService quoteService;
 
@@ -38,7 +42,9 @@ class QuoteServiceTest {
                 BigDecimal.TEN, BigDecimal.ONE, LocalDateTime.now()
         );
 
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(archivedProject));
+        Long ownerId = 7L;
+        when(currentUserProvider.getCurrentUserId()).thenReturn(ownerId);
+        when(projectRepository.findByIdAndOwnerId(projectId, ownerId)).thenReturn(Optional.of(archivedProject));
 
         assertThatThrownBy(() -> quoteService.generateQuote(projectId, request))
                 .isInstanceOf(IllegalStateException.class)
