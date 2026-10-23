@@ -6,7 +6,7 @@ Estado: ⬜ pendiente · 🟡 en curso · ✅ hecho
 
 ---
 
-## Fase 1 — Endurecer la configuración de seguridad ✅ (pendiente de CI)
+## Fase 1 — Endurecer la configuración de seguridad ✅
 
 Cambios pequeños que cierran agujeros de configuración sin tocar el dominio.
 
@@ -17,6 +17,7 @@ Cambios pequeños que cierran agujeros de configuración sin tocar el dominio.
 - [x] Desactivar `spring.jpa.show-sql` por defecto.
 - [x] Sacar `.artifacts/` y las carpetas de `.idea/` del repositorio y añadirlas a `.gitignore`.
 - [x] Tests unitarios de la validación del secreto.
+- [x] Arreglar el CI: `backend/mvnw` no tenía permiso de ejecución y el job fallaba siempre (exit 126).
 
 ## Fase 2 — Separar los datos por usuario ⬜
 
