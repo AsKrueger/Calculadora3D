@@ -37,7 +37,9 @@ class QuoteServiceIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldGenerateAndPersistQuoteIntegratingEsiosMock() {
         // 1. Arrange: Create a project
+        Long ownerId = authenticateAs("quote-owner@test.com").getId();
         Project project = new Project();
+        project.setOwnerId(ownerId);
         project.updateDetails("Integration Project", null);
         project.updateStatus(ProjectStatus.DRAFT);
         project.updateLabor(BigDecimal.ONE, BigDecimal.TEN);

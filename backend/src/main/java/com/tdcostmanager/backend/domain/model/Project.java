@@ -23,6 +23,9 @@ public class Project {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "owner_id", nullable = false, updatable = false)
+    private Long ownerId;
+
     @NotNull
     @Column(nullable = false)
     private String name;
@@ -68,6 +71,9 @@ public class Project {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public Long getOwnerId() { return ownerId; }
+    public void setOwnerId(Long ownerId) { this.ownerId = ownerId; }
 
     public String getName() { return name; }
 

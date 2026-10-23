@@ -4,6 +4,7 @@ import com.tdcostmanager.backend.application.dto.ProjectUpdateRequest;
 import com.tdcostmanager.backend.domain.model.Project;
 import com.tdcostmanager.backend.domain.model.ProjectStatus;
 import com.tdcostmanager.backend.domain.repository.ProjectRepository;
+import com.tdcostmanager.backend.infrastructure.security.CurrentUserProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,6 +23,9 @@ class ProjectServiceTest {
     @Mock
     private ProjectRepository projectRepository;
 
+    @Mock
+    private CurrentUserProvider currentUser;
+
     @InjectMocks
     private ProjectService projectService;
 
@@ -37,7 +41,8 @@ class ProjectServiceTest {
                 "Updated Name", "Desc", ProjectStatus.COMPLETED, BigDecimal.ONE, BigDecimal.TEN
         );
 
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(archivedProject));
+        when(currentUser.getCurrentUserId()).thenReturn(7L);
+        when(projectRepository.findByIdAndOwnerId(projectId, 7L)).thenReturn(Optional.of(archivedProject));
 
         assertThatThrownBy(() -> projectService.update(projectId, request))
                 .isInstanceOf(IllegalStateException.class)

@@ -4,6 +4,7 @@ import com.tdcostmanager.backend.application.dto.*;
 import com.tdcostmanager.backend.domain.model.*;
 import com.tdcostmanager.backend.domain.repository.*;
 import jakarta.persistence.EntityNotFoundException;
+import com.tdcostmanager.backend.infrastructure.security.CurrentUserProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,41 +18,46 @@ public class ProjectService {
     private final MaterialRepository materialRepository;
     private final MachineRepository machineRepository;
     private final ToolRepository toolRepository;
+    private final CurrentUserProvider currentUser;
 
     public ProjectService(ProjectRepository projectRepository,
                           MaterialRepository materialRepository,
                           MachineRepository machineRepository,
-                          ToolRepository toolRepository) {
+                          ToolRepository toolRepository,
+                          CurrentUserProvider currentUser) {
         this.projectRepository = projectRepository;
         this.materialRepository = materialRepository;
         this.machineRepository = machineRepository;
         this.toolRepository = toolRepository;
+        this.currentUser = currentUser;
     }
 
     @Transactional(readOnly = true)
     public List<ProjectResponse> findAll() {
-        return projectRepository.findAll().stream()
+        return projectRepository.findAllByOwnerId(currentUser.getCurrentUserId()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public ProjectResponse findById(Long id) {
-        return projectRepository.findById(id)
+        return projectRepository.findByIdAndOwnerId(id, currentUser.getCurrentUserId())
                 .map(this::mapToResponse)
                 .orElseThrow(() -> new EntityNotFoundException("Proyecto no encontrado con ID: " + id));
     }
 
     @Transactional
     public ProjectResponse create(ProjectCreateRequest request) {
+        Long ownerId = currentUser.getCurrentUserId();
         Project project = new Project();
+        project.setOwnerId(ownerId);
         project.updateDetails(request.name(), request.description());
         project.updateLabor(request.laborHours(), request.laborCostPerHour());
         project.updateStatus(ProjectStatus.DRAFT);
 
         if (request.materials() != null) {
             for (ProjectMaterialRequest req : request.materials()) {
-                Material material = materialRepository.findById(req.materialId())
+                Material material = materialRepository.findByIdAndOwnerId(req.materialId(), ownerId)
                         .orElseThrow(() -> new EntityNotFoundException("Material no encontrado: " + req.materialId()));
                 ProjectMaterial pm = new ProjectMaterial();
                 pm.setMaterial(material);
@@ -63,7 +69,7 @@ public class ProjectService {
 
         if (request.machines() != null) {
             for (ProjectMachineRequest req : request.machines()) {
-                Machine machine = machineRepository.findById(req.machineId())
+                Machine machine = machineRepository.findByIdAndOwnerId(req.machineId(), ownerId)
                         .orElseThrow(() -> new EntityNotFoundException("Máquina no encontrada: " + req.machineId()));
                 ProjectMachine pm = new ProjectMachine();
                 pm.setMachine(machine);
@@ -74,7 +80,7 @@ public class ProjectService {
 
         if (request.tools() != null) {
             for (ProjectToolRequest req : request.tools()) {
-                Tool tool = toolRepository.findById(req.toolId())
+                Tool tool = toolRepository.findByIdAndOwnerId(req.toolId(), ownerId)
                         .orElseThrow(() -> new EntityNotFoundException("Herramienta no encontrada: " + req.toolId()));
                 ProjectTool pt = new ProjectTool();
                 pt.setTool(tool);
@@ -89,7 +95,7 @@ public class ProjectService {
 
     @Transactional
     public ProjectResponse update(Long id, ProjectUpdateRequest request) {
-        Project project = projectRepository.findById(id)
+        Project project = projectRepository.findByIdAndOwnerId(id, currentUser.getCurrentUserId())
                 .orElseThrow(() -> new EntityNotFoundException("Proyecto no encontrado con ID: " + id));
 
         project.updateDetails(request.name(), request.description());
@@ -101,7 +107,7 @@ public class ProjectService {
 
     @Transactional
     public void delete(Long id) {
-        Project project = projectRepository.findById(id)
+        Project project = projectRepository.findByIdAndOwnerId(id, currentUser.getCurrentUserId())
                 .orElseThrow(() -> new EntityNotFoundException("Proyecto no encontrado con ID: " + id));
         
         project.archive();

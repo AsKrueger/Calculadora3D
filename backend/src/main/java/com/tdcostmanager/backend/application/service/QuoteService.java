@@ -13,6 +13,7 @@ import com.tdcostmanager.backend.domain.model.QuoteStatus;
 import com.tdcostmanager.backend.domain.repository.ProjectRepository;
 import com.tdcostmanager.backend.domain.repository.QuoteRepository;
 import jakarta.persistence.EntityNotFoundException;
+import com.tdcostmanager.backend.infrastructure.security.CurrentUserProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,18 +26,21 @@ public class QuoteService {
     private final QuoteRepository quoteRepository;
     private final ProjectRepository projectRepository;
     private final ElectricityPriceProvider electricityPriceProvider;
+    private final CurrentUserProvider currentUser;
 
     public QuoteService(QuoteRepository quoteRepository,
                         ProjectRepository projectRepository,
-                        ElectricityPriceProvider electricityPriceProvider) {
+                        ElectricityPriceProvider electricityPriceProvider,
+                        CurrentUserProvider currentUser) {
         this.quoteRepository = quoteRepository;
         this.projectRepository = projectRepository;
         this.electricityPriceProvider = electricityPriceProvider;
+        this.currentUser = currentUser;
     }
 
     @Transactional
     public QuoteResponse generateQuote(Long projectId, QuoteCreateRequest request) {
-        Project project = projectRepository.findById(projectId)
+        Project project = projectRepository.findByIdAndOwnerId(projectId, currentUser.getCurrentUserId())
                 .orElseThrow(() -> new EntityNotFoundException("Proyecto no encontrado: " + projectId));
 
         if (project.getStatus() == ProjectStatus.ARCHIVED) {
@@ -109,7 +113,7 @@ public class QuoteService {
 
     @Transactional(readOnly = true)
     public List<QuoteResponse> findByProjectId(Long projectId) {
-        if (!projectRepository.existsById(projectId)) {
+        if (!projectRepository.existsByIdAndOwnerId(projectId, currentUser.getCurrentUserId())) {
             throw new EntityNotFoundException("Proyecto no encontrado: " + projectId);
         }
         return quoteRepository.findByProjectId(projectId).stream()
@@ -119,7 +123,7 @@ public class QuoteService {
 
     @Transactional(readOnly = true)
     public QuoteResponse findById(Long quoteId) {
-        return quoteRepository.findById(quoteId)
+        return quoteRepository.findByIdAndProject_OwnerId(quoteId, currentUser.getCurrentUserId())
                 .map(this::mapToResponse)
                 .orElseThrow(() -> new EntityNotFoundException("Presupuesto no encontrado: " + quoteId));
     }

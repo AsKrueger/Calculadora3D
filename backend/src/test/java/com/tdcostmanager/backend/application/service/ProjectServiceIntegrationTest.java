@@ -25,6 +25,7 @@ class ProjectServiceIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldRollbackProjectCreationWhenMachineIsNotFound() {
         // Arrange
+        authenticateAs("rollback@test.com");
         ProjectCreateRequest request = new ProjectCreateRequest(
                 "Atomic Fail Project",
                 "This should not exist in DB",

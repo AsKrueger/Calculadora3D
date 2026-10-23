@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tdcostmanager.backend.BaseIntegrationTest;
 import com.tdcostmanager.backend.application.dto.MachineCreateRequest;
 import com.tdcostmanager.backend.application.dto.MachineUpdateRequest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -23,6 +24,11 @@ class MachineControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void authenticate() {
+        authenticateAs("catalog-owner@test.com");
+    }
 
     @Test
     @WithMockUser

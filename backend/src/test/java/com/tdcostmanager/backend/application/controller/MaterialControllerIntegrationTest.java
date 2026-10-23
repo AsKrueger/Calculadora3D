@@ -6,6 +6,7 @@ import com.tdcostmanager.backend.application.dto.MaterialCreateRequest;
 import com.tdcostmanager.backend.application.dto.MaterialUpdateRequest;
 import com.tdcostmanager.backend.domain.model.MaterialCategory;
 import com.tdcostmanager.backend.domain.model.UnitType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -25,6 +26,11 @@ class MaterialControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void authenticate() {
+        authenticateAs("catalog-owner@test.com");
+    }
 
     @Test
     @WithMockUser

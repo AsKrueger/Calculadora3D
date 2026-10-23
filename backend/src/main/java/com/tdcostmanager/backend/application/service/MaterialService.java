@@ -6,6 +6,7 @@ import com.tdcostmanager.backend.application.dto.MaterialUpdateRequest;
 import com.tdcostmanager.backend.domain.model.Material;
 import com.tdcostmanager.backend.domain.repository.MaterialRepository;
 import jakarta.persistence.EntityNotFoundException;
+import com.tdcostmanager.backend.infrastructure.security.CurrentUserProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,21 +18,23 @@ import java.util.stream.Collectors;
 public class MaterialService {
 
     private final MaterialRepository repository;
+    private final CurrentUserProvider currentUser;
 
-    public MaterialService(MaterialRepository repository) {
+    public MaterialService(MaterialRepository repository, CurrentUserProvider currentUser) {
         this.repository = repository;
+        this.currentUser = currentUser;
     }
 
     @Transactional(readOnly = true)
     public List<MaterialResponse> findAll() {
-        return repository.findAll().stream()
+        return repository.findAllByOwnerId(currentUser.getCurrentUserId()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public MaterialResponse findById(Long id) {
-        return repository.findById(id)
+        return repository.findByIdAndOwnerId(id, currentUser.getCurrentUserId())
                 .map(this::mapToResponse)
                 .orElseThrow(() -> new EntityNotFoundException("Material not found with id: " + id));
     }
@@ -45,12 +48,13 @@ public class MaterialService {
         material.setUnit(request.unit());
         material.setCategory(request.category());
         material.setActive(true);
+        material.setOwnerId(currentUser.getCurrentUserId());
 
         return mapToResponse(repository.save(material));
     }
 
     public MaterialResponse update(Long id, MaterialUpdateRequest request) {
-        Material material = repository.findById(id)
+        Material material = repository.findByIdAndOwnerId(id, currentUser.getCurrentUserId())
                 .orElseThrow(() -> new EntityNotFoundException("Material not found with id: " + id));
 
         material.setName(request.name());
@@ -65,7 +69,7 @@ public class MaterialService {
     }
 
     public void deactivate(Long id) {
-        Material material = repository.findById(id)
+        Material material = repository.findByIdAndOwnerId(id, currentUser.getCurrentUserId())
                 .orElseThrow(() -> new EntityNotFoundException("Material not found with id: " + id));
         material.setActive(false);
         repository.save(material);

@@ -26,7 +26,9 @@ public class ProjectRepositoryTest extends BaseRepositoryTest {
     @Test
     void shouldPersistProjectWithQuotesAndResources() {
         // Setup Catalog
+        Long ownerId = persistOwner("project-repo@test.com");
         Machine machine = new Machine();
+        machine.setOwnerId(ownerId);
         machine.setName("Prusa i3");
         machine.setAcquisitionCost(new BigDecimal("800.00"));
         machine.setUsefulLifeHours(new BigDecimal("5000.00"));
@@ -35,6 +37,7 @@ public class ProjectRepositoryTest extends BaseRepositoryTest {
         machineRepository.save(machine);
 
         Material material = new Material();
+        material.setOwnerId(ownerId);
         material.setName("PETG Black");
         material.setPurchasePrice(new BigDecimal("25.00"));
         material.setQuantity(new BigDecimal("1000.00"));
@@ -44,6 +47,7 @@ public class ProjectRepositoryTest extends BaseRepositoryTest {
 
         // Setup Project
         Project project = new Project();
+        project.setOwnerId(ownerId);
         project.updateDetails("Death Star Lamp", null);
         project.updateStatus(ProjectStatus.DRAFT);
         Project savedProject = projectRepository.save(project);
@@ -83,7 +87,9 @@ public class ProjectRepositoryTest extends BaseRepositoryTest {
 
     @Test
     void shouldMaintainIntegrityWhenDeactivatingMaterial() {
+        Long ownerId = persistOwner("integrity@test.com");
         Material material = new Material();
+        material.setOwnerId(ownerId);
         material.setName("Resin Grey");
         material.setPurchasePrice(new BigDecimal("40.00"));
         material.setQuantity(new BigDecimal("1000.00"));
@@ -92,6 +98,7 @@ public class ProjectRepositoryTest extends BaseRepositoryTest {
         materialRepository.save(material);
 
         Project project = new Project();
+        project.setOwnerId(ownerId);
         project.updateDetails("Miniature Hero", null);
         project.updateStatus(ProjectStatus.DRAFT);
         projectRepository.save(project);

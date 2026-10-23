@@ -6,6 +6,7 @@ import com.tdcostmanager.backend.application.dto.MachineUpdateRequest;
 import com.tdcostmanager.backend.domain.model.Machine;
 import com.tdcostmanager.backend.domain.repository.MachineRepository;
 import jakarta.persistence.EntityNotFoundException;
+import com.tdcostmanager.backend.infrastructure.security.CurrentUserProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,21 +18,23 @@ import java.util.stream.Collectors;
 public class MachineService {
 
     private final MachineRepository repository;
+    private final CurrentUserProvider currentUser;
 
-    public MachineService(MachineRepository repository) {
+    public MachineService(MachineRepository repository, CurrentUserProvider currentUser) {
         this.repository = repository;
+        this.currentUser = currentUser;
     }
 
     @Transactional(readOnly = true)
     public List<MachineResponse> findAll() {
-        return repository.findAll().stream()
+        return repository.findAllByOwnerId(currentUser.getCurrentUserId()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public MachineResponse findById(Long id) {
-        return repository.findById(id)
+        return repository.findByIdAndOwnerId(id, currentUser.getCurrentUserId())
                 .map(this::mapToResponse)
                 .orElseThrow(() -> new EntityNotFoundException("Machine not found with id: " + id));
     }
@@ -44,12 +47,13 @@ public class MachineService {
         machine.setPowerWatts(request.powerWatts());
         machine.setMaintenanceCostPerHour(request.maintenanceCostPerHour());
         machine.setActive(true);
+        machine.setOwnerId(currentUser.getCurrentUserId());
 
         return mapToResponse(repository.save(machine));
     }
 
     public MachineResponse update(Long id, MachineUpdateRequest request) {
-        Machine machine = repository.findById(id)
+        Machine machine = repository.findByIdAndOwnerId(id, currentUser.getCurrentUserId())
                 .orElseThrow(() -> new EntityNotFoundException("Machine not found with id: " + id));
 
         machine.setName(request.name());
@@ -63,7 +67,7 @@ public class MachineService {
     }
 
     public void deactivate(Long id) {
-        Machine machine = repository.findById(id)
+        Machine machine = repository.findByIdAndOwnerId(id, currentUser.getCurrentUserId())
                 .orElseThrow(() -> new EntityNotFoundException("Machine not found with id: " + id));
         machine.setActive(false);
         repository.save(machine);
