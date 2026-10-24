@@ -37,7 +37,7 @@ internal val LightColors = lightColorScheme(
     surfaceContainerHighest = Color(0xFFE2E6EA),
     outline = Color(0xFF8A939D),
     outlineVariant = Color(0xFFDCE0E5),
-    inverseSurface = Color(0xFF2A3038),
+    inverseSurface = Color(0xFF141A23),
     inverseOnSurface = Color(0xFFF0F2F5),
     inversePrimary = Color(0xFFFF8A4C),
     // La elevación tonal mezcla este color con el fondo: neutro, para que barras y menús no salgan anaranjados

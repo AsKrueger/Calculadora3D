@@ -54,6 +54,7 @@ La app funcionaba, pero no se podía enseñar: sin tema propio, formatos de prog
 - [x] Icono adaptativo y splash propios.
 - [x] `.gitattributes` para que `mvnw` y `gradlew` conserven LF en Windows (`docker compose up --build` fallaba).
 - [x] Login y registro según el diseño de referencia: logo con degradado, campos con etiqueta y botón en degradado, reutilizables (Issue #49).
+- [x] Lista de proyectos según el diseño de referencia, con el precio del último presupuesto (una sola consulta para todo el listado), búsqueda sin tildes y orden (Issue #51).
 
 ## Fase 5 — Proyectos editables y validaciones coherentes ⬜
 

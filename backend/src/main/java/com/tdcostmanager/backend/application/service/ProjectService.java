@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,24 +20,30 @@ public class ProjectService {
     private final MaterialRepository materialRepository;
     private final MachineRepository machineRepository;
     private final ToolRepository toolRepository;
+    private final QuoteRepository quoteRepository;
     private final CurrentUserProvider currentUserProvider;
 
     public ProjectService(ProjectRepository projectRepository,
                           MaterialRepository materialRepository,
                           MachineRepository machineRepository,
                           ToolRepository toolRepository,
+                          QuoteRepository quoteRepository,
                           CurrentUserProvider currentUserProvider) {
         this.projectRepository = projectRepository;
         this.materialRepository = materialRepository;
         this.machineRepository = machineRepository;
         this.toolRepository = toolRepository;
+        this.quoteRepository = quoteRepository;
         this.currentUserProvider = currentUserProvider;
     }
 
     @Transactional(readOnly = true)
     public List<ProjectResponse> findAll() {
-        return projectRepository.findAllByOwnerId(currentUserProvider.getCurrentUserId()).stream()
-                .map(this::mapToResponse)
+        Long ownerId = currentUserProvider.getCurrentUserId();
+        Map<Long, Quote> latestByProject = quoteRepository.findLatestPerProjectByOwnerId(ownerId).stream()
+                .collect(Collectors.toMap(q -> q.getProject().getId(), Function.identity()));
+        return projectRepository.findAllByOwnerId(ownerId).stream()
+                .map(p -> mapToResponse(p, latestByProject.get(p.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -89,7 +97,7 @@ public class ProjectService {
         }
 
         Project saved = projectRepository.save(project);
-        return mapToResponse(saved);
+        return mapToResponse(saved, null);
     }
 
     @Transactional
@@ -118,6 +126,10 @@ public class ProjectService {
     }
 
     private ProjectResponse mapToResponse(Project p) {
+        return mapToResponse(p, quoteRepository.findFirstByProjectIdOrderByIdDesc(p.getId()).orElse(null));
+    }
+
+    private ProjectResponse mapToResponse(Project p, Quote latestQuote) {
         return new ProjectResponse(
                 p.getId(),
                 p.getName(),
@@ -135,7 +147,9 @@ public class ProjectService {
                         .map(pt -> new ProjectResponse.ToolItem(pt.getTool().getId(), pt.getTool().getName(), pt.getUses()))
                         .collect(Collectors.toList()),
                 p.getCreatedAt(),
-                p.getUpdatedAt()
+                p.getUpdatedAt(),
+                latestQuote == null ? null : new ProjectResponse.LatestQuote(
+                        latestQuote.getId(), latestQuote.getFinalPrice(), latestQuote.getStatus(), latestQuote.getCalculatedAt())
         );
     }
 }
