@@ -1,6 +1,7 @@
 package com.tdcostmanager.app.data.remote.dto.project
 
 import com.tdcostmanager.app.domain.model.ProjectStatus
+import com.tdcostmanager.app.domain.model.QuoteStatus
 import com.tdcostmanager.app.domain.model.UnitType
 import kotlinx.serialization.Serializable
 
@@ -16,8 +17,18 @@ data class ProjectResponse(
     val machines: List<MachineItem>,
     val tools: List<ToolItem>,
     val createdAt: String,
-    val updatedAt: String
+    val updatedAt: String,
+    val latestQuote: LatestQuote? = null
 ) {
+    // Resumen del presupuesto más reciente; null si el proyecto aún no tiene ninguno
+    @Serializable
+    data class LatestQuote(
+        val id: Long,
+        val finalPrice: Double,
+        val status: QuoteStatus,
+        val calculatedAt: String? = null
+    )
+
     @Serializable
     data class MaterialItem(
         val materialId: Long,

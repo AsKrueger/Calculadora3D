@@ -1,9 +1,11 @@
 package com.tdcostmanager.app.ui.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.ViewInAr
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.outlined.ViewInAr
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -17,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -91,26 +94,31 @@ sealed class Screen(val route: String) {
 
 /** Secciones de la barra inferior. */
 enum class TopLevel(val route: String, val label: String, val icon: ImageVector) {
-    Projects(Screen.Projects.route, "Proyectos", Icons.Default.ViewInAr),
-    Catalog(Screen.Catalog.route, "Catálogo", Icons.Default.Inventory2),
-    Account(Screen.Account.route, "Cuenta", Icons.Default.AccountCircle)
+    Projects(Screen.Projects.route, "Proyectos", Icons.Outlined.ViewInAr),
+    Catalog(Screen.Catalog.route, "Catálogo", Icons.Outlined.Inventory2),
+    Account(Screen.Account.route, "Cuenta", Icons.Outlined.AccountCircle)
 }
 
 @Composable
 fun MainBottomBar(current: TopLevel, onSelect: (TopLevel) -> Unit) {
-    NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, tonalElevation = 0.dp) {
-        TopLevel.entries.forEach { item ->
-            NavigationBarItem(
-                selected = item == current,
-                onClick = { if (item != current) onSelect(item) },
-                icon = { Icon(item.icon, contentDescription = null) },
-                label = { Text(item.label) },
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    selectedTextColor = MaterialTheme.colorScheme.onSurface
+    Column {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, tonalElevation = 0.dp) {
+            TopLevel.entries.forEach { item ->
+                NavigationBarItem(
+                    selected = item == current,
+                    onClick = { if (item != current) onSelect(item) },
+                    icon = { Icon(item.icon, contentDescription = null) },
+                    label = {
+                        Text(item.label, fontWeight = if (item == current) FontWeight.Bold else FontWeight.Normal)
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 )
-            )
+            }
         }
     }
 }
