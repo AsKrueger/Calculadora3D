@@ -2,20 +2,17 @@ package com.tdcostmanager.app.ui.material
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.tdcostmanager.app.ui.common.UiState
+import com.tdcostmanager.app.domain.util.toFriendlyMessage
+import com.tdcostmanager.app.ui.common.*
+import com.tdcostmanager.app.ui.theme.Tone
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MaterialDetailScreen(
     id: Long,
@@ -25,11 +22,9 @@ fun MaterialDetailScreen(
 ) {
     val state by viewModel.materialDetailState.collectAsState()
     val operationState by viewModel.operationState.collectAsState()
+    var confirmDeactivate by remember { mutableStateOf(false) }
 
-    LaunchedEffect(id) {
-        viewModel.loadMaterialDetail(id)
-    }
-
+    LaunchedEffect(id) { viewModel.loadMaterialDetail(id) }
     LaunchedEffect(operationState) {
         if (operationState is UiState.Success) {
             viewModel.resetOperationState()
@@ -37,67 +32,65 @@ fun MaterialDetailScreen(
         }
     }
 
+    val material = (state as? UiState.Success)?.data
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Detalle de Material") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+            AppTopBar("Material", onBack = onNavigateBack) {
+                if (material != null) {
+                    IconButton(onClick = { onEditClick(material.id) }) {
+                        Icon(Icons.Default.Edit, contentDescription = "Editar")
                     }
-                },
-                actions = {
-                    if (state is UiState.Success) {
-                        val material = (state as UiState.Success).data
-                        if (material.active) {
-                            IconButton(onClick = { onEditClick(material.id) }) {
-                                Icon(Icons.Default.Edit, contentDescription = "Editar")
-                            }
-                            IconButton(onClick = { viewModel.deactivateMaterial(material.id) }) {
-                                Icon(Icons.Default.Archive, contentDescription = "Desactivar")
-                            }
+                    if (material.active) {
+                        IconButton(onClick = { confirmDeactivate = true }) {
+                            Icon(Icons.Default.Block, contentDescription = "Desactivar")
                         }
                     }
                 }
-            )
-        }
-    ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            when (val s = state) {
-                is UiState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                is UiState.Success -> {
-                    val material = s.data
-                    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-                        Text(text = material.name, style = MaterialTheme.typography.headlineMedium)
-                        ActiveBadge(active = material.active)
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(text = "Descripción", style = MaterialTheme.typography.titleSmall)
-                        Text(text = material.description ?: "Sin descripción", style = MaterialTheme.typography.bodyMedium)
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            InfoBox(label = "Precio", value = "${material.purchasePrice} €", modifier = Modifier.weight(1f))
-                            InfoBox(label = "Cantidad", value = "${material.quantity} ${material.unit}", modifier = Modifier.weight(1f))
-                        }
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(text = "Categoría: ${material.category}", style = MaterialTheme.typography.bodyLarge)
-                    }
-                }
-                is UiState.Error -> Text("Error", modifier = Modifier.align(Alignment.Center))
-                else -> {}
             }
-            if (operationState is UiState.Loading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        }
+    ) { padding ->
+        when (val s = state) {
+            is UiState.Loading, UiState.Idle -> LoadingState(Modifier.padding(padding))
+            is UiState.Error -> ErrorState(s.error, onRetry = { viewModel.loadMaterialDetail(id) }, modifier = Modifier.padding(padding))
+            is UiState.Success -> DetailColumn(padding) {
+                val m = s.data
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconBadge(m.category.icon, size = 56)
+                    Spacer(Modifier.width(16.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(m.name, style = MaterialTheme.typography.headlineSmall)
+                        Spacer(Modifier.height(6.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            StatusChip(m.category.label, Tone.Progress)
+                            StatusChip(if (m.active) "Activo" else "Inactivo", if (m.active) Tone.Success else Tone.Neutral)
+                        }
+                    }
+                }
+                SectionCard(title = "Compra") {
+                    Row {
+                        MetricTile("Precio", Format.euros(m.purchasePrice), Modifier.weight(1f))
+                        MetricTile("Cantidad", Format.quantity(m.quantity, m.unit), Modifier.weight(1f))
+                    }
+                    HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                    InfoRow("Coste por ${m.unit.symbol}", m.unitCostLabel(), emphasize = true)
+                }
+                if (!m.description.isNullOrBlank()) {
+                    SectionCard(title = "Descripción") {
+                        Text(m.description, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                (operationState as? UiState.Error)?.let { ErrorBanner(it.error.toFriendlyMessage()) }
+            }
         }
     }
-}
 
-@Composable
-fun InfoBox(label: String, value: String, modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
-        Text(text = label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
-        Text(text = value, style = MaterialTheme.typography.titleLarge)
+    if (confirmDeactivate && material != null) {
+        ConfirmDialog(
+            title = "Desactivar material",
+            text = "«${material.name}» quedará marcado como inactivo. Los proyectos que ya lo usan no cambian.",
+            confirmLabel = "Desactivar",
+            onConfirm = { viewModel.deactivateMaterial(material.id) },
+            onDismiss = { confirmDeactivate = false }
+        )
     }
 }

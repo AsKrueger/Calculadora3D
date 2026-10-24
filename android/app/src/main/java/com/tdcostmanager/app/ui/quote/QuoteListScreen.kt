@@ -1,24 +1,20 @@
 package com.tdcostmanager.app.ui.quote
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tdcostmanager.app.data.remote.dto.quote.QuoteResponse
-import com.tdcostmanager.app.ui.common.UiState
+import com.tdcostmanager.app.ui.common.*
+import com.tdcostmanager.app.ui.theme.tabular
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuoteListScreen(
     projectId: Long,
@@ -28,79 +24,72 @@ fun QuoteListScreen(
     onNavigateBack: () -> Unit
 ) {
     val state by viewModel.quotesState.collectAsState()
-
-    LaunchedEffect(projectId) {
-        viewModel.loadQuotes(projectId)
-    }
+    LaunchedEffect(projectId) { viewModel.loadQuotes(projectId) }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Presupuestos (Quotes)") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                }
-            )
-        },
+        topBar = { AppTopBar("Presupuestos", onBack = onNavigateBack) },
         floatingActionButton = {
-            FloatingActionButton(onClick = onCreateQuote) {
-                Icon(Icons.Default.Add, contentDescription = "Nuevo Presupuesto")
-            }
+            ExtendedFloatingActionButton(
+                onClick = onCreateQuote,
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                text = { Text("Nuevo presupuesto") }
+            )
         }
-    ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+    ) { padding ->
+        Box(Modifier.fillMaxSize().padding(padding)) {
             when (val s = state) {
-                is UiState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                is UiState.Success -> {
-                    val quotes = s.data
-                    if (quotes.isEmpty()) {
-                        Column(
-                            modifier = Modifier.align(Alignment.Center),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text("No hay presupuestos emitidos.")
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(onClick = onCreateQuote) {
-                                Text("Generar Primer Presupuesto")
-                            }
-                        }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(quotes) { quote ->
-                                QuoteItem(quote = quote, onClick = { onQuoteClick(quote.id) })
-                            }
+                is UiState.Loading, UiState.Idle -> LoadingState()
+                is UiState.Error -> ErrorState(s.error, onRetry = { viewModel.loadQuotes(projectId) })
+                is UiState.Success -> if (s.data.isEmpty()) {
+                    EmptyState(
+                        icon = Icons.AutoMirrored.Filled.ReceiptLong,
+                        title = "Sin presupuestos",
+                        message = "Calcula el primero: se guardará con su desglose para que puedas consultarlo cuando quieras.",
+                        actionLabel = "Calcular presupuesto",
+                        onAction = onCreateQuote
+                    )
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(start = ScreenPadding, end = ScreenPadding, top = 8.dp, bottom = 96.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(s.data.sortedByDescending { it.id }, key = { it.id }) { quote ->
+                            QuoteCard(quote, onClick = { onQuoteClick(quote.id) })
                         }
                     }
                 }
-                is UiState.Error -> Button(onClick = { viewModel.loadQuotes(projectId) }, modifier = Modifier.align(Alignment.Center)) { Text("Reintentar") }
-                else -> {}
             }
         }
     }
 }
 
 @Composable
-fun QuoteItem(quote: QuoteResponse, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(text = "Presupuesto #${quote.id}", style = MaterialTheme.typography.titleMedium)
-                Text(text = "${quote.finalPrice} €", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+private fun QuoteCard(quote: QuoteResponse, onClick: () -> Unit) {
+    SectionCard(onClick = onClick) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Presupuesto #${quote.id}", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    Format.dateTime(quote.calculatedAt ?: quote.createdAt),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "${quote.status.label} · Base: ${quote.baseCost} € | Ajustado: ${quote.adjustedCost} €",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.secondary
-            )
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    Format.euros(quote.finalPrice),
+                    style = MaterialTheme.typography.titleLarge.tabular(),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(4.dp))
+                StatusChip(quote.status.label, quote.status.tone)
+            }
         }
+        Spacer(Modifier.height(10.dp))
+        Text(
+            "Coste ${Format.euros(quote.baseCost)} · Margen ${Format.percent(quote.marginPercentage)} · Seguridad ${Format.percent(quote.safetyPercentage)}",
+            style = MaterialTheme.typography.labelMedium.tabular(),
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

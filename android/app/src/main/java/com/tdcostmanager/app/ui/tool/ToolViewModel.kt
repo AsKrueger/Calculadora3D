@@ -32,7 +32,8 @@ class ToolViewModel(
 
     fun loadTools() {
         viewModelScope.launch {
-            _toolsState.value = UiState.Loading
+            // Al recargar una lista que ya se ve, se mantiene en pantalla en lugar de mostrar la carga
+            if (_toolsState.value !is UiState.Success) _toolsState.value = UiState.Loading
             repository.getTools()
                 .onSuccess { list -> _toolsState.value = UiState.Success(list) }
                 .onFailure { e -> _toolsState.value = UiState.Error(e.toNetworkError()) }

@@ -4,6 +4,14 @@ Aplicación para calcular el coste de piezas impresas en 3D y generar presupuest
 
 A partir de un catálogo de recursos (materiales, máquinas y herramientas) y de la mano de obra de cada proyecto, el backend calcula el coste base, le aplica un margen de seguridad y un margen de beneficio, y guarda el resultado como presupuesto (*quote*). El consumo eléctrico de las máquinas se valora con el precio horario real de la API de ESIOS (Red Eléctrica).
 
+<p align="center">
+  <img src="docs/screenshots/proyectos.png" width="180" alt="Lista de proyectos">
+  <img src="docs/screenshots/proyecto.png" width="180" alt="Detalle de un proyecto">
+  <img src="docs/screenshots/presupuesto.png" width="180" alt="Presupuesto con su desglose">
+  <img src="docs/screenshots/catalogo.png" width="180" alt="Catálogo de materiales">
+  <img src="docs/screenshots/presupuesto-oscuro.png" width="180" alt="Presupuesto en modo oscuro">
+</p>
+
 ---
 
 ## Estructura del repositorio
@@ -51,6 +59,11 @@ Los tests de integración usan Testcontainers, así que necesitan Docker en marc
 ---
 
 ## App Android
+
+- **Proyectos:** cada encargo con su mano de obra, materiales, máquinas y herramientas. Por ahora las líneas de materiales, máquinas y herramientas solo se pueden añadir a través de la API; añadirlas desde la app es la Fase 5 del roadmap.
+- **Catálogo:** materiales, máquinas y herramientas con el coste unitario que usa el cálculo (€/g, €/h, €/uso).
+- **Presupuestos:** precio final con el desglose por partida y su ciclo de vida (borrador, enviado, aceptado…).
+- Tema propio en modo claro y oscuro, y formato español en importes, cantidades y fechas.
 
 Requisitos: Android Studio con el SDK 34 y JDK 21 (el JDK que trae Android Studio sirve).
 

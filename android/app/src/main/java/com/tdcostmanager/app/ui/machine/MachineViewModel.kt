@@ -32,7 +32,8 @@ class MachineViewModel(
 
     fun loadMachines() {
         viewModelScope.launch {
-            _machinesState.value = UiState.Loading
+            // Al recargar una lista que ya se ve, se mantiene en pantalla en lugar de mostrar la carga
+            if (_machinesState.value !is UiState.Success) _machinesState.value = UiState.Loading
             repository.getMachines()
                 .onSuccess { list -> _machinesState.value = UiState.Success(list) }
                 .onFailure { e -> _machinesState.value = UiState.Error(e.toNetworkError()) }

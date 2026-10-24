@@ -5,6 +5,7 @@ import com.tdcostmanager.app.data.remote.api.AuthApi
 import com.tdcostmanager.app.data.remote.dto.auth.LoginRequest
 import com.tdcostmanager.app.data.remote.dto.auth.RegisterRequest
 import com.tdcostmanager.app.data.remote.network.NetworkConfig
+import com.tdcostmanager.app.domain.util.JwtClaims
 
 class AuthRepository(
     private val api: AuthApi = NetworkConfig.authApi,
@@ -36,4 +37,6 @@ class AuthRepository(
     fun isAuthenticated(): Boolean {
         return tokenManager.getToken() != null
     }
+
+    fun currentEmail(): String? = tokenManager.getToken()?.let(JwtClaims::subject)
 }

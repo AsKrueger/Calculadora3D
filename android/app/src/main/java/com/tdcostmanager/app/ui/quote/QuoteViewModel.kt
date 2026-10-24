@@ -34,7 +34,8 @@ class QuoteViewModel(
 
     fun loadQuotes(projectId: Long) {
         viewModelScope.launch {
-            _quotesState.value = UiState.Loading
+            // Al recargar una lista que ya se ve, se mantiene en pantalla en lugar de mostrar la carga
+            if (_quotesState.value !is UiState.Success) _quotesState.value = UiState.Loading
             repository.getQuotesByProject(projectId)
                 .onSuccess { list -> _quotesState.value = UiState.Success(list) }
                 .onFailure { e -> _quotesState.value = UiState.Error(e.toNetworkError()) }
