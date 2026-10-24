@@ -51,4 +51,5 @@ Thumbs.db
 # IDE y herramientas (no se versionan)
 .idea/
 **/.idea/
+.vscode/
 .artifacts/

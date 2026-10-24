@@ -71,6 +71,25 @@ class CostCalculatorTest {
         assertThat(result.adjustedCost()).isEqualByComparingTo("22.4700");
         assertThat(result.profitAmount()).isEqualByComparingTo("4.4940");
         assertThat(result.finalPrice()).isEqualByComparingTo("26.9640");
+        assertThat(result.energyKWh()).isEqualByComparingTo("3.5000");
+        assertThat(result.electricityPricePerKWh()).isEqualByComparingTo("0.2000");
+    }
+
+    @Test
+    void shouldNotAskForElectricityPriceWhenNoEnergyIsConsumed() {
+        CostCalculationInput input = new CostCalculationInput(
+                BigDecimal.ONE, BigDecimal.TEN, List.of(), List.of(), List.of()
+        );
+        ElectricityPriceProvider unavailable = (dt) -> {
+            throw new IllegalStateException("ESIOS no debería consultarse");
+        };
+
+        CostCalculationResult result = CostCalculator.calculate(input, testDateTime, BigDecimal.ZERO, BigDecimal.ZERO, unavailable);
+
+        assertThat(result.electricityCost()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(result.energyKWh()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(result.electricityPricePerKWh()).isNull();
+        assertThat(result.finalPrice()).isEqualByComparingTo("10.0000");
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.tdcostmanager.backend.application.controller;
 
 import com.tdcostmanager.backend.application.dto.QuoteCreateRequest;
 import com.tdcostmanager.backend.application.dto.QuoteResponse;
+import com.tdcostmanager.backend.application.dto.QuoteStatusUpdateRequest;
 import com.tdcostmanager.backend.application.service.QuoteService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -33,5 +34,11 @@ public class QuoteController {
     @GetMapping("/{quoteId}")
     public QuoteResponse getById(@PathVariable Long projectId, @PathVariable Long quoteId) {
         return quoteService.findById(projectId, quoteId);
+    }
+
+    @PatchMapping("/{quoteId}/status")
+    public QuoteResponse updateStatus(@PathVariable Long projectId, @PathVariable Long quoteId,
+                                      @Valid @RequestBody QuoteStatusUpdateRequest request) {
+        return quoteService.updateStatus(projectId, quoteId, request);
     }
 }

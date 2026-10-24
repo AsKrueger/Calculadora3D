@@ -3,6 +3,7 @@ package com.tdcostmanager.backend.application.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tdcostmanager.backend.BaseIntegrationTest;
 import com.tdcostmanager.backend.application.dto.*;
+import com.tdcostmanager.backend.domain.calculation.CostCalculationResult;
 import com.tdcostmanager.backend.domain.model.*;
 import com.tdcostmanager.backend.domain.repository.MaterialRepository;
 import com.tdcostmanager.backend.domain.repository.ProjectRepository;
@@ -18,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -158,11 +160,7 @@ class OwnershipIsolationIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void cannotQuoteOrReadQuotesOfAnotherUsersProject() throws Exception {
-        Quote quoteA = quoteRepository.save(Quote.create(
-                projectRepository.findById(projectA).orElseThrow(),
-                new BigDecimal("20"), new BigDecimal("5"),
-                new BigDecimal("10.0000"), new BigDecimal("10.5000"), new BigDecimal("12.6000"),
-                QuoteStatus.DRAFT));
+        Quote quoteA = saveQuoteForProjectA();
 
         QuoteCreateRequest quoteRequest = new QuoteCreateRequest(
                 new BigDecimal("20"), new BigDecimal("5"), LocalDateTime.of(2026, 9, 20, 12, 0));
@@ -192,6 +190,20 @@ class OwnershipIsolationIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    void cannotChangeTheStatusOfAnotherUsersQuote() throws Exception {
+        Quote quoteA = saveQuoteForProjectA();
+        String body = objectMapper.writeValueAsString(new QuoteStatusUpdateRequest(QuoteStatus.SENT));
+
+        mockMvc.perform(as(tokenB, patch("/api/v1/projects/" + projectA + "/quotes/" + quoteA.getId() + "/status"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(as(tokenA, get("/api/v1/projects/" + projectA + "/quotes/" + quoteA.getId())))
+                .andExpect(jsonPath("$.status").value("DRAFT"));
+    }
+
+    @Test
     void ownerSentByTheClientIsIgnored() throws Exception {
         String body = """
                 {
@@ -213,6 +225,17 @@ class OwnershipIsolationIntegrationTest extends BaseIntegrationTest {
 
         long id = objectMapper.readTree(response).get("id").asLong();
         assertThat(materialRepository.findById(id).orElseThrow().getOwner().getId()).isEqualTo(userB.getId());
+    }
+
+    private Quote saveQuoteForProjectA() {
+        CostCalculationResult result = new CostCalculationResult(
+                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("10.0000"), BigDecimal.ZERO,
+                new BigDecimal("10.0000"), new BigDecimal("0.5000"), new BigDecimal("10.5000"),
+                new BigDecimal("2.1000"), new BigDecimal("12.6000"), BigDecimal.ZERO, null);
+        return quoteRepository.save(Quote.create(
+                projectRepository.findById(projectA).orElseThrow(),
+                new BigDecimal("20"), new BigDecimal("5"),
+                result, Instant.parse("2026-09-20T10:00:00Z")));
     }
 
     private MockHttpServletRequestBuilder as(String token, MockHttpServletRequestBuilder request) {

@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tdcostmanager.app.data.remote.dto.quote.QuoteCreateRequest
 import com.tdcostmanager.app.data.remote.dto.quote.QuoteResponse
+import com.tdcostmanager.app.data.remote.dto.quote.QuoteStatusUpdateRequest
 import com.tdcostmanager.app.data.repository.QuoteRepository
+import com.tdcostmanager.app.domain.model.QuoteStatus
 import com.tdcostmanager.app.domain.util.toNetworkError
 import com.tdcostmanager.app.ui.common.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +29,9 @@ class QuoteViewModel(
     private val _createdQuoteState = MutableStateFlow<UiState<QuoteResponse>>(UiState.Idle)
     val createdQuoteState: StateFlow<UiState<QuoteResponse>> = _createdQuoteState.asStateFlow()
 
+    private val _statusUpdateState = MutableStateFlow<UiState<QuoteResponse>>(UiState.Idle)
+    val statusUpdateState: StateFlow<UiState<QuoteResponse>> = _statusUpdateState.asStateFlow()
+
     fun loadQuotes(projectId: Long) {
         viewModelScope.launch {
             _quotesState.value = UiState.Loading
@@ -39,6 +44,7 @@ class QuoteViewModel(
     fun loadQuoteDetail(projectId: Long, quoteId: Long) {
         viewModelScope.launch {
             _quoteDetailState.value = UiState.Loading
+            _statusUpdateState.value = UiState.Idle
             repository.getQuoteById(projectId, quoteId)
                 .onSuccess { quote -> _quoteDetailState.value = UiState.Success(quote) }
                 .onFailure { e -> _quoteDetailState.value = UiState.Error(e.toNetworkError()) }
@@ -60,6 +66,18 @@ class QuoteViewModel(
                     loadQuotes(projectId)
                 }
                 .onFailure { e -> _createdQuoteState.value = UiState.Error(e.toNetworkError()) }
+        }
+    }
+
+    fun updateStatus(projectId: Long, quoteId: Long, status: QuoteStatus) {
+        viewModelScope.launch {
+            _statusUpdateState.value = UiState.Loading
+            repository.updateQuoteStatus(projectId, quoteId, QuoteStatusUpdateRequest(status))
+                .onSuccess { quote ->
+                    _statusUpdateState.value = UiState.Idle
+                    _quoteDetailState.value = UiState.Success(quote)
+                }
+                .onFailure { e -> _statusUpdateState.value = UiState.Error(e.toNetworkError()) }
         }
     }
 
