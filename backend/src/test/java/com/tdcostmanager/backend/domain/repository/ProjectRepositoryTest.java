@@ -1,9 +1,11 @@
 package com.tdcostmanager.backend.domain.repository;
 
+import com.tdcostmanager.backend.domain.calculation.CostCalculationResult;
 import com.tdcostmanager.backend.domain.model.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
+import java.time.Instant;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ProjectRepositoryTest extends BaseRepositoryTest {
@@ -62,14 +64,16 @@ public class ProjectRepositoryTest extends BaseRepositoryTest {
         projectMaterialRepository.save(pm);
 
         // Create Quote
+        CostCalculationResult result = new CostCalculationResult(
+                new BigDecimal("15.7500"), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                new BigDecimal("15.7500"), new BigDecimal("0.7875"), new BigDecimal("16.5375"),
+                new BigDecimal("3.3075"), new BigDecimal("19.8450"), BigDecimal.ZERO, null);
         Quote quote = Quote.create(
                 savedProject,
                 new BigDecimal("20.00"),
                 new BigDecimal("5.00"),
-                new BigDecimal("15.7500"),
-                new BigDecimal("16.5375"),
-                new BigDecimal("19.8450"),
-                QuoteStatus.DRAFT
+                result,
+                Instant.parse("2026-09-20T10:00:00Z")
         );
         quoteRepository.save(quote);
 
@@ -84,6 +88,10 @@ public class ProjectRepositoryTest extends BaseRepositoryTest {
 
         Quote foundQuote = quoteRepository.findAll().get(0);
         assertThat(foundQuote.getFinalPrice()).isEqualByComparingTo("19.8450");
+        assertThat(foundQuote.getMaterialCost()).isEqualByComparingTo("15.7500");
+        assertThat(foundQuote.getProfitAmount()).isEqualByComparingTo("3.3075");
+        assertThat(foundQuote.getElectricityPricePerKWh()).isNull();
+        assertThat(foundQuote.getCalculatedAt()).isEqualTo(Instant.parse("2026-09-20T10:00:00Z"));
     }
 
     @Test

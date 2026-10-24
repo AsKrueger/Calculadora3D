@@ -2,6 +2,7 @@ package com.tdcostmanager.backend.application.service;
 
 import com.tdcostmanager.backend.application.dto.QuoteCreateRequest;
 import com.tdcostmanager.backend.application.dto.QuoteResponse;
+import com.tdcostmanager.backend.application.dto.QuoteStatusUpdateRequest;
 import com.tdcostmanager.backend.domain.calculation.CostCalculationInput;
 import com.tdcostmanager.backend.domain.calculation.CostCalculationResult;
 import com.tdcostmanager.backend.domain.calculation.CostCalculator;
@@ -9,7 +10,6 @@ import com.tdcostmanager.backend.domain.calculation.ElectricityPriceProvider;
 import com.tdcostmanager.backend.domain.model.Project;
 import com.tdcostmanager.backend.domain.model.ProjectStatus;
 import com.tdcostmanager.backend.domain.model.Quote;
-import com.tdcostmanager.backend.domain.model.QuoteStatus;
 import com.tdcostmanager.backend.domain.repository.ProjectRepository;
 import com.tdcostmanager.backend.domain.repository.QuoteRepository;
 import com.tdcostmanager.backend.infrastructure.security.CurrentUserProvider;
@@ -17,11 +17,16 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class QuoteService {
+
+    // La fecha y hora del cálculo llega sin zona; se interpreta en la hora peninsular, la que usa ESIOS
+    private static final ZoneId CALCULATION_ZONE = ZoneId.of("Europe/Madrid");
 
     private final QuoteRepository quoteRepository;
     private final ProjectRepository projectRepository;
@@ -95,15 +100,13 @@ public class QuoteService {
                 electricityPriceProvider
         );
 
-        // Mapear resultado a entidad persistible
+        Instant calculatedAt = request.calculationDateTime().atZone(CALCULATION_ZONE).toInstant();
         Quote quote = Quote.create(
                 project,
                 request.marginPercentage(),
                 request.safetyPercentage(),
-                result.baseCost(),
-                result.adjustedCost(),
-                result.finalPrice(),
-                QuoteStatus.DRAFT
+                result,
+                calculatedAt
         );
 
         Quote saved = quoteRepository.save(quote);
@@ -120,8 +123,18 @@ public class QuoteService {
 
     @Transactional(readOnly = true)
     public QuoteResponse findById(Long projectId, Long quoteId) {
+        return mapToResponse(findOwnedQuote(projectId, quoteId));
+    }
+
+    @Transactional
+    public QuoteResponse updateStatus(Long projectId, Long quoteId, QuoteStatusUpdateRequest request) {
+        Quote quote = findOwnedQuote(projectId, quoteId);
+        quote.updateStatus(request.status());
+        return mapToResponse(quoteRepository.save(quote));
+    }
+
+    private Quote findOwnedQuote(Long projectId, Long quoteId) {
         return quoteRepository.findByIdAndProjectIdAndProjectOwnerId(quoteId, projectId, currentUserProvider.getCurrentUserId())
-                .map(this::mapToResponse)
                 .orElseThrow(() -> new EntityNotFoundException("Presupuesto no encontrado: " + quoteId));
     }
 
@@ -137,10 +150,20 @@ public class QuoteService {
                 q.getProject().getId(),
                 q.getMarginPercentage(),
                 q.getSafetyPercentage(),
+                q.getMaterialCost(),
+                q.getMachineCost(),
+                q.getToolCost(),
+                q.getLaborCost(),
+                q.getElectricityCost(),
+                q.getEnergyKWh(),
+                q.getElectricityPricePerKWh(),
                 q.getBaseCost(),
+                q.getSafetyAmount(),
                 q.getAdjustedCost(),
+                q.getProfitAmount(),
                 q.getFinalPrice(),
                 q.getStatus(),
+                q.getCalculatedAt(),
                 q.getCreatedAt()
         );
     }

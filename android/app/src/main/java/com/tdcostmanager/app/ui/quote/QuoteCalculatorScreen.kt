@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.tdcostmanager.app.domain.util.toFriendlyMessage
 import com.tdcostmanager.app.ui.common.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,10 +99,11 @@ fun QuoteCalculatorScreen(
                 }
             }
 
-            if (createdState is UiState.Error) {
+            val creationError = createdState
+            if (creationError is UiState.Error) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Error al calcular presupuesto",
+                    text = "Error al calcular presupuesto: ${creationError.error.toFriendlyMessage()}",
                     color = MaterialTheme.colorScheme.error
                 )
             }
