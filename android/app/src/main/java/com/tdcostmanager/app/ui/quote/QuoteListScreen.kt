@@ -97,7 +97,7 @@ fun QuoteItem(quote: QuoteResponse, onClick: () -> Unit) {
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Base: ${quote.baseCost} € | Ajustado: ${quote.adjustedCost} €",
+                text = "${quote.status.label} · Base: ${quote.baseCost} € | Ajustado: ${quote.adjustedCost} €",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.secondary
             )

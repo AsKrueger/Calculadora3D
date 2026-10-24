@@ -3,6 +3,7 @@ package com.tdcostmanager.app.data.repository
 import com.tdcostmanager.app.data.remote.api.QuoteApi
 import com.tdcostmanager.app.data.remote.dto.quote.QuoteCreateRequest
 import com.tdcostmanager.app.data.remote.dto.quote.QuoteResponse
+import com.tdcostmanager.app.data.remote.dto.quote.QuoteStatusUpdateRequest
 import com.tdcostmanager.app.data.remote.network.NetworkConfig
 
 class QuoteRepository(
@@ -27,6 +28,14 @@ class QuoteRepository(
     suspend fun getQuoteById(projectId: Long, quoteId: Long): Result<QuoteResponse> {
         return try {
             Result.success(api.getQuoteById(projectId, quoteId))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateQuoteStatus(projectId: Long, quoteId: Long, request: QuoteStatusUpdateRequest): Result<QuoteResponse> {
+        return try {
+            Result.success(api.updateQuoteStatus(projectId, quoteId, request))
         } catch (e: Exception) {
             Result.failure(e)
         }

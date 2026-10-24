@@ -2,6 +2,7 @@ package com.tdcostmanager.app.data.remote.api
 
 import com.tdcostmanager.app.data.remote.dto.quote.QuoteCreateRequest
 import com.tdcostmanager.app.data.remote.dto.quote.QuoteResponse
+import com.tdcostmanager.app.data.remote.dto.quote.QuoteStatusUpdateRequest
 import retrofit2.http.*
 
 interface QuoteApi {
@@ -20,5 +21,12 @@ interface QuoteApi {
     suspend fun getQuoteById(
         @Path("projectId") projectId: Long,
         @Path("quoteId") quoteId: Long
+    ): QuoteResponse
+
+    @PATCH("api/v1/projects/{projectId}/quotes/{quoteId}/status")
+    suspend fun updateQuoteStatus(
+        @Path("projectId") projectId: Long,
+        @Path("quoteId") quoteId: Long,
+        @Body request: QuoteStatusUpdateRequest
     ): QuoteResponse
 }

@@ -36,7 +36,11 @@ public final class CostCalculator {
         BigDecimal machineCost = calculateMachineCost(input);
         BigDecimal toolCost = calculateToolCost(input);
         BigDecimal laborCost = calculateLaborCost(input);
-        BigDecimal electricityCost = calculateElectricityCost(input, calculationDateTime, priceProvider);
+        BigDecimal energyKWh = calculateEnergyKWh(input);
+        BigDecimal electricityPrice = resolveElectricityPrice(energyKWh, calculationDateTime, priceProvider);
+        BigDecimal electricityCost = electricityPrice == null
+                ? BigDecimal.ZERO.setScale(INTERNAL_SCALE, RoundingMode.HALF_UP)
+                : energyKWh.multiply(electricityPrice).setScale(INTERNAL_SCALE, RoundingMode.HALF_UP);
 
         BigDecimal baseCost = materialCost
                 .add(machineCost)
@@ -64,7 +68,9 @@ public final class CostCalculator {
                 scaleToFinal(safetyAmount),
                 scaleToFinal(adjustedCost),
                 scaleToFinal(profitAmount),
-                scaleToFinal(finalPrice)
+                scaleToFinal(finalPrice),
+                scaleToFinal(energyKWh),
+                electricityPrice
         );
     }
 
@@ -146,7 +152,7 @@ public final class CostCalculator {
                 .setScale(INTERNAL_SCALE, RoundingMode.HALF_UP);
     }
 
-    private static BigDecimal calculateElectricityCost(CostCalculationInput input, LocalDateTime calculationDateTime, ElectricityPriceProvider priceProvider) {
+    private static BigDecimal calculateEnergyKWh(CostCalculationInput input) {
         BigDecimal totalKWh = BigDecimal.ZERO.setScale(INTERNAL_SCALE, RoundingMode.HALF_UP);
 
         for (CostCalculationInput.MachineInput mach : input.machines()) {
@@ -156,13 +162,20 @@ public final class CostCalculator {
             BigDecimal energyKWh = powerKW.multiply(mach.estimatedHours());
             totalKWh = totalKWh.add(energyKWh);
         }
+        return totalKWh;
+    }
+
+    // Without energy consumption the price is irrelevant, so the provider (an external API) is not called
+    private static BigDecimal resolveElectricityPrice(BigDecimal energyKWh, LocalDateTime calculationDateTime, ElectricityPriceProvider priceProvider) {
+        if (energyKWh.signum() == 0) {
+            return null;
+        }
 
         BigDecimal price = priceProvider.getPricePerKWh(calculationDateTime);
         if (price == null || price.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Electricity price cannot be null or negative");
         }
-
-        return totalKWh.multiply(price).setScale(INTERNAL_SCALE, RoundingMode.HALF_UP);
+        return price;
     }
 
     private static BigDecimal scaleToFinal(BigDecimal value) {

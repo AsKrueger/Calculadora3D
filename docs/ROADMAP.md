@@ -31,16 +31,19 @@ El fallo más grave: cualquier usuario registrado veía y modificaba los datos d
 - [x] `GET /projects/{projectId}/quotes/{quoteId}` comprueba que el presupuesto pertenece a ese proyecto y al usuario.
 - [x] Tests de integración con dos usuarios y tokens JWT reales (`OwnershipIsolationIntegrationTest`).
 
-## Fase 3 — Presupuestos que se puedan auditar ⬜
+## Fase 3 — Presupuestos que se puedan auditar ✅
 
-Que un presupuesto guarde cómo se calculó, como promete el README.
+Que un presupuesto guarde cómo se calculó. Issue #44.
 
-- [ ] Migración: desglose por partida (material, máquina, herramienta, mano de obra, electricidad), precio del kWh usado y fecha/hora del cálculo (`TIMESTAMPTZ`).
-- [ ] Rellenar esos campos desde `CostCalculator` al crear el presupuesto.
-- [ ] Máquina de estados en `Quote.updateStatus` con transiciones permitidas; 409 si la transición no es válida.
-- [ ] Exponer el desglose en la API y en la app Android.
+- [x] Migración `V7__Add_Breakdown_To_Quotes.sql`: desglose por partida (material, máquina, herramienta, mano de obra, electricidad), seguridad, beneficio, energía consumida, precio del kWh y `calculated_at` (`TIMESTAMPTZ`). En los presupuestos existentes, la seguridad y el beneficio se deducen de los importes guardados y `calculated_at` toma `created_at`; el resto del desglose queda `NULL`.
+- [x] `CostCalculator` devuelve también la energía y el precio del kWh, y no consulta ESIOS si el consumo es 0. `QuoteService` guarda el desglose completo e interpreta la fecha del cálculo en `Europe/Madrid`.
+- [x] Ciclo de vida en `QuoteStatus`: `DRAFT → SENT | REJECTED`, `SENT → ACCEPTED | REJECTED | EXPIRED`; el resto, 409.
+- [x] `PATCH /api/v1/projects/{projectId}/quotes/{quoteId}/status` para cambiar el estado (404 si el presupuesto es de otro usuario).
+- [x] La app Android muestra el desglose, permite cambiar el estado y enseña el mensaje del backend en los errores 400 y 409.
 
 ## Fase 4 — Proyectos editables y validaciones coherentes ⬜
+
+Issue #45.
 
 - [ ] Permitir añadir, modificar y quitar líneas (materiales, máquinas, herramientas) en `ProjectUpdateRequest` y `Project`.
 - [ ] Exigir cantidad mayor que 0 en la API y en la base de datos (`CHECK quantity > 0`), para que falle al guardar y no al presupuestar.
@@ -48,12 +51,17 @@ Que un presupuesto guarde cómo se calculó, como promete el README.
 
 ## Fase 5 — Rendimiento y robustez ⬜
 
+Issue #46.
+
 - [ ] Eliminar las consultas N+1 en `ProjectService.findAll` (`@EntityGraph` o `JOIN FETCH`).
 - [ ] Caché de precios de ESIOS por hora.
+- [ ] Excepción propia para los fallos de ESIOS, traducida a 503 (hoy un token ausente responde 409 y un precio no encontrado, 500).
 - [ ] Usar la zona `Europe/Madrid` al consultar ESIOS, para acertar el tramo en los días de cambio de hora.
 - [ ] Migración: `users` con `TIMESTAMPTZ` y eliminar el índice redundante `idx_users_email`.
 
 ## Fase 6 — App Android lista para release ⬜
+
+Issue #47.
 
 - [ ] `BASE_URL` distinta por `buildType` (emulador en debug, HTTPS en release).
 - [ ] `usesCleartextTraffic` solo en debug (network security config).
