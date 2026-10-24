@@ -7,7 +7,7 @@ Este documento detalla la automatización del despliegue continuo (**CD**) imple
 ## 1. Arquitectura del Despliegue Automatizado
 
 ```text
-GitHub (Push a develop / main)
+GitHub (Push a main)
        │
        ▼
 GitHub Actions (CI Pipeline)
