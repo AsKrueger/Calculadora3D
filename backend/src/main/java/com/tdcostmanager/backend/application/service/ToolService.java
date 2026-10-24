@@ -5,6 +5,7 @@ import com.tdcostmanager.backend.application.dto.ToolResponse;
 import com.tdcostmanager.backend.application.dto.ToolUpdateRequest;
 import com.tdcostmanager.backend.domain.model.Tool;
 import com.tdcostmanager.backend.domain.repository.ToolRepository;
+import com.tdcostmanager.backend.infrastructure.security.CurrentUserProvider;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,23 +18,23 @@ import java.util.stream.Collectors;
 public class ToolService {
 
     private final ToolRepository repository;
+    private final CurrentUserProvider currentUserProvider;
 
-    public ToolService(ToolRepository repository) {
+    public ToolService(ToolRepository repository, CurrentUserProvider currentUserProvider) {
         this.repository = repository;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @Transactional(readOnly = true)
     public List<ToolResponse> findAll() {
-        return repository.findAll().stream()
+        return repository.findAllByOwnerId(currentUserProvider.getCurrentUserId()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public ToolResponse findById(Long id) {
-        return repository.findById(id)
-                .map(this::mapToResponse)
-                .orElseThrow(() -> new EntityNotFoundException("Tool not found with id: " + id));
+        return mapToResponse(findOwned(id));
     }
 
     public ToolResponse create(ToolCreateRequest request) {
@@ -44,13 +45,13 @@ public class ToolService {
         tool.setEstimatedUses(request.estimatedUses());
         tool.setMaintenancePercentage(request.maintenancePercentage());
         tool.setActive(true);
+        tool.setOwner(currentUserProvider.getCurrentUser());
 
         return mapToResponse(repository.save(tool));
     }
 
     public ToolResponse update(Long id, ToolUpdateRequest request) {
-        Tool tool = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Tool not found with id: " + id));
+        Tool tool = findOwned(id);
 
         tool.setName(request.name());
         tool.setDescription(request.description());
@@ -63,10 +64,15 @@ public class ToolService {
     }
 
     public void deactivate(Long id) {
-        Tool tool = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Tool not found with id: " + id));
+        Tool tool = findOwned(id);
         tool.setActive(false);
         repository.save(tool);
+    }
+
+    // Un recurso de otro usuario se trata como inexistente (404) para no revelar que existe
+    private Tool findOwned(Long id) {
+        return repository.findByIdAndOwnerId(id, currentUserProvider.getCurrentUserId())
+                .orElseThrow(() -> new EntityNotFoundException("Tool not found with id: " + id));
     }
 
     private ToolResponse mapToResponse(Tool tool) {

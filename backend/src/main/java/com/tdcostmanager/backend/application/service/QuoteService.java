@@ -12,6 +12,7 @@ import com.tdcostmanager.backend.domain.model.Quote;
 import com.tdcostmanager.backend.domain.model.QuoteStatus;
 import com.tdcostmanager.backend.domain.repository.ProjectRepository;
 import com.tdcostmanager.backend.domain.repository.QuoteRepository;
+import com.tdcostmanager.backend.infrastructure.security.CurrentUserProvider;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,19 +26,21 @@ public class QuoteService {
     private final QuoteRepository quoteRepository;
     private final ProjectRepository projectRepository;
     private final ElectricityPriceProvider electricityPriceProvider;
+    private final CurrentUserProvider currentUserProvider;
 
     public QuoteService(QuoteRepository quoteRepository,
                         ProjectRepository projectRepository,
-                        ElectricityPriceProvider electricityPriceProvider) {
+                        ElectricityPriceProvider electricityPriceProvider,
+                        CurrentUserProvider currentUserProvider) {
         this.quoteRepository = quoteRepository;
         this.projectRepository = projectRepository;
         this.electricityPriceProvider = electricityPriceProvider;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @Transactional
     public QuoteResponse generateQuote(Long projectId, QuoteCreateRequest request) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new EntityNotFoundException("Proyecto no encontrado: " + projectId));
+        Project project = findOwnedProject(projectId);
 
         if (project.getStatus() == ProjectStatus.ARCHIVED) {
             throw new IllegalStateException("No se pueden generar presupuestos para un proyecto archivado");
@@ -109,19 +112,23 @@ public class QuoteService {
 
     @Transactional(readOnly = true)
     public List<QuoteResponse> findByProjectId(Long projectId) {
-        if (!projectRepository.existsById(projectId)) {
-            throw new EntityNotFoundException("Proyecto no encontrado: " + projectId);
-        }
+        findOwnedProject(projectId);
         return quoteRepository.findByProjectId(projectId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public QuoteResponse findById(Long quoteId) {
-        return quoteRepository.findById(quoteId)
+    public QuoteResponse findById(Long projectId, Long quoteId) {
+        return quoteRepository.findByIdAndProjectIdAndProjectOwnerId(quoteId, projectId, currentUserProvider.getCurrentUserId())
                 .map(this::mapToResponse)
                 .orElseThrow(() -> new EntityNotFoundException("Presupuesto no encontrado: " + quoteId));
+    }
+
+    // Los presupuestos heredan el propietario de su proyecto; uno ajeno se trata como inexistente (404)
+    private Project findOwnedProject(Long projectId) {
+        return projectRepository.findByIdAndOwnerId(projectId, currentUserProvider.getCurrentUserId())
+                .orElseThrow(() -> new EntityNotFoundException("Proyecto no encontrado: " + projectId));
     }
 
     private QuoteResponse mapToResponse(Quote q) {

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tdcostmanager.backend.BaseIntegrationTest;
 import com.tdcostmanager.backend.application.dto.LoginRequest;
 import com.tdcostmanager.backend.application.dto.RegisterRequest;
-import com.tdcostmanager.backend.domain.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +24,6 @@ class AuthApiIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private UserRepository userRepository;
 
     @Autowired
     private ObjectMapper objectMapper;

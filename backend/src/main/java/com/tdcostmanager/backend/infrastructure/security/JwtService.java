@@ -25,11 +25,39 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private long jwtExpiration;
 
+    /** HS256 necesita una clave de al menos 256 bits (32 bytes). */
+    static final int MIN_KEY_BYTES = 32;
+
+    private Key signInKey;
+
     @PostConstruct
     public void validateConfiguration() {
-        if (secretKey == null || secretKey.trim().isEmpty()) {
-            throw new IllegalStateException("JWT secret key ('jwt.secret') must be configured and cannot be empty.");
+        this.signInKey = buildSigningKey(secretKey);
+    }
+
+    /**
+     * Valida el secreto y construye la clave de firma. Falla al arrancar si el secreto
+     * no existe, no es Base64 valido o es demasiado corto.
+     */
+    static Key buildSigningKey(String secret) {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException(
+                    "Falta el secreto JWT: define la variable de entorno JWT_SECRET "
+                            + "(genera uno con: openssl rand -base64 32).");
         }
+        byte[] keyBytes;
+        try {
+            keyBytes = Decoders.BASE64.decode(secret.trim());
+        } catch (RuntimeException e) {
+            throw new IllegalStateException(
+                    "JWT_SECRET no es Base64 valido (genera uno con: openssl rand -base64 32).", e);
+        }
+        if (keyBytes.length < MIN_KEY_BYTES) {
+            throw new IllegalStateException(
+                    "JWT_SECRET es demasiado corto: tiene " + (keyBytes.length * 8)
+                            + " bits y HS256 necesita al menos " + (MIN_KEY_BYTES * 8) + ".");
+        }
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String extractUsername(String token) {
@@ -79,8 +107,7 @@ public class JwtService {
     }
 
     private Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
+        return signInKey;
     }
 
     public long getExpirationTime() {

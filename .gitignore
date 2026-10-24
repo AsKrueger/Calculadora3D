@@ -45,3 +45,8 @@ target/
 Thumbs.db
 *.swp
 *~
+
+# IDE y herramientas (no se versionan)
+.idea/
+**/.idea/
+.artifacts/

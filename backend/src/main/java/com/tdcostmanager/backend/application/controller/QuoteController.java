@@ -31,7 +31,7 @@ public class QuoteController {
     }
 
     @GetMapping("/{quoteId}")
-    public QuoteResponse getById(@PathVariable Long quoteId) {
-        return quoteService.findById(quoteId);
+    public QuoteResponse getById(@PathVariable Long projectId, @PathVariable Long quoteId) {
+        return quoteService.findById(projectId, quoteId);
     }
 }
