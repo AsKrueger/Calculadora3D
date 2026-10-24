@@ -62,6 +62,12 @@ object AppThemeExtras {
 
     val breakdownColors
         @Composable @ReadOnlyComposable get() = breakdownPalette(LocalDarkTheme.current)
+
+    val accentGradient
+        @Composable @ReadOnlyComposable get() = AccentGradient
+
+    val field: FieldColors
+        @Composable @ReadOnlyComposable get() = fieldColors(LocalDarkTheme.current)
 }
 
 /** Cifras con dígitos de ancho fijo, para que los importes se alineen en columnas. */

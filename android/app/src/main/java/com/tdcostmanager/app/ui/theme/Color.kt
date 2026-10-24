@@ -106,6 +106,18 @@ internal fun toneColors(tone: Tone, dark: Boolean): ToneColors = if (dark) {
     }
 }
 
+/** Degradado de las acciones principales y del logo: naranja 600 → 500. */
+internal val AccentGradient = listOf(Color(0xFFEA580C), Color(0xFFF97316))
+
+/** Campo relleno: fondo y borde en reposo. */
+data class FieldColors(val container: Color, val border: Color, val label: Color)
+
+internal fun fieldColors(dark: Boolean): FieldColors = if (dark) {
+    FieldColors(container = Color(0xFF1D2126), border = Color(0xFF343B42), label = Color(0xFFA7B0BA))
+} else {
+    FieldColors(container = Color(0xFFF8FAFC), border = Color(0xFFE2E8F0), label = Color(0xFF334155))
+}
+
 /** Colores de las partidas del desglose de un presupuesto (material, máquina, herramienta, mano de obra, luz). */
 internal fun breakdownPalette(dark: Boolean): List<Color> = if (dark) {
     listOf(Color(0xFFFF8A4C), Color(0xFF7FB2F0), Color(0xFF5ED3C4), Color(0xFFC3CBD3), Color(0xFFF5C451))

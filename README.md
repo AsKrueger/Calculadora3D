@@ -5,6 +5,7 @@ Aplicación para calcular el coste de piezas impresas en 3D y generar presupuest
 A partir de un catálogo de recursos (materiales, máquinas y herramientas) y de la mano de obra de cada proyecto, el backend calcula el coste base, le aplica un margen de seguridad y un margen de beneficio, y guarda el resultado como presupuesto (*quote*). El consumo eléctrico de las máquinas se valora con el precio horario real de la API de ESIOS (Red Eléctrica).
 
 <p align="center">
+  <img src="docs/screenshots/login.png" width="180" alt="Inicio de sesión">
   <img src="docs/screenshots/proyectos.png" width="180" alt="Lista de proyectos">
   <img src="docs/screenshots/proyecto.png" width="180" alt="Detalle de un proyecto">
   <img src="docs/screenshots/presupuesto.png" width="180" alt="Presupuesto con su desglose">
