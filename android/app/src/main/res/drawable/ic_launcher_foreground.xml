@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cubo isométrico con las capas de una impresión FDM. Dentro de la zona segura de 66 dp del icono adaptativo. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Cara superior -->
+    <path
+        android:fillColor="#FF8A4C"
+        android:pathData="M54,31 L74,42.5 L54,54 L34,42.5 Z" />
+    <!-- Cara izquierda -->
+    <path
+        android:fillColor="#C2410C"
+        android:pathData="M34,42.5 L54,54 L54,77 L34,65.5 Z" />
+    <!-- Cara derecha -->
+    <path
+        android:fillColor="#E2561A"
+        android:pathData="M54,54 L74,42.5 L74,65.5 L54,77 Z" />
+
+    <!-- Líneas de capa -->
+    <path
+        android:strokeColor="#33FFFFFF"
+        android:strokeWidth="1.2"
+        android:pathData="M34,48.5 L54,60 L74,48.5 M34,54.5 L54,66 L74,54.5 M34,60.5 L54,72 L74,60.5" />
+
+    <!-- Boquilla -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M50.5,20 L57.5,20 L57.5,25 L55.5,28.5 L52.5,28.5 L50.5,25 Z" />
+</vector>

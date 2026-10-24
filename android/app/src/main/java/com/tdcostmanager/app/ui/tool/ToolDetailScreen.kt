@@ -2,22 +2,18 @@ package com.tdcostmanager.app.ui.tool
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Handyman
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.tdcostmanager.app.ui.common.UiState
-import com.tdcostmanager.app.ui.material.ActiveBadge
-import com.tdcostmanager.app.ui.material.InfoBox
+import com.tdcostmanager.app.domain.util.toFriendlyMessage
+import com.tdcostmanager.app.ui.common.*
+import com.tdcostmanager.app.ui.theme.Tone
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ToolDetailScreen(
     id: Long,
@@ -27,11 +23,9 @@ fun ToolDetailScreen(
 ) {
     val state by viewModel.toolDetailState.collectAsState()
     val operationState by viewModel.operationState.collectAsState()
+    var confirmDeactivate by remember { mutableStateOf(false) }
 
-    LaunchedEffect(id) {
-        viewModel.loadToolDetail(id)
-    }
-
+    LaunchedEffect(id) { viewModel.loadToolDetail(id) }
     LaunchedEffect(operationState) {
         if (operationState is UiState.Success) {
             viewModel.resetOperationState()
@@ -39,61 +33,64 @@ fun ToolDetailScreen(
         }
     }
 
+    val tool = (state as? UiState.Success)?.data
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Detalle de Herramienta") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+            AppTopBar("Herramienta", onBack = onNavigateBack) {
+                if (tool != null) {
+                    IconButton(onClick = { onEditClick(tool.id) }) {
+                        Icon(Icons.Default.Edit, contentDescription = "Editar")
                     }
-                },
-                actions = {
-                    if (state is UiState.Success) {
-                        val tool = (state as UiState.Success).data
-                        if (tool.active) {
-                            IconButton(onClick = { onEditClick(tool.id) }) {
-                                Icon(Icons.Default.Edit, contentDescription = "Editar")
-                            }
-                            IconButton(onClick = { viewModel.deactivateTool(tool.id) }) {
-                                Icon(Icons.Default.Archive, contentDescription = "Desactivar")
-                            }
+                    if (tool.active) {
+                        IconButton(onClick = { confirmDeactivate = true }) {
+                            Icon(Icons.Default.Block, contentDescription = "Desactivar")
                         }
                     }
                 }
-            )
-        }
-    ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            when (val s = state) {
-                is UiState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                is UiState.Success -> {
-                    val tool = s.data
-                    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-                        Text(text = tool.name, style = MaterialTheme.typography.headlineMedium)
-                        ActiveBadge(active = tool.active)
-                        tool.description?.let {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = it, style = MaterialTheme.typography.bodyMedium)
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            InfoBox(label = "Adquisición", value = "${tool.acquisitionCost} €", modifier = Modifier.weight(1f))
-                            InfoBox(label = "Usos Estimados", value = "${tool.estimatedUses}", modifier = Modifier.weight(1f))
-                        }
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            InfoBox(label = "Mantenimiento", value = "${tool.maintenancePercentage}%", modifier = Modifier.weight(1f))
-                        }
-                    }
-                }
-                is UiState.Error -> Text("Error", modifier = Modifier.align(Alignment.Center))
-                else -> {}
             }
-            if (operationState is UiState.Loading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
+    ) { padding ->
+        when (val s = state) {
+            is UiState.Loading, UiState.Idle -> LoadingState(Modifier.padding(padding))
+            is UiState.Error -> ErrorState(s.error, onRetry = { viewModel.loadToolDetail(id) }, modifier = Modifier.padding(padding))
+            is UiState.Success -> DetailColumn(padding) {
+                val t = s.data
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconBadge(Icons.Default.Handyman, size = 56)
+                    Spacer(Modifier.width(16.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(t.name, style = MaterialTheme.typography.headlineSmall)
+                        Spacer(Modifier.height(6.dp))
+                        StatusChip(if (t.active) "Activa" else "Inactiva", if (t.active) Tone.Success else Tone.Neutral)
+                    }
+                }
+                SectionCard(title = "Coste por uso") {
+                    InfoRow("Amortización", "${Format.number(if (t.estimatedUses > 0) t.acquisitionCost / t.estimatedUses else 0.0, 4)} €")
+                    InfoRow("Mantenimiento", Format.percent(t.maintenancePercentage))
+                    HorizontalDivider(Modifier.padding(vertical = 6.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                    InfoRow("Total por uso", "${Format.number(t.costPerUse, 4)} €", emphasize = true)
+                }
+                SectionCard(title = "Datos de la herramienta") {
+                    InfoRow("Precio de compra", Format.euros(t.acquisitionCost))
+                    InfoRow("Usos estimados", Format.number(t.estimatedUses, 0))
+                }
+                if (!t.description.isNullOrBlank()) {
+                    SectionCard(title = "Descripción") {
+                        Text(t.description, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                (operationState as? UiState.Error)?.let { ErrorBanner(it.error.toFriendlyMessage()) }
+            }
+        }
+    }
+
+    if (confirmDeactivate && tool != null) {
+        ConfirmDialog(
+            title = "Desactivar herramienta",
+            text = "«${tool.name}» quedará marcada como inactiva. Los proyectos que ya la usan no cambian.",
+            confirmLabel = "Desactivar",
+            onConfirm = { viewModel.deactivateTool(tool.id) },
+            onDismiss = { confirmDeactivate = false }
+        )
     }
 }

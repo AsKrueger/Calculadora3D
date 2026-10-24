@@ -33,7 +33,8 @@ class ProjectViewModel(
 
     fun loadProjects() {
         viewModelScope.launch {
-            _projectsState.value = UiState.Loading
+            // Al recargar una lista que ya se ve, se mantiene en pantalla en lugar de mostrar la carga
+            if (_projectsState.value !is UiState.Success) _projectsState.value = UiState.Loading
             repository.getProjects()
                 .onSuccess { list ->
                     _projectsState.value = UiState.Success(list)

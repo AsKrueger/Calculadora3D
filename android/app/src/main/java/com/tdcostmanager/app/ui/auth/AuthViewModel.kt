@@ -29,6 +29,9 @@ class AuthViewModel(
     private val _isAuthenticated = MutableStateFlow(repository.isAuthenticated())
     val isAuthenticated: StateFlow<Boolean> = _isAuthenticated.asStateFlow()
 
+    val currentEmail: String?
+        get() = repository.currentEmail()
+
     init {
         viewModelScope.launch {
             SessionEventBus.events.collect { event ->
@@ -40,13 +43,12 @@ class AuthViewModel(
         }
     }
 
+    // Tras registrarse se inicia sesión directamente, sin volver a pedir las credenciales
     fun register(email: String, password: String) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             repository.register(email, password)
-                .onSuccess {
-                    _uiState.value = AuthUiState.Success
-                }
+                .onSuccess { login(email, password) }
                 .onFailure { error ->
                     val friendlyMsg = error.toNetworkError().toFriendlyMessage()
                     _uiState.value = AuthUiState.Error(friendlyMsg)
@@ -67,6 +69,11 @@ class AuthViewModel(
                     _uiState.value = AuthUiState.Error(friendlyMsg)
                 }
         }
+    }
+
+    // El error de una pantalla (login o registro) no debe aparecer al entrar en la otra
+    fun clearError() {
+        if (_uiState.value is AuthUiState.Error) _uiState.value = AuthUiState.Idle
     }
 
     fun logout() {

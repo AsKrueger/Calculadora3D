@@ -1,0 +1,11 @@
+# Los scripts de shell se ejecutan en Linux (Docker, CI): siempre con LF,
+# aunque core.autocrlf=true convierta el resto de ficheros a CRLF en Windows
+mvnw text eol=lf
+gradlew text eol=lf
+*.sh text eol=lf
+
+# Los scripts de Windows, con CRLF
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+*.jar binary

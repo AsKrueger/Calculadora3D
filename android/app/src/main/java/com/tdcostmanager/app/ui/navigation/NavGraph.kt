@@ -1,67 +1,77 @@
 package com.tdcostmanager.app.ui.navigation
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.ViewInAr
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.tdcostmanager.app.ui.ViewModelFactory
+import com.tdcostmanager.app.ui.account.AccountScreen
 import com.tdcostmanager.app.ui.auth.AuthViewModel
 import com.tdcostmanager.app.ui.auth.LoginScreen
 import com.tdcostmanager.app.ui.auth.RegisterScreen
+import com.tdcostmanager.app.ui.catalog.CatalogScreen
+import com.tdcostmanager.app.ui.catalog.CatalogTab
 import com.tdcostmanager.app.ui.machine.MachineDetailScreen
 import com.tdcostmanager.app.ui.machine.MachineFormScreen
-import com.tdcostmanager.app.ui.machine.MachineListScreen
-import com.tdcostmanager.app.ui.machine.MachineViewModel
 import com.tdcostmanager.app.ui.material.MaterialDetailScreen
 import com.tdcostmanager.app.ui.material.MaterialFormScreen
-import com.tdcostmanager.app.ui.material.MaterialListScreen
-import com.tdcostmanager.app.ui.material.MaterialViewModel
 import com.tdcostmanager.app.ui.project.ProjectDetailScreen
 import com.tdcostmanager.app.ui.project.ProjectFormScreen
 import com.tdcostmanager.app.ui.project.ProjectListScreen
-import com.tdcostmanager.app.ui.project.ProjectViewModel
 import com.tdcostmanager.app.ui.quote.QuoteCalculatorScreen
 import com.tdcostmanager.app.ui.quote.QuoteDetailScreen
 import com.tdcostmanager.app.ui.quote.QuoteListScreen
-import com.tdcostmanager.app.ui.quote.QuoteViewModel
 import com.tdcostmanager.app.ui.tool.ToolDetailScreen
 import com.tdcostmanager.app.ui.tool.ToolFormScreen
-import com.tdcostmanager.app.ui.tool.ToolListScreen
-import com.tdcostmanager.app.ui.tool.ToolViewModel
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
 
 sealed class Screen(val route: String) {
     data object Login : Screen("login")
     data object Register : Screen("register")
-    data object Home : Screen("home")
-    data object ProjectList : Screen("project_list")
+    data object Projects : Screen("projects")
+    data object Catalog : Screen("catalog?tab={tab}") {
+        fun createRoute(tab: CatalogTab) = "catalog?tab=${tab.name}"
+    }
+    data object Account : Screen("account")
     data object ProjectDetail : Screen("project_detail/{id}") {
         fun createRoute(id: Long) = "project_detail/$id"
     }
     data object ProjectForm : Screen("project_form?id={id}") {
         fun createRoute(id: Long? = null) = if (id != null) "project_form?id=$id" else "project_form"
     }
-    data object MaterialList : Screen("material_list")
     data object MaterialDetail : Screen("material_detail/{id}") {
         fun createRoute(id: Long) = "material_detail/$id"
     }
     data object MaterialForm : Screen("material_form?id={id}") {
         fun createRoute(id: Long? = null) = if (id != null) "material_form?id=$id" else "material_form"
     }
-    data object MachineList : Screen("machine_list")
     data object MachineDetail : Screen("machine_detail/{id}") {
         fun createRoute(id: Long) = "machine_detail/$id"
     }
     data object MachineForm : Screen("machine_form?id={id}") {
         fun createRoute(id: Long? = null) = if (id != null) "machine_form?id=$id" else "machine_form"
     }
-    data object ToolList : Screen("tool_list")
     data object ToolDetail : Screen("tool_detail/{id}") {
         fun createRoute(id: Long) = "tool_detail/$id"
     }
@@ -79,20 +89,67 @@ sealed class Screen(val route: String) {
     }
 }
 
+/** Secciones de la barra inferior. */
+enum class TopLevel(val route: String, val label: String, val icon: ImageVector) {
+    Projects(Screen.Projects.route, "Proyectos", Icons.Default.ViewInAr),
+    Catalog(Screen.Catalog.route, "Catálogo", Icons.Default.Inventory2),
+    Account(Screen.Account.route, "Cuenta", Icons.Default.AccountCircle)
+}
+
+@Composable
+fun MainBottomBar(current: TopLevel, onSelect: (TopLevel) -> Unit) {
+    NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, tonalElevation = 0.dp) {
+        TopLevel.entries.forEach { item ->
+            NavigationBarItem(
+                selected = item == current,
+                onClick = { if (item != current) onSelect(item) },
+                icon = { Icon(item.icon, contentDescription = null) },
+                label = { Text(item.label) },
+                colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    selectedTextColor = MaterialTheme.colorScheme.onSurface
+                )
+            )
+        }
+    }
+}
+
+private val idArgument = listOf(navArgument("id") { type = NavType.LongType })
+private val optionalIdArgument = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L })
+
 @Composable
 fun NavGraph(
     navController: NavHostController = rememberNavController()
 ) {
     val context = LocalContext.current
-    val factory = ViewModelFactory(context)
+    val factory = remember { ViewModelFactory(context) }
     val authViewModel: AuthViewModel = viewModel(factory = factory)
-    
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
 
-    NavHost(
-        navController = navController,
-        startDestination = if (isAuthenticated) Screen.Home.route else Screen.Login.route
-    ) {
+    // El destino inicial se fija una vez; los cambios de sesión navegan limpiando la pila,
+    // para que «Atrás» nunca lleve a una pantalla de la otra mitad de la app (o a una en blanco).
+    val startDestination = remember { if (isAuthenticated) Screen.Projects.route else Screen.Login.route }
+    val currentEntry by navController.currentBackStackEntryAsState()
+    LaunchedEffect(isAuthenticated) {
+        val target = if (isAuthenticated) Screen.Projects.route else Screen.Login.route
+        val inAuthFlow = currentEntry?.destination?.route in setOf(Screen.Login.route, Screen.Register.route)
+        if (currentEntry != null && inAuthFlow == isAuthenticated) {
+            navController.navigate(target) {
+                popUpTo(navController.graph.id) { inclusive = true }
+            }
+        }
+    }
+
+    val selectTopLevel: (TopLevel) -> Unit = { item ->
+        navController.navigate(if (item == TopLevel.Catalog) Screen.Catalog.createRoute(CatalogTab.Materials) else item.route) {
+            popUpTo(Screen.Projects.route) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
+    NavHost(navController = navController, startDestination = startDestination) {
         composable(Screen.Login.route) {
             LoginScreen(
                 viewModel = authViewModel,
@@ -105,173 +162,131 @@ fun NavGraph(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable(Screen.Home.route) {
-            val projectViewModel: ProjectViewModel = viewModel(factory = factory)
+
+        composable(Screen.Projects.route) {
             ProjectListScreen(
-                viewModel = projectViewModel,
+                viewModel = viewModel(factory = factory),
                 onProjectClick = { id -> navController.navigate(Screen.ProjectDetail.createRoute(id)) },
                 onCreateProject = { navController.navigate(Screen.ProjectForm.createRoute()) },
-                onNavigateToMaterials = { navController.navigate(Screen.MaterialList.route) },
-                onNavigateToMachines = { navController.navigate(Screen.MachineList.route) },
-                onNavigateToTools = { navController.navigate(Screen.ToolList.route) }
-            )
-        }
-        composable(Screen.MaterialList.route) {
-            val materialViewModel: MaterialViewModel = viewModel(factory = factory)
-            MaterialListScreen(
-                viewModel = materialViewModel,
-                onMaterialClick = { id -> navController.navigate(Screen.MaterialDetail.createRoute(id)) },
-                onCreateMaterial = { navController.navigate(Screen.MaterialForm.createRoute()) },
-                onNavigateBack = { navController.popBackStack() }
+                bottomBar = { MainBottomBar(TopLevel.Projects, selectTopLevel) }
             )
         }
         composable(
-            route = Screen.MaterialDetail.route,
-            arguments = listOf(navArgument("id") { type = NavType.LongType })
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getLong("id") ?: 0L
-            val materialViewModel: MaterialViewModel = viewModel(factory = factory)
+            route = Screen.Catalog.route,
+            arguments = listOf(navArgument("tab") { type = NavType.StringType; defaultValue = CatalogTab.Materials.name })
+        ) { entry ->
+            val initialTab = CatalogTab.entries.firstOrNull { it.name == entry.arguments?.getString("tab") } ?: CatalogTab.Materials
+            CatalogScreen(
+                initialTab = initialTab,
+                factory = factory,
+                onMaterialClick = { navController.navigate(Screen.MaterialDetail.createRoute(it)) },
+                onMachineClick = { navController.navigate(Screen.MachineDetail.createRoute(it)) },
+                onToolClick = { navController.navigate(Screen.ToolDetail.createRoute(it)) },
+                onCreate = { tab ->
+                    navController.navigate(
+                        when (tab) {
+                            CatalogTab.Materials -> Screen.MaterialForm.createRoute()
+                            CatalogTab.Machines -> Screen.MachineForm.createRoute()
+                            CatalogTab.Tools -> Screen.ToolForm.createRoute()
+                        }
+                    )
+                },
+                bottomBar = { MainBottomBar(TopLevel.Catalog, selectTopLevel) }
+            )
+        }
+        composable(Screen.Account.route) {
+            AccountScreen(
+                email = authViewModel.currentEmail,
+                healthViewModel = viewModel(factory = factory),
+                onLogout = { authViewModel.logout() },
+                bottomBar = { MainBottomBar(TopLevel.Account, selectTopLevel) }
+            )
+        }
+
+        composable(Screen.MaterialDetail.route, idArgument) { entry ->
             MaterialDetailScreen(
-                id = id,
-                viewModel = materialViewModel,
+                id = entry.arguments?.getLong("id") ?: 0L,
+                viewModel = viewModel(factory = factory),
                 onNavigateBack = { navController.popBackStack() },
-                onEditClick = { mid -> navController.navigate(Screen.MaterialForm.createRoute(mid)) }
+                onEditClick = { navController.navigate(Screen.MaterialForm.createRoute(it)) }
             )
         }
-        composable(
-            route = Screen.MaterialForm.route,
-            arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L })
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getLong("id").let { if (it == -1L) null else it }
-            val materialViewModel: MaterialViewModel = viewModel(factory = factory)
+        composable(Screen.MaterialForm.route, optionalIdArgument) { entry ->
             MaterialFormScreen(
-                id = id,
-                viewModel = materialViewModel,
+                id = entry.arguments?.getLong("id")?.takeIf { it != -1L },
+                viewModel = viewModel(factory = factory),
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable(Screen.MachineList.route) {
-            val machineViewModel: MachineViewModel = viewModel(factory = factory)
-            MachineListScreen(
-                viewModel = machineViewModel,
-                onMachineClick = { id -> navController.navigate(Screen.MachineDetail.createRoute(id)) },
-                onCreateMachine = { navController.navigate(Screen.MachineForm.createRoute()) },
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
-        composable(
-            route = Screen.MachineDetail.route,
-            arguments = listOf(navArgument("id") { type = NavType.LongType })
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getLong("id") ?: 0L
-            val machineViewModel: MachineViewModel = viewModel(factory = factory)
+        composable(Screen.MachineDetail.route, idArgument) { entry ->
             MachineDetailScreen(
-                id = id,
-                viewModel = machineViewModel,
+                id = entry.arguments?.getLong("id") ?: 0L,
+                viewModel = viewModel(factory = factory),
                 onNavigateBack = { navController.popBackStack() },
-                onEditClick = { mid -> navController.navigate(Screen.MachineForm.createRoute(mid)) }
+                onEditClick = { navController.navigate(Screen.MachineForm.createRoute(it)) }
             )
         }
-        composable(
-            route = Screen.MachineForm.route,
-            arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L })
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getLong("id").let { if (it == -1L) null else it }
-            val machineViewModel: MachineViewModel = viewModel(factory = factory)
+        composable(Screen.MachineForm.route, optionalIdArgument) { entry ->
             MachineFormScreen(
-                id = id,
-                viewModel = machineViewModel,
+                id = entry.arguments?.getLong("id")?.takeIf { it != -1L },
+                viewModel = viewModel(factory = factory),
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable(Screen.ToolList.route) {
-            val toolViewModel: ToolViewModel = viewModel(factory = factory)
-            ToolListScreen(
-                viewModel = toolViewModel,
-                onToolClick = { id -> navController.navigate(Screen.ToolDetail.createRoute(id)) },
-                onCreateTool = { navController.navigate(Screen.ToolForm.createRoute()) },
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
-        composable(
-            route = Screen.ToolDetail.route,
-            arguments = listOf(navArgument("id") { type = NavType.LongType })
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getLong("id") ?: 0L
-            val toolViewModel: ToolViewModel = viewModel(factory = factory)
+        composable(Screen.ToolDetail.route, idArgument) { entry ->
             ToolDetailScreen(
-                id = id,
-                viewModel = toolViewModel,
+                id = entry.arguments?.getLong("id") ?: 0L,
+                viewModel = viewModel(factory = factory),
                 onNavigateBack = { navController.popBackStack() },
-                onEditClick = { tid -> navController.navigate(Screen.ToolForm.createRoute(tid)) }
+                onEditClick = { navController.navigate(Screen.ToolForm.createRoute(it)) }
             )
         }
-        composable(
-            route = Screen.ToolForm.route,
-            arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L })
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getLong("id").let { if (it == -1L) null else it }
-            val toolViewModel: ToolViewModel = viewModel(factory = factory)
+        composable(Screen.ToolForm.route, optionalIdArgument) { entry ->
             ToolFormScreen(
-                id = id,
-                viewModel = toolViewModel,
+                id = entry.arguments?.getLong("id")?.takeIf { it != -1L },
+                viewModel = viewModel(factory = factory),
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable(
-            route = Screen.ProjectDetail.route,
-            arguments = listOf(navArgument("id") { type = NavType.LongType })
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getLong("id") ?: 0L
-            val projectViewModel: ProjectViewModel = viewModel(factory = factory)
+
+        composable(Screen.ProjectDetail.route, idArgument) { entry ->
             ProjectDetailScreen(
-                id = id,
-                viewModel = projectViewModel,
+                id = entry.arguments?.getLong("id") ?: 0L,
+                viewModel = viewModel(factory = factory),
                 onNavigateBack = { navController.popBackStack() },
-                onEditClick = { projectId -> navController.navigate(Screen.ProjectForm.createRoute(projectId)) },
-                onNavigateToQuotes = { projectId -> navController.navigate(Screen.QuoteList.createRoute(projectId)) },
-                onNavigateToCalculator = { projectId -> navController.navigate(Screen.QuoteCalculator.createRoute(projectId)) }
+                onEditClick = { navController.navigate(Screen.ProjectForm.createRoute(it)) },
+                onNavigateToQuotes = { navController.navigate(Screen.QuoteList.createRoute(it)) },
+                onNavigateToCalculator = { navController.navigate(Screen.QuoteCalculator.createRoute(it)) }
             )
         }
-        composable(
-            route = Screen.ProjectForm.route,
-            arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = -1L })
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getLong("id").let { if (it == -1L) null else it }
-            val projectViewModel: ProjectViewModel = viewModel(factory = factory)
+        composable(Screen.ProjectForm.route, optionalIdArgument) { entry ->
             ProjectFormScreen(
-                id = id,
-                viewModel = projectViewModel,
+                id = entry.arguments?.getLong("id")?.takeIf { it != -1L },
+                viewModel = viewModel(factory = factory),
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable(
-            route = Screen.QuoteList.route,
-            arguments = listOf(navArgument("projectId") { type = NavType.LongType })
-        ) { backStackEntry ->
-            val projectId = backStackEntry.arguments?.getLong("projectId") ?: 0L
-            val quoteViewModel: QuoteViewModel = viewModel(factory = factory)
+        composable(Screen.QuoteList.route, listOf(navArgument("projectId") { type = NavType.LongType })) { entry ->
+            val projectId = entry.arguments?.getLong("projectId") ?: 0L
             QuoteListScreen(
                 projectId = projectId,
-                viewModel = quoteViewModel,
+                viewModel = viewModel(factory = factory),
                 onQuoteClick = { quoteId -> navController.navigate(Screen.QuoteDetail.createRoute(projectId, quoteId)) },
                 onCreateQuote = { navController.navigate(Screen.QuoteCalculator.createRoute(projectId)) },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable(
-            route = Screen.QuoteCalculator.route,
-            arguments = listOf(navArgument("projectId") { type = NavType.LongType })
-        ) { backStackEntry ->
-            val projectId = backStackEntry.arguments?.getLong("projectId") ?: 0L
-            val quoteViewModel: QuoteViewModel = viewModel(factory = factory)
+        composable(Screen.QuoteCalculator.route, listOf(navArgument("projectId") { type = NavType.LongType })) { entry ->
+            val projectId = entry.arguments?.getLong("projectId") ?: 0L
             QuoteCalculatorScreen(
                 projectId = projectId,
-                viewModel = quoteViewModel,
+                viewModel = viewModel(factory = factory),
                 onNavigateBack = { navController.popBackStack() },
-                onQuoteCreated = { quoteId -> navController.navigate(Screen.QuoteDetail.createRoute(projectId, quoteId)) {
-                    popUpTo(Screen.QuoteList.createRoute(projectId))
-                } }
+                onQuoteCreated = { quoteId ->
+                    navController.navigate(Screen.QuoteDetail.createRoute(projectId, quoteId)) {
+                        popUpTo(Screen.QuoteCalculator.route) { inclusive = true }
+                    }
+                }
             )
         }
         composable(
@@ -280,14 +295,11 @@ fun NavGraph(
                 navArgument("projectId") { type = NavType.LongType },
                 navArgument("quoteId") { type = NavType.LongType }
             )
-        ) { backStackEntry ->
-            val projectId = backStackEntry.arguments?.getLong("projectId") ?: 0L
-            val quoteId = backStackEntry.arguments?.getLong("quoteId") ?: 0L
-            val quoteViewModel: QuoteViewModel = viewModel(factory = factory)
+        ) { entry ->
             QuoteDetailScreen(
-                projectId = projectId,
-                quoteId = quoteId,
-                viewModel = quoteViewModel,
+                projectId = entry.arguments?.getLong("projectId") ?: 0L,
+                quoteId = entry.arguments?.getLong("quoteId") ?: 0L,
+                viewModel = viewModel(factory = factory),
                 onNavigateBack = { navController.popBackStack() }
             )
         }

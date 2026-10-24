@@ -1,29 +1,21 @@
 package com.tdcostmanager.app.ui.quote
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.tdcostmanager.app.data.remote.dto.quote.QuoteResponse
 import com.tdcostmanager.app.domain.model.QuoteStatus
 import com.tdcostmanager.app.domain.util.toFriendlyMessage
-import com.tdcostmanager.app.ui.common.UiState
-import com.tdcostmanager.app.ui.material.InfoBox
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import com.tdcostmanager.app.ui.common.*
+import com.tdcostmanager.app.ui.theme.AppThemeExtras
+import com.tdcostmanager.app.ui.theme.tabular
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuoteDetailScreen(
     projectId: Long,
@@ -34,147 +26,171 @@ fun QuoteDetailScreen(
     val state by viewModel.quoteDetailState.collectAsState()
     val statusUpdateState by viewModel.statusUpdateState.collectAsState()
 
-    LaunchedEffect(projectId, quoteId) {
-        viewModel.loadQuoteDetail(projectId, quoteId)
-    }
+    LaunchedEffect(projectId, quoteId) { viewModel.loadQuoteDetail(projectId, quoteId) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Detalle de Presupuesto") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            when (val s = state) {
-                is UiState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                is UiState.Success -> {
-                    val quote = s.data
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .padding(16.dp)
-                    ) {
-                        Text(text = "Presupuesto #${quote.id}", style = MaterialTheme.typography.headlineMedium)
-                        Text(text = "Estado: ${quote.status.label}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.secondary)
-                        quote.calculatedAt?.let {
-                            Text(text = "Calculado para: ${formatInstant(it)}", style = MaterialTheme.typography.bodyMedium)
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            InfoBox(label = "Precio Final", value = formatEuros(quote.finalPrice), modifier = Modifier.weight(1f))
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-                        HorizontalDivider()
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        CostBreakdown(quote)
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        StatusActions(
-                            status = quote.status,
-                            isUpdating = statusUpdateState is UiState.Loading,
-                            onStatusSelected = { viewModel.updateStatus(projectId, quoteId, it) }
-                        )
-
-                        val updateError = statusUpdateState
-                        if (updateError is UiState.Error) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = updateError.error.toFriendlyMessage(), color = MaterialTheme.colorScheme.error)
-                        }
-                    }
-                }
-                is UiState.Error -> Text(s.error.toFriendlyMessage(), modifier = Modifier.align(Alignment.Center).padding(16.dp))
-                else -> {}
+    Scaffold(topBar = { AppTopBar("Presupuesto #$quoteId", onBack = onNavigateBack) }) { padding ->
+        when (val s = state) {
+            is UiState.Loading, UiState.Idle -> LoadingState(Modifier.padding(padding))
+            is UiState.Error -> ErrorState(s.error, onRetry = { viewModel.loadQuoteDetail(projectId, quoteId) }, modifier = Modifier.padding(padding))
+            is UiState.Success -> DetailColumn(padding) {
+                val quote = s.data
+                PriceHero(quote)
+                CostBreakdown(quote)
+                StatusActions(
+                    status = quote.status,
+                    isUpdating = statusUpdateState is UiState.Loading,
+                    onStatusSelected = { viewModel.updateStatus(projectId, quoteId, it) }
+                )
+                (statusUpdateState as? UiState.Error)?.let { ErrorBanner(it.error.toFriendlyMessage()) }
+                Spacer(Modifier.height(8.dp))
             }
         }
     }
 }
+
+@Composable
+private fun PriceHero(quote: QuoteResponse) {
+    SectionCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Precio final", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+            StatusChip(quote.status.label, quote.status.tone)
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(
+            Format.euros(quote.finalPrice),
+            style = MaterialTheme.typography.displaySmall.tabular(),
+            color = MaterialTheme.colorScheme.primary
+        )
+        quote.calculatedAt?.let {
+            Text(
+                "Calculado para el ${Format.dateTime(it)}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+private data class Part(val label: String, val amount: Double)
 
 @Composable
 private fun CostBreakdown(quote: QuoteResponse) {
-    Text(text = "Desglose", style = MaterialTheme.typography.titleMedium)
-    Spacer(modifier = Modifier.height(8.dp))
-
-    // Los presupuestos antiguos no guardaban el desglose por partida
-    if (quote.materialCost == null) {
-        Text(
-            text = "Este presupuesto se generó antes de guardar el desglose por partida.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.secondary
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-    } else {
-        BreakdownRow("Materiales", quote.materialCost)
-        BreakdownRow("Máquinas", quote.machineCost)
-        BreakdownRow("Herramientas", quote.toolCost)
-        BreakdownRow("Mano de obra", quote.laborCost)
-        BreakdownRow("Electricidad", quote.electricityCost)
-        quote.energyKWh?.takeIf { it > 0 }?.let { energy ->
-            val price = quote.electricityPricePerKWh?.let { " a ${String.format(Locale.getDefault(), "%.5f", it)} €/kWh" } ?: ""
+    SectionCard(title = "Desglose del coste") {
+        // Los presupuestos anteriores a la Fase 3 no guardaban las partidas
+        if (quote.materialCost == null) {
             Text(
-                text = "${String.format(Locale.getDefault(), "%.3f", energy)} kWh$price",
+                "Este presupuesto se generó antes de guardar el desglose por partida.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.secondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(Modifier.height(8.dp))
+        } else {
+            val parts = listOf(
+                Part("Materiales", quote.materialCost),
+                Part("Máquinas", quote.machineCost ?: 0.0),
+                Part("Herramientas", quote.toolCost ?: 0.0),
+                Part("Mano de obra", quote.laborCost ?: 0.0),
+                Part("Electricidad", quote.electricityCost ?: 0.0)
+            )
+            val colors = AppThemeExtras.breakdownColors
+            val total = parts.sumOf { it.amount }
+            if (total > 0) {
+                StackedBar(parts.map { it.amount / total }, colors)
+                Spacer(Modifier.height(12.dp))
+            }
+            parts.forEachIndexed { i, part ->
+                Row(Modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(10.dp).clip(MaterialTheme.shapes.extraSmall).background(colors[i]))
+                    Spacer(Modifier.width(10.dp))
+                    Text(part.label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    if (total > 0) {
+                        Text(
+                            "${Format.number(part.amount / total * 100, 0)} %",
+                            style = MaterialTheme.typography.bodySmall.tabular(),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.width(12.dp))
+                    }
+                    Text(Format.euros(part.amount), style = MaterialTheme.typography.bodyMedium.tabular())
+                }
+            }
+            val energy = quote.energyKWh
+            if (energy != null && energy > 0) {
+                Text(
+                    "${Format.energy(energy)}" + (quote.electricityPricePerKWh?.let { " a ${Format.pricePerKWh(it)}" } ?: ""),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 20.dp)
+                )
+            }
         }
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        HorizontalDivider(Modifier.padding(vertical = 10.dp), color = MaterialTheme.colorScheme.outlineVariant)
+        InfoRow("Coste base", Format.euros(quote.baseCost))
+        InfoRow("Seguridad (${Format.percent(quote.safetyPercentage)})", quote.safetyAmount?.let { "+ ${Format.euros(it)}" } ?: "—")
+        InfoRow("Coste ajustado", Format.euros(quote.adjustedCost))
+        InfoRow("Beneficio (${Format.percent(quote.marginPercentage)})", quote.profitAmount?.let { "+ ${Format.euros(it)}" } ?: "—")
+        HorizontalDivider(Modifier.padding(vertical = 6.dp), color = MaterialTheme.colorScheme.outlineVariant)
+        InfoRow("Precio final", Format.euros(quote.finalPrice), emphasize = true)
     }
-
-    BreakdownRow("Coste base", quote.baseCost)
-    BreakdownRow("Seguridad (${quote.safetyPercentage}%)", quote.safetyAmount)
-    BreakdownRow("Coste ajustado", quote.adjustedCost)
-    BreakdownRow("Beneficio (${quote.marginPercentage}%)", quote.profitAmount)
-    BreakdownRow("Precio final", quote.finalPrice)
 }
 
+/** Barra horizontal dividida en tramos proporcionales a cada partida. */
 @Composable
-private fun BreakdownRow(label: String, value: Double?) {
+private fun StackedBar(fractions: List<Double>, colors: List<Color>) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        Modifier
+            .fillMaxWidth()
+            .height(14.dp)
+            .clip(MaterialTheme.shapes.extraSmall)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodyMedium)
-        Text(text = value?.let { formatEuros(it) } ?: "—", style = MaterialTheme.typography.bodyMedium)
+        fractions.forEachIndexed { i, f ->
+            if (f > 0) Box(Modifier.weight(f.toFloat()).fillMaxHeight().background(colors[i]))
+        }
     }
 }
 
-@Composable
-private fun StatusActions(
-    status: QuoteStatus,
-    isUpdating: Boolean,
-    onStatusSelected: (QuoteStatus) -> Unit
-) {
-    val transitions = status.allowedTransitions
-    if (transitions.isEmpty()) return
+private val QuoteStatus.actionLabel: String
+    get() = when (this) {
+        QuoteStatus.DRAFT -> "Borrador"
+        QuoteStatus.SENT -> "Marcar como enviado"
+        QuoteStatus.ACCEPTED -> "Aceptado"
+        QuoteStatus.REJECTED -> "Rechazado"
+        QuoteStatus.EXPIRED -> "Caducado"
+    }
 
-    Text(text = "Cambiar estado", style = MaterialTheme.typography.titleMedium)
-    Spacer(modifier = Modifier.height(8.dp))
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        transitions.forEach { target ->
-            OutlinedButton(onClick = { onStatusSelected(target) }, enabled = !isUpdating) {
-                Text(target.label)
+@Composable
+private fun StatusActions(status: QuoteStatus, isUpdating: Boolean, onStatusSelected: (QuoteStatus) -> Unit) {
+    val transitions = status.allowedTransitions
+    SectionCard(title = "Estado") {
+        if (transitions.isEmpty()) {
+            Text(
+                "Estado final: «${status.label}». Para ofrecer otro precio, calcula un presupuesto nuevo.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            return@SectionCard
+        }
+        Text(
+            if (status == QuoteStatus.DRAFT) "Cuando se lo envíes al cliente, márcalo como enviado." else "¿Qué ha respondido el cliente?",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.height(12.dp))
+        val (primary, others) = transitions.partition { it == QuoteStatus.SENT || it == QuoteStatus.ACCEPTED }
+        primary.forEach {
+            PrimaryButton(text = it.actionLabel, onClick = { onStatusSelected(it) }, loading = isUpdating)
+            Spacer(Modifier.height(8.dp))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            others.forEach {
+                OutlinedButton(
+                    onClick = { onStatusSelected(it) },
+                    enabled = !isUpdating,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    shape = MaterialTheme.shapes.small
+                ) { Text(it.actionLabel) }
             }
         }
     }
-    if (isUpdating) {
-        LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
-    }
 }
-
-private fun formatEuros(value: Double): String = String.format(Locale.getDefault(), "%.2f €", value)
-
-private val dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-
-private fun formatInstant(isoInstant: String): String =
-    runCatching { Instant.parse(isoInstant).atZone(ZoneId.systemDefault()).format(dateTimeFormatter) }
-        .getOrDefault(isoInstant)

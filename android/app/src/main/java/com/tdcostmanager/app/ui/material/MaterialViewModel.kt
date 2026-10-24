@@ -32,7 +32,8 @@ class MaterialViewModel(
 
     fun loadMaterials() {
         viewModelScope.launch {
-            _materialsState.value = UiState.Loading
+            // Al recargar una lista que ya se ve, se mantiene en pantalla en lugar de mostrar la carga
+            if (_materialsState.value !is UiState.Success) _materialsState.value = UiState.Loading
             repository.getMaterials()
                 .onSuccess { list -> _materialsState.value = UiState.Success(list) }
                 .onFailure { e -> _materialsState.value = UiState.Error(e.toNetworkError()) }

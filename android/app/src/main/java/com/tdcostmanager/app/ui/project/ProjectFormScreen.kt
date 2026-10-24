@@ -1,20 +1,19 @@
 package com.tdcostmanager.app.ui.project
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.tdcostmanager.app.data.remote.dto.project.ProjectUpdateRequest
 import com.tdcostmanager.app.domain.model.ProjectStatus
-import com.tdcostmanager.app.ui.common.UiState
+import com.tdcostmanager.app.domain.util.toFriendlyMessage
+import com.tdcostmanager.app.ui.common.*
 
-@OptIn(ExperimentalMaterial3Api::class)
+// Archivar tiene su propia acción, con confirmación, en el detalle del proyecto
+private val editableStatuses = ProjectStatus.entries - ProjectStatus.ARCHIVED
+
 @Composable
 fun ProjectFormScreen(
     id: Long?,
@@ -24,31 +23,27 @@ fun ProjectFormScreen(
     val detailState by viewModel.projectDetailState.collectAsState()
     val operationState by viewModel.operationState.collectAsState()
 
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var laborHours by remember { mutableStateOf("") }
-    var laborCostPerHour by remember { mutableStateOf("") }
-    var status by remember { mutableStateOf(ProjectStatus.DRAFT) }
+    var name by rememberSaveable { mutableStateOf("") }
+    var description by rememberSaveable { mutableStateOf("") }
+    var laborHours by rememberSaveable { mutableStateOf("") }
+    var laborCostPerHour by rememberSaveable { mutableStateOf("") }
+    var status by rememberSaveable { mutableStateOf(ProjectStatus.DRAFT) }
+    var submitted by rememberSaveable { mutableStateOf(false) }
+    var loaded by rememberSaveable { mutableStateOf(false) }
 
-    val isEdit = id != null
-
-    LaunchedEffect(id) {
-        if (id != null) {
-            viewModel.loadProjectDetail(id)
-        }
-    }
-
+    LaunchedEffect(id) { if (id != null) viewModel.loadProjectDetail(id) }
     LaunchedEffect(detailState) {
-        if (isEdit && detailState is UiState.Success) {
-            val project = (detailState as UiState.Success).data
-            name = project.name
-            description = project.description ?: ""
-            laborHours = project.laborHours.toString()
-            laborCostPerHour = project.laborCostPerHour.toString()
-            status = project.status
+        val s = detailState
+        if (id != null && !loaded && s is UiState.Success) {
+            val p = s.data
+            name = p.name
+            description = p.description.orEmpty()
+            laborHours = Format.forInput(p.laborHours)
+            laborCostPerHour = Format.forInput(p.laborCostPerHour)
+            status = p.status
+            loaded = true
         }
     }
-
     LaunchedEffect(operationState) {
         if (operationState is UiState.Success) {
             viewModel.resetOperationState()
@@ -56,88 +51,49 @@ fun ProjectFormScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(if (isEdit) "Editar Proyecto" else "Nuevo Proyecto") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Nombre") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
+    val hoursError = if (submitted) validateNumber(laborHours) else null
+    val rateError = if (submitted) validateNumber(laborCostPerHour) else null
+    val hours = Format.parseDecimal(laborHours)
+    val rate = Format.parseDecimal(laborCostPerHour)
 
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("Descripción") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                OutlinedTextField(
-                    value = laborHours,
-                    onValueChange = { laborHours = it },
-                    label = { Text("Horas") },
-                    modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-                OutlinedTextField(
-                    value = laborCostPerHour,
-                    onValueChange = { laborCostPerHour = it },
-                    label = { Text("Coste/h") },
-                    modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            if (operationState is UiState.Error) {
-                Text(
-                    text = (operationState as UiState.Error).error.toString(),
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
-
-            Button(
-                onClick = {
-                    val hours = laborHours.toDoubleOrNull() ?: 0.0
-                    val cost = laborCostPerHour.toDoubleOrNull() ?: 0.0
-                    if (id != null) {
-                        viewModel.updateProject(id, ProjectUpdateRequest(name, description, status, hours, cost))
-                    } else {
-                        viewModel.createProject(name, description, hours, cost)
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = name.isNotBlank() && operationState !is UiState.Loading
-            ) {
-                if (operationState is UiState.Loading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+    FormScaffold(
+        title = if (id != null) "Editar proyecto" else "Nuevo proyecto",
+        onBack = onNavigateBack,
+        saveLabel = if (id != null) "Guardar cambios" else "Crear proyecto",
+        saving = operationState is UiState.Loading,
+        error = (operationState as? UiState.Error)?.error?.toFriendlyMessage(),
+        onSave = {
+            submitted = true
+            if (name.isNotBlank() && validateNumber(laborHours) == null && validateNumber(laborCostPerHour) == null && hours != null && rate != null) {
+                val desc = description.ifBlank { null }
+                if (id != null) {
+                    viewModel.updateProject(id, ProjectUpdateRequest(name.trim(), desc, status, hours, rate))
                 } else {
-                    Text("Guardar")
+                    viewModel.createProject(name.trim(), desc, hours, rate)
                 }
+            }
+        }
+    ) {
+        SectionCard(title = "Proyecto") {
+            AppTextField(name, { name = it }, "Nombre", error = if (submitted && name.isBlank()) "Obligatorio" else null)
+            Spacer(Modifier.height(4.dp))
+            AppTextField(description, { description = it }, "Descripción (opcional)", singleLine = false, minLines = 3)
+            if (id != null) {
+                Spacer(Modifier.height(12.dp))
+                DropdownField("Estado", editableStatuses, status, { it.label }, { status = it })
+            }
+        }
+        SectionCard(title = "Mano de obra") {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                NumberField(laborHours, { laborHours = it }, "Horas", suffix = "h", error = hoursError, modifier = Modifier.weight(1f))
+                NumberField(laborCostPerHour, { laborCostPerHour = it }, "Precio/hora", suffix = "€/h", error = rateError, modifier = Modifier.weight(1f))
+            }
+            if (hours != null && rate != null) {
+                Text(
+                    "Coste de mano de obra: ${Format.euros(hours * rate)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }

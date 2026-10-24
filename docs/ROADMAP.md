@@ -41,7 +41,20 @@ Que un presupuesto guarde cómo se calculó. Issue #44.
 - [x] `PATCH /api/v1/projects/{projectId}/quotes/{quoteId}/status` para cambiar el estado (404 si el presupuesto es de otro usuario).
 - [x] La app Android muestra el desglose, permite cambiar el estado y enseña el mensaje del backend en los errores 400 y 409.
 
-## Fase 4 — Proyectos editables y validaciones coherentes ⬜
+## Fase 4 — Rediseño de la app Android ✅
+
+La app funcionaba, pero no se podía enseñar: sin tema propio, formatos de programador y pantallas que prometían funciones que no existían. Issue #48.
+
+- [x] Tema propio «taller técnico» (grafito y naranja filamento) en modo claro y oscuro, con componentes compartidos (`ui/theme`, `ui/common`).
+- [x] Formato español en importes, cantidades y fechas; estados y categorías traducidos.
+- [x] Barra inferior (Proyectos, Catálogo con pestañas, Cuenta), cierre de sesión y arreglo de la pantalla en blanco al volver atrás tras iniciar sesión.
+- [x] Detalle de proyecto con sus líneas; presupuesto con barra de desglose por partida; coste unitario en el catálogo.
+- [x] Formularios que aceptan coma decimal, con validación por campo y todas las categorías y unidades.
+- [x] Login y registro sin funciones ficticias; tras registrarse se inicia sesión sola.
+- [x] Icono adaptativo y splash propios.
+- [x] `.gitattributes` para que `mvnw` y `gradlew` conserven LF en Windows (`docker compose up --build` fallaba).
+
+## Fase 5 — Proyectos editables y validaciones coherentes ⬜
 
 Issue #45.
 
@@ -49,7 +62,7 @@ Issue #45.
 - [ ] Exigir cantidad mayor que 0 en la API y en la base de datos (`CHECK quantity > 0`), para que falle al guardar y no al presupuestar.
 - [ ] Conversión entre unidades de masa y volumen mediante la densidad del material (p. ej. resina comprada en litros y usada en gramos).
 
-## Fase 5 — Rendimiento y robustez ⬜
+## Fase 6 — Rendimiento y robustez ⬜
 
 Issue #46.
 
@@ -59,7 +72,7 @@ Issue #46.
 - [ ] Usar la zona `Europe/Madrid` al consultar ESIOS, para acertar el tramo en los días de cambio de hora.
 - [ ] Migración: `users` con `TIMESTAMPTZ` y eliminar el índice redundante `idx_users_email`.
 
-## Fase 6 — App Android lista para release ⬜
+## Fase 7 — App Android lista para release ⬜
 
 Issue #47.
 
@@ -72,6 +85,6 @@ Issue #47.
 
 ## Fuera de este roadmap (ideas para más adelante)
 
-- Refresh tokens y cierre de sesión.
+- Refresh tokens.
 - Exportar presupuestos a PDF.
 - Límite de intentos en el login.
