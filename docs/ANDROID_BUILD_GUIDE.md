@@ -1,66 +1,59 @@
-# Guía de Compilación y Configuración de Entornos Android — 3D Cost Manager
+# Guía de compilación de la app Android — 3D Cost Manager
 
-Este documento detalla los pasos para compilar, configurar endpoints por entorno e instalar el cliente nativo Android de **3D Cost Manager** en un emulador o dispositivo físico.
-
----
-
-## 1. Requisitos Previos
-
-* **Android Studio 2024.1+** con Android SDK instalado (API level 34+).
-* **JDK 21** configurado en Android Studio (`jbr-21`).
+Cómo compilar la app, apuntarla al backend correcto e instalarla en un emulador o en un teléfono.
 
 ---
 
-## 2. Configuración Centralizada de URL Base (`BuildConfig.BASE_URL`)
+## 1. Requisitos
 
-Desde la **Issue #38**, la URL base de la API REST se encuentra centralizada a través de `BuildConfig.BASE_URL` definido en `android/app/build.gradle.kts`. `NetworkConfig.kt` consume directamente esta propiedad.
+- **Android Studio** con el Android SDK 34 instalado.
+- **JDK 21.** Sirve el que trae Android Studio (*Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK*). Desde la terminal, Gradle usa `JAVA_HOME` o el `java` del `PATH`.
+- **`android/local.properties`** con la ruta del SDK (`sdk.dir=...`). Android Studio lo crea al abrir el proyecto; no se versiona.
 
-### Entornos de Red
-
-1. **Emulador Android (Desarrollo por Defecto):**
-   - Configuración: `buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")`
-   - La IP `10.0.2.2` permite al emulador redirigir el tráfico hacia el `localhost` del host de desarrollo en el puerto `8080`.
-
-2. **Dispositivo Físico (Pruebas en LAN local):**
-   - Para probar en un terminal físico en la misma red Wi-Fi, edita temporalmente `build.gradle.kts` o define una propiedad en `gradle.properties`:
-     ```kotlin
-     buildConfigField("String", "BASE_URL", "\"http://192.168.X.X:8080/\"")
-     ```
-   - *Nota:* Asegúrate de que el firewall de tu PC permita conexiones entrantes al puerto 8080.
-
-3. **Staging / Producción (Nube HTTPS):**
-   - Cuando el backend se encuentre desplegado en la nube AWS con TLS/HTTPS habilitado, configura en la variante `release`:
-     ```kotlin
-     buildConfigField("String", "BASE_URL", "\"https://api.3dcostmanager.com/\"")
-     ```
+El repositorio no guarda rutas de ningún equipo. Si necesitas fijar el JDK para Gradle, añade `org.gradle.java.home` a tu `~/.gradle/gradle.properties`, no al del proyecto.
 
 ---
 
-## 3. Generación de APKs (Android Studio o Terminal)
+## 2. URL del backend (`BuildConfig.BASE_URL`)
 
-### Opción A — Desde la Terminal (Gradle Wrapper)
-Ubicado en la carpeta `android`:
-```bash
-cd android
-./gradlew assembleDebug assembleRelease
-```
-Ubicación de artefactos generados:
-- **Debug:** `android/app/build/outputs/apk/debug/app-debug.apk`
-- **Release:** `android/app/build/outputs/apk/release/app-release-unsigned.apk`
+La URL base se define en [`android/app/build.gradle.kts`](../android/app/build.gradle.kts) y la lee `NetworkConfig.kt`.
+
+| Entorno | URL | Notas |
+| :--- | :--- | :--- |
+| Emulador (por defecto) | `http://10.0.2.2:8080/` | `10.0.2.2` es el `localhost` del equipo anfitrión visto desde el emulador. |
+| Teléfono físico en la misma Wi-Fi | `http://<IP-del-PC>:8080/` | Cambia la URL del `buildType` que compiles. El firewall del PC debe aceptar conexiones entrantes al puerto 8080. |
+| Producción | `https://...` | Aún no hay una URL HTTPS de producción. |
+
+Hoy `debug` y `release` usan la misma URL de desarrollo y el manifiesto permite tráfico HTTP sin cifrar (`usesCleartextTraffic`). Separar la configuración por `buildType` es la Fase 6 del [roadmap](ROADMAP.md).
 
 ---
 
-## 4. Instalación en Emulador o Dispositivo
+## 3. Compilar
 
-Puedes instalar el APK generado utilizando `adb` desde la terminal:
+Desde la carpeta `android`:
 
 ```bash
-adb install android/app/build/outputs/apk/debug/app-debug.apk
+./gradlew test assembleDebug      # en Windows: gradlew.bat test assembleDebug
 ```
+
+La APK queda en `android/app/build/outputs/apk/debug/app-debug.apk`.
+
+`./gradlew assembleRelease` genera `app-release-unsigned.apk`, pero **no está firmada ni apunta a un backend de producción**, así que no sirve para distribuirla.
+
+El CI ([`android-ci.yml`](../.github/workflows/android-ci.yml)) ejecuta `test assembleDebug` en cada PR que toca `android/` y adjunta la APK debug como artefacto.
 
 ---
 
-## 5. Verificación de Integridad y Calidad
+## 4. Instalar
 
-- **Compilación sin advertencias:** Los formularios Compose (`MachineFormScreen`, `MaterialFormScreen`, `ProjectFormScreen`, `ToolFormScreen`) fueron saneados de expresiones redundantes (`Condition is always 'true'`).
-- **Seguridad local:** Las credenciales y tokens JWT se almacenan en `EncryptedSharedPreferences` protegidos por la Keystore del dispositivo.
+```bash
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Que la APK compile no demuestra que la app funcione: con el backend en marcha, comprueba en el emulador o en el teléfono el registro, el inicio de sesión, el alta de catálogo, la creación de un proyecto y la generación de un presupuesto.
+
+---
+
+## 5. Sesión
+
+El token JWT se guarda cifrado con `EncryptedSharedPreferences` (`TokenManager`). Si el backend responde 401 fuera de los endpoints de autenticación, la app borra el token y vuelve a la pantalla de inicio de sesión.

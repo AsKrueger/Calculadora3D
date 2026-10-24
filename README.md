@@ -1,81 +1,79 @@
-# 3D Cost Manager (v1.0.0)
+# 3D Cost Manager
 
-> Aplicación integral para la **gestión de proyectos de impresión 3D y estimación automatizada de costes**, estructurada como un backend profesional en Java 21 / Spring Boot 3.2.5 y un cliente móvil nativo en Android (Jetpack Compose), con soporte de infraestructura cloud en AWS (CloudFormation y CI/CD automatizado).
+Aplicación para calcular el coste de piezas impresas en 3D y generar presupuestos. Se compone de un backend REST en Java 21 / Spring Boot 3.2.5 y una app Android en Kotlin con Jetpack Compose.
 
----
-
-## 🎯 Resumen del Proyecto
-
-**3D Cost Manager** resuelve el problema de calcular con precisión los costes de fabricación de piezas 3D y post-procesado. A partir de catálogos de recursos (materiales, máquinas, herramientas) y parámetros económicos (mano de obra, márgenes, consumo eléctrico con tarifas reales integradas desde la API de ESIOS), el sistema calcula el coste base, ajustado y el precio final de venta, generando y persistiendo presupuestos inmutables (**Quotes**).
+A partir de un catálogo de recursos (materiales, máquinas y herramientas) y de la mano de obra de cada proyecto, el backend calcula el coste base, le aplica un margen de seguridad y un margen de beneficio, y guarda el resultado como presupuesto (*quote*). El consumo eléctrico de las máquinas se valora con el precio horario real de la API de ESIOS (Red Eléctrica).
 
 ---
 
-## 🏗️ Arquitectura del Sistema
+## Estructura del repositorio
 
-### 1. Backend (Spring Boot 3.2.5 / Java 21)
-* **Domain-Driven Design (DDD) Táctico:** Encapsulación de agregados (`Project`, `Quote`) para proteger invariantes de negocio (ej. prohibición de modificar proyectos archivados, inmutabilidad de snapshots financieros en presupuestos emitidos).
-* **Motor de Cálculo Puro (`CostCalculator`):** Desacoplado del ORM mediante `CostCalculationInput`, garantizando cálculos deterministas con alta precisión (`BigDecimal`, escala 8 interna, escala 4 final, `HALF_UP`).
-* **Contrato Estándar de Errores (`ApiError` & `GlobalExceptionHandler`):** Respuestas de error REST unificadas con códigos HTTP semánticos (`400`, `401`, `403`, `404`, `405`, `409`, `500`, `503`), desglose de validaciones por campo y cero filtrado de trazas o detalles internos.
-* **Persistencia Robusta:** PostgreSQL 16 con migraciones versionadas gestionadas por **Flyway** e Hibernate en modo estricto de validación (`spring.jpa.hibernate.ddl-auto=validate`).
-* **Seguridad Stateless:** Autenticación mediante JSON Web Tokens (JWT) inyectados desde `${JWT_SECRET}` con validación de arranque (`@PostConstruct`), cifrado BCrypt y gestión segura de secretos mediante **AWS Systems Manager Parameter Store**.
-
-### 2. Cliente Android (Jetpack Compose & MVVM)
-* **Arquitectura Reactiva:** MVVM estructurado con Jetpack Compose, flujos reactivos (`StateFlow`), y gestión robusta de estados de red (`UiState`, `NetworkError`).
-* **Configuración Centralizada de Red (`BuildConfig.BASE_URL`):** Retrofit consume `BuildConfig.BASE_URL` configurado dinámicamente desde Gradle para soportar emuladores (`10.0.2.2:8080`), dispositivos físicos en LAN Wi-Fi (`192.168.X.X:8080`) o entornos de producción HTTPS.
-* **Seguridad Local:** Interceptor de autenticación (`AuthInterceptor`) para la inyección automática de tokens y persistencia local segura de sesiones en Android Keystore con `EncryptedSharedPreferences` (AES-256).
-* **Flujo MVP Completo:** Autenticación (Login/Registro), gestión de Proyectos, Materiales, Máquinas, Herramientas, Motor de Cálculo y Consulta/Generación de Presupuestos (`Quotes`).
-
-### 3. Infraestructura Cloud AWS & DevOps
-* **Infraestructura como Código (CloudFormation):**
-  * `vpc-networking.yaml`: VPC dedicada con Subnet Pública (EC2) y Subnets Privadas (RDS).
-  * `rds-postgresql.yaml`: Base de datos administrada Amazon RDS PostgreSQL 16 (`db.t4g.micro`) en subred privada.
-  * `ec2.yaml`: Instancia de cómputo Amazon EC2 (`t4g.micro` ARM64 Graviton) con Docker y rol IAM de mínimo privilegio.
-  * `parameter-store.yaml`: Gestión segura de configuración y credenciales (`SecureString`).
-* **CI/CD Automatizado (GitHub Actions):** Pipeline que compila, valida tests, construye imágenes Docker optimizadas para ARM64 (`linux/arm64`), las publica en Amazon ECR, y realiza el despliegue automático en EC2 mediante AWS Systems Manager (SSM) Run Command con Health Check integrado (`/api/v1/health` → `UP`).
-* **Nota de Estado:** Las plantillas de infraestructura y la canalización CI/CD están definidas y validadas en código fuente. Las verificaciones en vivo en la nube AWS se marcan como `NO VERIFICADO EN VIVO` hasta el aprovisionamiento formal de la cuenta AWS de producción.
+| Carpeta | Contenido |
+| :--- | :--- |
+| [`backend/`](backend/) | API REST (Spring Boot, PostgreSQL, Flyway, JWT) |
+| [`android/`](android/) | App Android (Jetpack Compose, MVVM, Retrofit) |
+| [`infra/aws/`](infra/aws/) | Plantillas CloudFormation (VPC, RDS, EC2, Parameter Store) |
+| [`docs/`](docs/) | Documentación técnica y [roadmap](docs/ROADMAP.md) |
+| [`.github/workflows/`](.github/workflows/) | CI de backend y Android, despliegue a AWS |
 
 ---
 
-## 🛠️ Tecnologías Principales
+## Backend
 
-* **Backend:** Java 21, Spring Boot 3.2.5, Spring Data JPA / Hibernate, Flyway, Spring Security, JJWT, PostgreSQL 16, JUnit 5, Mockito, Testcontainers.
-* **Android:** Kotlin 2.1.0, Jetpack Compose, Material 3, Retrofit, Kotlinx Serialization, Coroutines, Gradle 8.9, JDK 21 (`jbr-21`).
-* **DevOps / Cloud:** Docker & Docker Compose, Amazon EC2, Amazon RDS, Amazon ECR, AWS SSM Parameter Store, GitHub Actions (OIDC).
+- **Dominio:** `Project` y `Quote` protegen sus reglas (un proyecto archivado no se puede modificar ni presupuestar).
+- **Cálculo:** `CostCalculator` es lógica pura, sin dependencias de JPA. Usa `BigDecimal` con escala 8 en los cálculos intermedios y escala 4 en el resultado (`HALF_UP`).
+- **Persistencia:** PostgreSQL 16, migraciones con Flyway y Hibernate en modo `ddl-auto=validate`.
+- **Seguridad:** JWT sin estado y contraseñas con BCrypt. `JWT_SECRET` es obligatorio: si falta o no es una clave Base64 de al menos 256 bits, la aplicación no arranca.
+- **Datos por usuario:** cada usuario solo ve y modifica sus propios catálogos, proyectos y presupuestos. Un recurso de otro usuario responde 404.
+- **Errores:** todas las respuestas de error siguen el formato `ApiError` descrito en [`docs/API_ERROR_CONTRACT.md`](docs/API_ERROR_CONTRACT.md).
 
----
+### Ejecutar en local
 
-## 🐳 Ejecución Local y Pruebas
+Requisitos: JDK 21 y Docker.
 
-### 1. Backend (Spring Boot + PostgreSQL con Testcontainers / Docker Compose)
-Para compilar y ejecutar las 69 pruebas unitarias y de integración del backend:
 ```bash
-cd backend
-mvn test
-```
-Para levantar el stack local con Docker Compose:
-```bash
-cp .env.example .env
+cp .env.example .env          # revisa los valores; genera tu JWT_SECRET con: openssl rand -base64 32
 docker compose up --build -d
 curl http://localhost:8080/api/v1/health
 ```
 
-### 2. Cliente Android (Gradle Wrapper)
-Para compilar y verificar el cliente Android (Debug y Release):
+Sin un `ESIOS_API_TOKEN` válido el backend arranca, pero no puede generar presupuestos porque no obtiene el precio de la electricidad.
+
+### Tests
+
 ```bash
-cd android
-./gradlew test assembleDebug assembleRelease
+cd backend
+./mvnw clean verify           # en Windows: mvnw.cmd clean verify
 ```
-Ubicación de artefactos generados:
-- **Debug APK:** `android/app/build/outputs/apk/debug/app-debug.apk`
-- **Release APK:** `android/app/build/outputs/apk/release/app-release-unsigned.apk`
+
+Los tests de integración usan Testcontainers, así que necesitan Docker en marcha. El test contra la API real de ESIOS está deshabilitado por defecto porque requiere un token personal.
 
 ---
 
-## 📌 Estado del Saneamiento Técnico (Issues #36–#41)
+## App Android
 
-- [x] **Issue #36:** Auditoría exhaustiva de la base de código.
-- [x] **Issue #37:** Eliminación de artefactos temporales (~800MB heap dump y logs) e inyección de reglas `.gitignore`.
-- [x] **Issue #38:** Configuración centralizada `BuildConfig.BASE_URL` y saneamiento de advertencias Kotlin en formularios Compose.
-- [x] **Issue #39:** Inyección obligatoria de `${JWT_SECRET}` con validación de arranque y eliminación de advertencia HHH90000025 en Hibernate.
-- [x] **Issue #40:** Estandarización del contrato de errores REST (`ApiError` / `GlobalExceptionHandler` con suite de pruebas unitarias dedicada).
-- [x] **Issue #41:** Alineación y actualización completa de la documentación técnica.
+Requisitos: Android Studio con el SDK 34 y JDK 21 (el JDK que trae Android Studio sirve).
+
+```bash
+cd android
+./gradlew test assembleDebug
+adb install app/build/outputs/apk/debug/app-debug.apk
+```
+
+La app se conecta a `BuildConfig.BASE_URL`, que por defecto es `http://10.0.2.2:8080/`: la dirección del equipo anfitrión vista desde el emulador. Para un teléfono físico o para producción, consulta [`docs/ANDROID_BUILD_GUIDE.md`](docs/ANDROID_BUILD_GUIDE.md).
+
+La configuración `release` todavía apunta a esa misma URL de desarrollo y no está firmada, así que la APK release no está lista para distribuirse (Fase 6 del roadmap).
+
+---
+
+## CI/CD y AWS
+
+- **Backend:** cada PR contra `develop` o `main` ejecuta `./mvnw clean verify`. Un push a `main` construye la imagen Docker ARM64, la publica en Amazon ECR y la despliega en EC2 mediante SSM.
+- **Android:** cada PR contra `develop` o `main` que toque `android/` ejecuta los tests y compila la APK debug.
+- **Infraestructura:** las plantillas de `infra/aws/` y la guía de [`docs/aws/`](docs/aws/) describen el entorno previsto. **No se ha verificado un despliegue real** en una cuenta AWS.
+
+---
+
+## Estado y próximos pasos
+
+Las fases hechas y pendientes, con su Issue, están en [`docs/ROADMAP.md`](docs/ROADMAP.md).

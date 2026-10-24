@@ -20,7 +20,7 @@ GitHub Actions
                │
                ├── [FAIL] ──► Detener pipeline (Cero publicación)
                │
-               └── [PASS] ──► (Solo en Push a main/develop)
+               └── [PASS] ──► (Solo en Push a main)
                                 │
                                 ├── 4. AWS OIDC Authentication
                                 ├── 5. ECR Login
@@ -33,7 +33,8 @@ GitHub Actions
 ## 2. Triggers y Comportamiento (PR vs Push)
 
 * **Pull Request:** Ejecuta únicamente la fase de verificación (`Maven clean verify` y tests), garantizando que ningún código roto o con tests fallidos pueda fusionarse. No publica imágenes en ECR.
-* **Push a `develop` o `main`:** Ejecuta la fase de verificación y, si es exitosa, construye la imagen Docker para `linux/arm64` y la publica automáticamente en Amazon ECR.
+* **Push a `develop`:** Ejecuta solo la fase de verificación. No publica imágenes ni despliega.
+* **Push a `main`:** Ejecuta la verificación y, si es exitosa, construye la imagen Docker para `linux/arm64`, la publica en Amazon ECR y la despliega en EC2 (ver [AWS_DEPLOYMENT_AUTOMATED.md](AWS_DEPLOYMENT_AUTOMATED.md)).
 
 ---
 

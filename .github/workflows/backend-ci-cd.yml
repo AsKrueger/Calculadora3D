@@ -5,10 +5,12 @@ on:
     branches: [ develop, main ]
     paths:
       - 'backend/**'
+      - '.github/workflows/backend-ci-cd.yml'
   pull_request:
     branches: [ develop, main ]
     paths:
       - 'backend/**'
+      - '.github/workflows/backend-ci-cd.yml'
 
 permissions:
   id-token: write
@@ -35,9 +37,10 @@ jobs:
       - name: Run Maven Verify (Clean + Tests)
         run: ./mvnw clean verify
 
+  # Solo main despliega: develop se valida en build-and-test, pero no llega a AWS
   build-and-push-ecr:
     needs: build-and-test
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ steps.meta.outputs.sha }}
@@ -82,7 +85,7 @@ jobs:
 
   deploy-to-ec2:
     needs: build-and-push-ecr
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
