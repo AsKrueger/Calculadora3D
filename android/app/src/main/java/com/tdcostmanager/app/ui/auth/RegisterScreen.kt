@@ -3,18 +3,18 @@ package com.tdcostmanager.app.ui.auth
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.tdcostmanager.app.ui.common.AppTextField
 import com.tdcostmanager.app.ui.common.ErrorBanner
-import com.tdcostmanager.app.ui.common.PrimaryButton
+import com.tdcostmanager.app.ui.common.GradientButton
+import com.tdcostmanager.app.ui.common.LabeledTextField
 
 // Mismo mínimo que exige el backend en RegisterRequest
 private const val MIN_PASSWORD_LENGTH = 8
@@ -46,22 +46,18 @@ fun RegisterScreen(
     AuthLayout(
         title = "Crear cuenta",
         subtitle = "Cada cuenta tiene su propio catálogo, proyectos y presupuestos.",
-        footer = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("¿Ya tienes cuenta?", style = MaterialTheme.typography.bodyMedium)
-                TextButton(onClick = onNavigateBack) { Text("Iniciar sesión") }
-            }
-        }
+        footer = { AuthFooter("¿Ya tienes cuenta?", "Iniciar sesión", onNavigateBack) }
     ) {
-        AppTextField(
+        LabeledTextField(
             value = email,
             onValueChange = { email = it },
             label = "Correo electrónico",
-            leadingIcon = Icons.Default.Email,
+            placeholder = "ejemplo@taller3d.com",
+            leadingIcon = Icons.Outlined.Email,
             error = emailError,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(20.dp))
         PasswordField(
             value = password,
             onValueChange = { password = it },
@@ -70,7 +66,7 @@ fun RegisterScreen(
             error = passwordError,
             helper = "Al menos $MIN_PASSWORD_LENGTH caracteres"
         )
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(12.dp))
         PasswordField(
             value = confirmPassword,
             onValueChange = { confirmPassword = it },
@@ -80,15 +76,15 @@ fun RegisterScreen(
             error = confirmError
         )
         if (uiState is AuthUiState.Error) {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
             ErrorBanner((uiState as AuthUiState.Error).message)
         }
-        Spacer(Modifier.height(20.dp))
-        PrimaryButton(
+        Spacer(Modifier.height(28.dp))
+        GradientButton(
             text = "Crear cuenta",
             onClick = submit,
-            enabled = email.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank(),
-            loading = uiState is AuthUiState.Loading
+            loading = uiState is AuthUiState.Loading,
+            trailingIcon = Icons.AutoMirrored.Filled.ArrowForward
         )
     }
 }

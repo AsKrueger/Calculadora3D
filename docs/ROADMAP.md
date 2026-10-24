@@ -53,6 +53,7 @@ La app funcionaba, pero no se podía enseñar: sin tema propio, formatos de prog
 - [x] Login y registro sin funciones ficticias; tras registrarse se inicia sesión sola.
 - [x] Icono adaptativo y splash propios.
 - [x] `.gitattributes` para que `mvnw` y `gradlew` conserven LF en Windows (`docker compose up --build` fallaba).
+- [x] Login y registro según el diseño de referencia: logo con degradado, campos con etiqueta y botón en degradado, reutilizables (Issue #49).
 
 ## Fase 5 — Proyectos editables y validaciones coherentes ⬜
 
@@ -80,6 +81,16 @@ Issue #47.
 - [ ] `usesCleartextTraffic` solo en debug (network security config).
 - [ ] `isMinifyEnabled = true` con reglas de R8/ProGuard para Retrofit y modelos.
 - [ ] `allowBackup="false"` o reglas de backup que excluyan el token.
+
+## Fase 8 — Recuperación de contraseña ⬜
+
+Issue #50. Hoy, quien olvida la contraseña pierde el acceso a sus datos.
+
+- [ ] Migración `password_reset_tokens`: código de 6 dígitos con hash, caducidad de 15 minutos y un solo uso.
+- [ ] `POST /auth/password-reset/request` (responde siempre 202, sin revelar si el correo existe) y `POST /auth/password-reset/confirm`.
+- [ ] Límite de intentos por código y de solicitudes por correo.
+- [ ] Envío por SMTP (`spring-boot-starter-mail`) configurado con variables de entorno y Parameter Store.
+- [ ] Enlace «¿Olvidaste?» en el login y pantallas para pedir el código y fijar la nueva contraseña.
 
 ---
 
