@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copia automática de Android (Android 12+): base de datos, ajustes e imágenes; nunca la caché -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="database" path="." />
+        <include domain="sharedpref" path="." />
+        <include domain="file" path="datastore/" />
+        <include domain="file" path="images/" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="database" path="." />
+        <include domain="sharedpref" path="." />
+        <include domain="file" path="datastore/" />
+        <include domain="file" path="images/" />
+    </device-transfer>
+</data-extraction-rules>

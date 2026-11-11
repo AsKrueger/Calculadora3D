@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Tema de la ventana. Los colores de la interfaz los pone AppTheme (Compose). -->
-    <style name="Theme.TdCostManager" parent="android:Theme.Material.Light.NoActionBar">
+    <!-- Tema de la ventana (AppCompat, necesario para elegir idioma por app). Los colores de la interfaz los pone AppTheme (Compose). -->
+    <style name="Theme.TdCostManager" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:windowBackground">@color/window_background</item>
     </style>
 

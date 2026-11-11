@@ -1,8 +1,38 @@
 # Roadmap de 3D Cost Manager
 
-Plan de mejoras surgido de la revisión del código (octubre 2026). Las fases van por prioridad: primero seguridad, después integridad de los datos, luego funcionalidad y por último rendimiento y despliegue. Cada fase se entrega en su propia rama y PR contra `develop`.
+Cada fase se entrega en su propia rama y PR contra `develop`.
 
-Estado: ⬜ pendiente · 🟡 en curso · ✅ hecho
+Estado: ⬜ pendiente · 🟡 en curso · ✅ hecho · ⛔ descartada
+
+En noviembre de 2026, tras analizar la competencia, la app se rehízo como app local sin cuenta ni servidor (Fase 9). Las fases 1 a 5 se hicieron sobre la versión con backend; las fases 6 a 8 quedan descartadas porque solo tenían sentido con servidor.
+
+---
+
+## Fase 9 — Nueva app local: calculadora, pedidos y ajustes ✅
+
+Issue #52. Análisis de competencia y plan: https://claude.ai/artifact/7r8fuRGTNgxvWTztHcggKN
+
+- [x] Room y DataStore en el dispositivo; sin login ni backend. Copia automática de Android y copia manual en `.zip`.
+- [x] `CostEngine` en Kotlin puro: varios materiales y desperdicio, luz, desgaste, preparación por placa y acabado por pieza, extras, fallos, piezas por placa; precio por margen, beneficio fijo o precio fijo, con comisión del canal, IVA y redondeo.
+- [x] Importar G-code y 3MF laminados (Flash Studio, Orca, Bambu Studio, PrusaSlicer, Cura): tiempo, gramos por filamento e imagen.
+- [x] Catálogo con plantillas de impresoras, stock de bobinas, extras y canales de venta con comisiones.
+- [x] Piezas guardadas; presupuestos con cliente, estados, descuento, envío, PDF y descuento de stock al imprimir; resumen del mes.
+- [x] Ajustes: idioma (español/inglés), moneda, tema, valores por defecto, PVPC del día (REData), datos del negocio, imágenes sin conexión, borrar caché y datos, copia de seguridad, comentarios, valorar, compartir y privacidad.
+- [x] Barra de anuncios AdMob arriba, solo visible con anuncio cargado; consentimiento UMP.
+- [x] Release con R8, firma por `keystore.properties` y sin tráfico en claro.
+
+## Siguientes ideas ⬜
+
+- Pago único «Quitar anuncios» con Google Play Billing.
+- Widget de cálculo rápido y temporizador de impresión.
+- Etiquetas QR/NFC para las bobinas.
+- Más idiomas (portugués, francés, alemán, italiano).
+- Sincronización opcional en la nube reutilizando el backend archivado.
+- `targetSdk` 36 cuando Google Play lo exija para apps nuevas (requiere actualizar el Android Gradle Plugin).
+
+---
+
+# Historial: versión con backend
 
 ---
 
@@ -66,7 +96,7 @@ Issue #45.
 - [x] La compatibilidad de unidades se comprueba al guardar el proyecto, con un mensaje claro, y no al presupuestar.
 - [x] Android: editor de líneas en el formulario de proyecto (crear y editar), densidad en el formulario de material y desplegables reescritos.
 
-## Fase 6 — Rendimiento y robustez ⬜
+## Fase 6 — Rendimiento y robustez ⛔
 
 Issue #46.
 
@@ -76,7 +106,9 @@ Issue #46.
 - [ ] Usar la zona `Europe/Madrid` al consultar ESIOS, para acertar el tramo en los días de cambio de hora.
 - [ ] Migración: `users` con `TIMESTAMPTZ` y eliminar el índice redundante `idx_users_email`.
 
-## Fase 7 — App Android lista para release ⬜
+## Fase 7 — App Android lista para release ✅
+
+Cubierta por la Fase 9: R8, firma de release y sin tráfico en claro.
 
 Issue #47.
 
@@ -85,7 +117,9 @@ Issue #47.
 - [ ] `isMinifyEnabled = true` con reglas de R8/ProGuard para Retrofit y modelos.
 - [ ] `allowBackup="false"` o reglas de backup que excluyan el token.
 
-## Fase 8 — Recuperación de contraseña ⬜
+## Fase 8 — Recuperación de contraseña ⛔
+
+La app ya no tiene cuentas.
 
 Issue #50. Hoy, quien olvida la contraseña pierde el acceso a sus datos.
 
