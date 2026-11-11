@@ -22,6 +22,9 @@ class AppContainer(context: Context) {
 
     /** Archivo del laminador compartido con la app, pendiente de abrir en la calculadora. */
     val pendingImport = MutableStateFlow<Uri?>(null)
+
+    /** Acción pedida desde un acceso directo del icono, pendiente de atender. */
+    val pendingShortcut = MutableStateFlow<String?>(null)
 }
 
 class App : Application() {
@@ -31,6 +34,7 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        com.tdcostmanager.app.core.PrintTimer.init(this)
     }
 }
 

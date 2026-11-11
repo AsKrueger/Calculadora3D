@@ -5,6 +5,9 @@
     <!-- Solo para la publicidad y para el precio de la luz (PVPC), que se pide al pulsar el botón -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Temporizador de impresión: aviso al terminar y reprogramar tras reiniciar -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".App"
@@ -29,6 +32,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Accesos directos del icono. Desde Android 16 la acción de un intent explícito
+                 tiene que estar declarada aquí; si no, el sistema la descarta. -->
+            <intent-filter>
+                <action android:name="com.tdcostmanager.app.shortcut.new_calc" />
+                <action android:name="com.tdcostmanager.app.shortcut.import" />
+                <action android:name="com.tdcostmanager.app.shortcut.new_quote" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
             <!-- Abrir o compartir un archivo del laminador (G-code o 3MF) con la app -->
             <intent-filter android:label="@string/import_intent_label">
                 <action android:name="android.intent.action.SEND" />
@@ -44,6 +56,15 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".core.PrintTimerReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
         <!-- Compartir los PDF de presupuesto y las copias de seguridad -->
         <provider

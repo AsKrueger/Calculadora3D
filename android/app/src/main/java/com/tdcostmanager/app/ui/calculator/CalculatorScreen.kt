@@ -4,6 +4,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material.icons.outlined.Save
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -53,6 +55,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -69,6 +72,7 @@ import com.tdcostmanager.app.core.calc.CostPart
 import com.tdcostmanager.app.core.calc.CostResult
 import com.tdcostmanager.app.core.calc.PricingMode
 import com.tdcostmanager.app.data.db.MaterialUnit
+import com.tdcostmanager.app.ui.common.FoldSection
 import com.tdcostmanager.app.ui.common.LedgerRow
 import com.tdcostmanager.app.ui.common.LocalFmt
 import com.tdcostmanager.app.ui.common.NumberField
@@ -118,6 +122,27 @@ fun CalculatorScreen(
 
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(vm::importFile)
+    }
+    LaunchedEffect(Unit) { vm.importRequestFlow.collect { importer.launch(arrayOf("*/*")) } }
+    val jobs by com.tdcostmanager.app.core.PrintTimer.jobs.collectAsStateWithLifecycle()
+    val timerStarted = stringResource(R.string.timer_started)
+    val timerNoPermission = stringResource(R.string.timer_no_permission)
+    fun startTimer() {
+        val ms = CalculatorViewModel.hoursOf(f).multiply(BigDecimal(3_600_000)).toLong()
+        val job = com.tdcostmanager.app.core.PrintTimer.start(context, f.name.ifBlank { context.getString(R.string.timer_default_name) }, ms)
+        val time = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
+            .format(java.time.Instant.ofEpochMilli(job.endAt).atZone(java.time.ZoneId.systemDefault()))
+        scope.launch { snackbar.showSnackbar(timerStarted.format(time)) }
+    }
+    val notifPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        startTimer()
+        if (!granted) scope.launch { snackbar.showSnackbar(timerNoPermission) }
+    }
+    fun onTimerClick() {
+        val needs = android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(
+            context, android.Manifest.permission.POST_NOTIFICATIONS
+        ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (needs) notifPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS) else startTimer()
     }
     val photo = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri?.let(vm::pickImage)
@@ -169,9 +194,20 @@ fun CalculatorScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Se queda mientras el cálculo sea nuevo: si desapareciera al teclear, el formulario saltaría bajo el dedo
-            if (f.pieceId == null && f.image == null) ImportHint { importer.launch(arrayOf("*/*")) }
+            jobs.forEach { job -> RunningJob(job) { com.tdcostmanager.app.core.PrintTimer.cancel(context, job.id) } }
+            if (f.pieceId == null && f.image == null) ImportHint(
+                onImport = { importer.launch(arrayOf("*/*")) },
+                onExample = if (!state.hasInput) vm::loadExample else null
+            )
 
             PrintSection(state, vm, onOpenCatalog)
+            if (CalculatorViewModel.hoursOf(f).signum() > 0) {
+                OutlinedButton(onClick = ::onTimerClick, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Outlined.Timer, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.timer_start))
+                }
+            }
             MaterialSection(state, vm, onOpenCatalog)
             LaborSection(state, vm)
             ExtrasSection(state, vm)
@@ -217,8 +253,31 @@ fun CalculatorScreen(
     )
 }
 
+/** Impresión en marcha: a qué hora termina y cómo cancelar el aviso. */
 @Composable
-private fun ImportHint(onImport: () -> Unit) {
+private fun RunningJob(job: com.tdcostmanager.app.core.PrintJob, onCancel: () -> Unit) {
+    val end = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
+        .format(java.time.Instant.ofEpochMilli(job.endAt).atZone(java.time.ZoneId.systemDefault()))
+    Surface(
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+        shape = MaterialTheme.shapes.large,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Outlined.Timer, null)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(job.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(stringResource(R.string.timer_running, end), style = MaterialTheme.typography.bodySmall)
+            }
+            IconButton(onClick = onCancel) { Icon(Icons.Outlined.Close, stringResource(R.string.timer_cancel)) }
+        }
+    }
+}
+
+@Composable
+private fun ImportHint(onImport: () -> Unit, onExample: (() -> Unit)?) {
     Surface(
         color = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -231,7 +290,10 @@ private fun ImportHint(onImport: () -> Unit) {
                 Text(stringResource(R.string.calc_import_body), style = MaterialTheme.typography.bodySmall)
             }
             Spacer(Modifier.width(12.dp))
-            FilledTonalButton(onClick = onImport) { Text(stringResource(R.string.calc_import_short)) }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                FilledTonalButton(onClick = onImport) { Text(stringResource(R.string.calc_import_short)) }
+                if (onExample != null) TextButton(onClick = onExample) { Text(stringResource(R.string.calc_example)) }
+            }
         }
     }
 }
@@ -329,7 +391,19 @@ private fun MaterialSection(state: CalcUi, vm: CalculatorViewModel, onOpenCatalo
 private fun LaborSection(state: CalcUi, vm: CalculatorViewModel) {
     val f = state.form
     val fmt = LocalFmt.current
-    Section(stringResource(R.string.calc_section_labor)) {
+    var open by rememberSaveable { mutableStateOf(false) }
+    val dash = { v: String -> v.ifBlank { "0" } }
+    FoldSection(
+        title = stringResource(R.string.calc_section_labor),
+        summary = listOf(
+            stringResource(R.string.calc_prep) + " " + dash(f.prep) + " min",
+            stringResource(R.string.calc_post) + " " + dash(f.post) + " min",
+            dash(f.laborRate) + " " + fmt.currencySymbol + "/h",
+            stringResource(R.string.calc_failure) + " " + dash(f.failure) + " %"
+        ).joinToString(" · "),
+        expanded = open,
+        onToggle = { open = !open }
+    ) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             NumberField(stringResource(R.string.calc_prep), f.prep, { v -> vm.edit { it.copy(prep = v) } },
                 Modifier.weight(1f), suffix = "min", supporting = stringResource(R.string.calc_prep_help))
@@ -351,26 +425,30 @@ private fun ExtrasSection(state: CalcUi, vm: CalculatorViewModel) {
     val f = state.form
     val fmt = LocalFmt.current
     var menu by remember { mutableStateOf(false) }
-    Section(
-        stringResource(R.string.calc_section_extras),
-        trailing = {
-            Box {
-                TextButton(onClick = { menu = true }, enabled = state.catalog.extras.isNotEmpty()) {
-                    Icon(Icons.Outlined.Add, null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text(stringResource(R.string.calc_add_extra))
-                }
-                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    state.catalog.extras.forEach { e ->
-                        DropdownMenuItem(
-                            text = { Text(e.name + " · " + fmt.money(e.unitCost)) },
-                            onClick = { vm.addExtra(e.id); menu = false }
-                        )
-                    }
+    var open by rememberSaveable { mutableStateOf(false) }
+    FoldSection(
+        title = stringResource(R.string.calc_section_extras),
+        summary = f.extras.mapNotNull { row ->
+            state.catalog.extras.firstOrNull { it.id == row.extraId }?.let { it.name + " ×" + row.qty.ifBlank { "0" } }
+        }.joinToString(", ").ifEmpty { stringResource(R.string.calc_extras_empty) },
+        expanded = open,
+        onToggle = { open = !open }
+    ) {
+        Box {
+            TextButton(onClick = { menu = true }, enabled = state.catalog.extras.isNotEmpty()) {
+                Icon(Icons.Outlined.Add, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(4.dp))
+                Text(stringResource(R.string.calc_add_extra))
+            }
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                state.catalog.extras.forEach { e ->
+                    DropdownMenuItem(
+                        text = { Text(e.name + " · " + fmt.money(e.unitCost)) },
+                        onClick = { vm.addExtra(e.id); menu = false }
+                    )
                 }
             }
         }
-    ) {
         if (f.extras.isEmpty()) Text(
             stringResource(R.string.calc_extras_empty),
             style = MaterialTheme.typography.bodySmall,
@@ -400,7 +478,24 @@ private fun ExtrasSection(state: CalcUi, vm: CalculatorViewModel) {
 private fun PriceSection(state: CalcUi, vm: CalculatorViewModel) {
     val f = state.form
     val fmt = LocalFmt.current
-    Section(stringResource(R.string.calc_section_price)) {
+    var open by rememberSaveable { mutableStateOf(false) }
+    val modeLabel = stringResource(
+        when (f.mode) {
+            PricingMode.MARKUP -> R.string.mode_markup
+            PricingMode.TARGET_PROFIT -> R.string.mode_profit
+            PricingMode.FIXED_PRICE -> R.string.mode_fixed
+        }
+    ).removeSuffix(" %")
+    FoldSection(
+        title = stringResource(R.string.calc_section_price),
+        summary = listOfNotNull(
+            modeLabel + " " + f.priceValue.ifBlank { "0" } + (if (f.mode == PricingMode.MARKUP) " %" else " " + fmt.currencySymbol),
+            state.channel?.name,
+            stringResource(R.string.calc_vat) + " " + f.vat.ifBlank { "0" } + " %"
+        ).joinToString(" · "),
+        expanded = open,
+        onToggle = { open = !open }
+    ) {
         val modes = listOf(
             PricingMode.MARKUP to R.string.mode_markup,
             PricingMode.TARGET_PROFIT to R.string.mode_profit,
@@ -638,12 +733,25 @@ private fun ResultBar(r: CostResult?, hasInput: Boolean, onClick: () -> Unit) {
         ) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.calc_price), style = MaterialTheme.typography.labelMedium)
-                Text(
-                    if (r != null && hasInput && r.feasible) fmt.money(r.price) else "—",
-                    style = MaterialTheme.typography.headlineSmall.tabular(),
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.inversePrimary
-                )
+                // El precio sube o baja con un deslizamiento corto: se ve qué ha movido el último cambio
+                val price = r?.takeIf { hasInput && it.feasible }?.price
+                androidx.compose.animation.AnimatedContent(
+                    targetState = price,
+                    transitionSpec = {
+                        val up = (targetState ?: BigDecimal.ZERO) > (initialState ?: BigDecimal.ZERO)
+                        (androidx.compose.animation.slideInVertically(androidx.compose.animation.core.tween(180)) { if (up) it / 2 else -it / 2 } +
+                            androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(180))) togetherWith
+                            androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(120))
+                    },
+                    label = "price"
+                ) { p ->
+                    Text(
+                        p?.let(fmt::money) ?: "—",
+                        style = MaterialTheme.typography.headlineSmall.tabular(),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.inversePrimary
+                    )
+                }
             }
             if (r != null && hasInput) Column(horizontalAlignment = Alignment.End) {
                 Text(stringResource(R.string.calc_cost_short, fmt.money(r.totalCost)),
