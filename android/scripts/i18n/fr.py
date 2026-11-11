@@ -170,6 +170,11 @@ S = {
  "shortcut_import": "Importer un fichier",
  "shortcut_new_quote": "Nouveau devis",
  "calc_example": "Voir un exemple",
+ "widget_title": "Impressions en cours",
+ "widget_description": "Voyez quand votre impression se termine et lancez un calcul",
+ "widget_empty": "Aucune impression en cours. Lancez un minuteur depuis la calculatrice.",
+ "widget_ends": "Fin à %1$s",
+ "widget_more": "%1$d de plus",
  "privacy_delete_title": "Effacer vos données",
  "privacy_delete_body": "Réglages › Effacer toutes les données supprime tout de ce téléphone. Désinstaller l’app fait de même.",
 

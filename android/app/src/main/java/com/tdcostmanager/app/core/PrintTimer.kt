@@ -134,6 +134,9 @@ object PrintTimer {
         )
     }
 
+    /** Impresiones guardadas (también para el widget, que puede ejecutarse sin la app abierta). */
+    fun current(context: Context): List<PrintJob> = read(context)
+
     private fun read(context: Context): List<PrintJob> =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null)
             ?.let { runCatching { json.decodeFromString<List<PrintJob>>(it) }.getOrNull() } ?: emptyList()
@@ -141,6 +144,7 @@ object PrintTimer {
     private fun save(context: Context, jobs: List<PrintJob>) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY, json.encodeToString(jobs)).apply()
         _jobs.value = jobs
+        PrintsWidget.refresh(context)
     }
 }
 

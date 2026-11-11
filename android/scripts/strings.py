@@ -390,6 +390,11 @@ S = {
  "shortcut_import": ("Import file", "Importar archivo"),
  "shortcut_new_quote": ("New quote", "Nuevo presupuesto"),
  "calc_example": ("See an example", "Ver un ejemplo"),
+ "widget_title": ("Prints in progress", "Impresiones en curso"),
+ "widget_description": ("See when your print finishes and start a calculation", "Mira cuándo termina tu impresión y empieza un cálculo"),
+ "widget_empty": ("No print running. Start a timer from the calculator.", "Ninguna impresión en marcha. Pon un temporizador desde la calculadora."),
+ "widget_ends": ("Finishes at %1$s", "Termina a las %1$s"),
+ "widget_more": ("%1$d more", "%1$d más"),
  "privacy_delete_title": ("Delete your data", "Borrar tus datos"),
  "privacy_delete_body": ("Settings › Delete all data removes everything from this phone. Uninstalling the app does the same.", "Ajustes › Borrar todos los datos elimina todo de este teléfono. Desinstalar la app hace lo mismo."),
 
