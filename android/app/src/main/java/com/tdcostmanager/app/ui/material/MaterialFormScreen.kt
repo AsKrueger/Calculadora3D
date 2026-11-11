@@ -32,6 +32,7 @@ fun MaterialFormScreen(
     var quantity by rememberSaveable { mutableStateOf("") }
     var unit by rememberSaveable { mutableStateOf(UnitType.KG) }
     var category by rememberSaveable { mutableStateOf(MaterialCategory.FILAMENT) }
+    var density by rememberSaveable { mutableStateOf("") }
     var active by rememberSaveable { mutableStateOf(true) }
     var submitted by rememberSaveable { mutableStateOf(false) }
     var loaded by rememberSaveable { mutableStateOf(false) }
@@ -47,6 +48,7 @@ fun MaterialFormScreen(
             quantity = Format.forInput(m.quantity)
             unit = m.unit
             category = m.category
+            density = m.densityGPerMl?.let(Format::forInput).orEmpty()
             active = m.active
             loaded = true
         }
@@ -61,6 +63,7 @@ fun MaterialFormScreen(
     val nameError = if (submitted && name.isBlank()) "Obligatorio" else null
     val priceError = if (submitted) validateNumber(price) else null
     val quantityError = if (submitted) validateNumber(quantity, positive = true) else null
+    val densityError = if (submitted) validateNumber(density, required = false, positive = true) else null
 
     FormScaffold(
         title = if (id != null) "Editar material" else "Nuevo material",
@@ -72,12 +75,15 @@ fun MaterialFormScreen(
             submitted = true
             val p = Format.parseDecimal(price)
             val q = Format.parseDecimal(quantity)
-            if (name.isNotBlank() && validateNumber(price) == null && validateNumber(quantity, positive = true) == null && p != null && q != null) {
+            if (name.isNotBlank() && validateNumber(price) == null && validateNumber(quantity, positive = true) == null &&
+                validateNumber(density, required = false, positive = true) == null && p != null && q != null
+            ) {
                 val desc = description.ifBlank { null }
+                val d = Format.parseDecimal(density)
                 if (id != null) {
-                    viewModel.updateMaterial(id, MaterialUpdateRequest(name.trim(), desc, p, q, unit, category, active))
+                    viewModel.updateMaterial(id, MaterialUpdateRequest(name.trim(), desc, p, q, unit, category, active, d))
                 } else {
-                    viewModel.createMaterial(MaterialCreateRequest(name.trim(), desc, p, q, unit, category))
+                    viewModel.createMaterial(MaterialCreateRequest(name.trim(), desc, p, q, unit, category, d))
                 }
             }
         }
@@ -105,6 +111,12 @@ fun MaterialFormScreen(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+        }
+        SectionCard(title = "Densidad (opcional)") {
+            NumberField(
+                density, { density = it }, "Densidad", suffix = "g/ml", error = densityError,
+                helper = "Permite usarlo en gramos aunque lo compres en litros, o al revés. PLA ≈ 1,24 · resina ≈ 1,1"
+            )
         }
         if (id != null) {
             SectionCard {

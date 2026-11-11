@@ -14,5 +14,6 @@ public record MaterialCreateRequest(
     @NotNull @PositiveOrZero BigDecimal purchasePrice,
     @NotNull @Positive BigDecimal quantity,
     @NotNull UnitType unit,
-    @NotNull MaterialCategory category
+    @NotNull MaterialCategory category,
+    @Positive BigDecimal densityGPerMl
 ) {}

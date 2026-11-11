@@ -1,6 +1,7 @@
 package com.tdcostmanager.backend.application.service;
 
 import com.tdcostmanager.backend.application.dto.*;
+import com.tdcostmanager.backend.domain.calculation.UnitConverter;
 import com.tdcostmanager.backend.domain.model.*;
 import com.tdcostmanager.backend.domain.repository.*;
 import com.tdcostmanager.backend.infrastructure.security.CurrentUserProvider;
@@ -62,39 +63,9 @@ public class ProjectService {
         project.updateLabor(request.laborHours(), request.laborCostPerHour());
         project.updateStatus(ProjectStatus.DRAFT);
 
-        if (request.materials() != null) {
-            for (ProjectMaterialRequest req : request.materials()) {
-                Material material = materialRepository.findByIdAndOwnerId(req.materialId(), ownerId)
-                        .orElseThrow(() -> new EntityNotFoundException("Material no encontrado: " + req.materialId()));
-                ProjectMaterial pm = new ProjectMaterial();
-                pm.setMaterial(material);
-                pm.setQuantityUsed(req.quantityUsed());
-                pm.setUnit(req.unit());
-                project.addProjectMaterial(pm);
-            }
-        }
-
-        if (request.machines() != null) {
-            for (ProjectMachineRequest req : request.machines()) {
-                Machine machine = machineRepository.findByIdAndOwnerId(req.machineId(), ownerId)
-                        .orElseThrow(() -> new EntityNotFoundException("Máquina no encontrada: " + req.machineId()));
-                ProjectMachine pm = new ProjectMachine();
-                pm.setMachine(machine);
-                pm.setEstimatedHours(req.estimatedHours());
-                project.addProjectMachine(pm);
-            }
-        }
-
-        if (request.tools() != null) {
-            for (ProjectToolRequest req : request.tools()) {
-                Tool tool = toolRepository.findByIdAndOwnerId(req.toolId(), ownerId)
-                        .orElseThrow(() -> new EntityNotFoundException("Herramienta no encontrada: " + req.toolId()));
-                ProjectTool pt = new ProjectTool();
-                pt.setTool(tool);
-                pt.setUses(req.uses());
-                project.addProjectTool(pt);
-            }
-        }
+        if (request.materials() != null) buildMaterials(request.materials(), ownerId).forEach(project::addProjectMaterial);
+        if (request.machines() != null) buildMachines(request.machines(), ownerId).forEach(project::addProjectMachine);
+        if (request.tools() != null) buildTools(request.tools(), ownerId).forEach(project::addProjectTool);
 
         Project saved = projectRepository.save(project);
         return mapToResponse(saved, null);
@@ -104,11 +75,56 @@ public class ProjectService {
     public ProjectResponse update(Long id, ProjectUpdateRequest request) {
         Project project = findOwned(id);
 
+        Long ownerId = currentUserProvider.getCurrentUserId();
         project.updateDetails(request.name(), request.description());
         project.updateLabor(request.laborHours(), request.laborCostPerHour());
+        // Las líneas antes que el estado: un proyecto que se archiva en esta misma petición ya no admite cambios
+        if (request.materials() != null) project.replaceProjectMaterials(buildMaterials(request.materials(), ownerId));
+        if (request.machines() != null) project.replaceProjectMachines(buildMachines(request.machines(), ownerId));
+        if (request.tools() != null) project.replaceProjectTools(buildTools(request.tools(), ownerId));
         project.updateStatus(request.status());
 
         return mapToResponse(projectRepository.save(project));
+    }
+
+    // Las líneas solo admiten recursos del mismo usuario; uno ajeno se trata como inexistente (404)
+
+    private List<ProjectMaterial> buildMaterials(List<ProjectMaterialRequest> requests, Long ownerId) {
+        return requests.stream().map(req -> {
+            Material material = materialRepository.findByIdAndOwnerId(req.materialId(), ownerId)
+                    .orElseThrow(() -> new EntityNotFoundException("Material no encontrado: " + req.materialId()));
+            // Se comprueba al guardar, y no al presupuestar, que la unidad usada se puede convertir a la de compra
+            if (!UnitConverter.canConvert(req.unit(), material.getUnit(), material.getDensityGPerMl())) {
+                throw new IllegalArgumentException(material.getName() + ": " + UnitConverter.incompatibleMessage(req.unit(), material.getUnit()));
+            }
+            ProjectMaterial pm = new ProjectMaterial();
+            pm.setMaterial(material);
+            pm.setQuantityUsed(req.quantityUsed());
+            pm.setUnit(req.unit());
+            return pm;
+        }).toList();
+    }
+
+    private List<ProjectMachine> buildMachines(List<ProjectMachineRequest> requests, Long ownerId) {
+        return requests.stream().map(req -> {
+            Machine machine = machineRepository.findByIdAndOwnerId(req.machineId(), ownerId)
+                    .orElseThrow(() -> new EntityNotFoundException("Máquina no encontrada: " + req.machineId()));
+            ProjectMachine pm = new ProjectMachine();
+            pm.setMachine(machine);
+            pm.setEstimatedHours(req.estimatedHours());
+            return pm;
+        }).toList();
+    }
+
+    private List<ProjectTool> buildTools(List<ProjectToolRequest> requests, Long ownerId) {
+        return requests.stream().map(req -> {
+            Tool tool = toolRepository.findByIdAndOwnerId(req.toolId(), ownerId)
+                    .orElseThrow(() -> new EntityNotFoundException("Herramienta no encontrada: " + req.toolId()));
+            ProjectTool pt = new ProjectTool();
+            pt.setTool(tool);
+            pt.setUses(req.uses());
+            return pt;
+        }).toList();
     }
 
     @Transactional

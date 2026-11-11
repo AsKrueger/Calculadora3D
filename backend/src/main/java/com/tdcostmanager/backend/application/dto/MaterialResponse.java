@@ -12,5 +12,6 @@ public record MaterialResponse(
     BigDecimal quantity,
     UnitType unit,
     MaterialCategory category,
-    boolean active
+    boolean active,
+    BigDecimal densityGPerMl
 ) {}

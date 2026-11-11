@@ -58,7 +58,8 @@ public class QuoteService {
                         pm.getMaterial().getPurchasePrice(),
                         pm.getMaterial().getQuantity(),
                         pm.getMaterial().getUnit(),
-                        pm.getMaterial().getName()
+                        pm.getMaterial().getName(),
+                        pm.getMaterial().getDensityGPerMl()
                 ))
                 .collect(Collectors.toList());
 

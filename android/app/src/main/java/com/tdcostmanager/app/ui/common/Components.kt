@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material3.*
@@ -16,6 +18,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -353,8 +358,10 @@ fun NumberField(
     )
 }
 
-/** Selector desplegable para un enum, mostrando su etiqueta traducida. */
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Selector desplegable: campo de solo lectura con la opción elegida y un menú al pulsarlo.
+ * Una capa transparente encima del campo recoge la pulsación, porque el campo en sí no la propaga.
+ */
 @Composable
 fun <T> DropdownField(
     label: String,
@@ -365,17 +372,38 @@ fun <T> DropdownField(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = modifier) {
+    var fieldWidth by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
+    Box(modifier.onSizeChanged { fieldWidth = it.width }) {
         OutlinedTextField(
             value = optionLabel(selected),
             onValueChange = {},
             readOnly = true,
             label = { Text(label) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.menuAnchor().fillMaxWidth(),
+            trailingIcon = {
+                Icon(
+                    if (expanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                    contentDescription = null
+                )
+            },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.small
         )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        Box(
+            Modifier
+                .matchParentSize()
+                .padding(top = 8.dp)
+                .clip(MaterialTheme.shapes.small)
+                .clickable(role = Role.DropdownList, onClickLabel = label) { expanded = true }
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .width(with(density) { fieldWidth.toDp() })
+                .background(MaterialTheme.colorScheme.surfaceContainerLow)
+        ) {
             options.forEach { option ->
                 DropdownMenuItem(
                     text = { Text(optionLabel(option)) },

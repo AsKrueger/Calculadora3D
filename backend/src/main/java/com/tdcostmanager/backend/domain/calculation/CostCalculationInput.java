@@ -30,8 +30,15 @@ public record CostCalculationInput(
             BigDecimal purchasePrice,
             BigDecimal quantity,
             UnitType materialUnit,
-            String name
+            String name,
+            BigDecimal densityGPerMl
     ) {
+        /** Material sin densidad: solo admite unidades de la misma dimensión (masa o volumen). */
+        public MaterialInput(BigDecimal quantityUsed, UnitType unit, BigDecimal purchasePrice,
+                             BigDecimal quantity, UnitType materialUnit, String name) {
+            this(quantityUsed, unit, purchasePrice, quantity, materialUnit, name, null);
+        }
+
         public MaterialInput {
             Objects.requireNonNull(quantityUsed, "Quantity used cannot be null");
             Objects.requireNonNull(unit, "Unit cannot be null");

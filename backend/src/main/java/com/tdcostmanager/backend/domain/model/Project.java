@@ -167,4 +167,27 @@ public class Project {
         projectTools.add(pt);
         pt.setProject(this);
     }
+
+    // Sustituir las líneas: las anteriores se borran (orphanRemoval) y se añaden las nuevas
+
+    public void replaceProjectMaterials(List<ProjectMaterial> materials) {
+        ensureNotArchived();
+        Objects.requireNonNull(materials, "Project materials cannot be null");
+        projectMaterials.clear();
+        materials.forEach(this::addProjectMaterial);
+    }
+
+    public void replaceProjectMachines(List<ProjectMachine> machines) {
+        ensureNotArchived();
+        Objects.requireNonNull(machines, "Project machines cannot be null");
+        projectMachines.clear();
+        machines.forEach(this::addProjectMachine);
+    }
+
+    public void replaceProjectTools(List<ProjectTool> tools) {
+        ensureNotArchived();
+        Objects.requireNonNull(tools, "Project tools cannot be null");
+        projectTools.clear();
+        tools.forEach(this::addProjectTool);
+    }
 }

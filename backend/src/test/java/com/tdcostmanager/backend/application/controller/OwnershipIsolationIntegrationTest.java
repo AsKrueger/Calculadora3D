@@ -71,7 +71,7 @@ class OwnershipIsolationIntegrationTest extends BaseIntegrationTest {
         tokenB = jwtService.generateToken(userB);
 
         materialA = create(tokenA, "/api/v1/materials", new MaterialCreateRequest(
-                "PLA de A", null, new BigDecimal("20.00"), new BigDecimal("1000"), UnitType.G, MaterialCategory.FILAMENT));
+                "PLA de A", null, new BigDecimal("20.00"), new BigDecimal("1000"), UnitType.G, MaterialCategory.FILAMENT, null));
         machineA = create(tokenA, "/api/v1/machines", new MachineCreateRequest(
                 "Impresora de A", new BigDecimal("500.00"), new BigDecimal("5000"), new BigDecimal("200"), new BigDecimal("0.05")));
         toolA = create(tokenA, "/api/v1/tools", new ToolCreateRequest(
@@ -264,7 +264,7 @@ class OwnershipIsolationIntegrationTest extends BaseIntegrationTest {
     private Object updateBodyFor(String resource) {
         return switch (resource) {
             case "materials" -> new MaterialUpdateRequest(
-                    "Robado por B", null, BigDecimal.ONE, BigDecimal.ONE, UnitType.G, MaterialCategory.FILAMENT, true);
+                    "Robado por B", null, BigDecimal.ONE, BigDecimal.ONE, UnitType.G, MaterialCategory.FILAMENT, true, null);
             case "machines" -> new MachineUpdateRequest(
                     "Robado por B", BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE, true);
             case "tools" -> new ToolUpdateRequest(

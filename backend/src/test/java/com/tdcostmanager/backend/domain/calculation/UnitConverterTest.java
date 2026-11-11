@@ -46,11 +46,31 @@ class UnitConverterTest {
     void shouldThrowExceptionForIncompatibleUnits() {
         assertThatThrownBy(() -> UnitConverter.convert(BigDecimal.ONE, UnitType.G, UnitType.ML))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Incompatible units");
+            .hasMessage("Para convertir g a ml el material necesita una densidad (g/ml)");
 
-        assertThatThrownBy(() -> UnitConverter.convert(BigDecimal.ONE, UnitType.KG, UnitType.UNIT))
+        assertThatThrownBy(() -> UnitConverter.convert(BigDecimal.ONE, UnitType.KG, UnitType.UNIT, BigDecimal.ONE))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Incompatible units");
+            .hasMessage("No se puede convertir kg a unidades");
+    }
+
+    @Test
+    void shouldConvertBetweenMassAndVolumeWithDensity() {
+        BigDecimal resinDensity = new BigDecimal("1.1");
+
+        // 110 g de resina a 1,1 g/ml son 100 ml, es decir, 0,1 L
+        assertThat(UnitConverter.convert(new BigDecimal("110"), UnitType.G, UnitType.ML, resinDensity)).isEqualByComparingTo("100");
+        assertThat(UnitConverter.convert(new BigDecimal("110"), UnitType.G, UnitType.L, resinDensity)).isEqualByComparingTo("0.1");
+        // 0,5 L a 1,1 g/ml son 550 g, es decir, 0,55 kg
+        assertThat(UnitConverter.convert(new BigDecimal("0.5"), UnitType.L, UnitType.G, resinDensity)).isEqualByComparingTo("550");
+        assertThat(UnitConverter.convert(new BigDecimal("0.5"), UnitType.L, UnitType.KG, resinDensity)).isEqualByComparingTo("0.55");
+    }
+
+    @Test
+    void canConvertReportsWhetherDensityIsNeeded() {
+        assertThat(UnitConverter.canConvert(UnitType.G, UnitType.KG, null)).isTrue();
+        assertThat(UnitConverter.canConvert(UnitType.G, UnitType.ML, null)).isFalse();
+        assertThat(UnitConverter.canConvert(UnitType.G, UnitType.ML, new BigDecimal("1.24"))).isTrue();
+        assertThat(UnitConverter.canConvert(UnitType.UNIT, UnitType.G, new BigDecimal("1.24"))).isFalse();
     }
 
     @Test

@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.tdcostmanager.app.data.remote.dto.project.ProjectCreateRequest
 import com.tdcostmanager.app.data.remote.dto.project.ProjectUpdateRequest
 import com.tdcostmanager.app.domain.model.ProjectStatus
 import com.tdcostmanager.app.domain.util.toFriendlyMessage
@@ -22,6 +23,7 @@ fun ProjectFormScreen(
 ) {
     val detailState by viewModel.projectDetailState.collectAsState()
     val operationState by viewModel.operationState.collectAsState()
+    val catalogState by viewModel.catalogState.collectAsState()
 
     var name by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
@@ -30,8 +32,14 @@ fun ProjectFormScreen(
     var status by rememberSaveable { mutableStateOf(ProjectStatus.DRAFT) }
     var submitted by rememberSaveable { mutableStateOf(false) }
     var loaded by rememberSaveable { mutableStateOf(false) }
+    val materialLines = remember { mutableStateListOf<MaterialLine>() }
+    val machineLines = remember { mutableStateListOf<MachineLine>() }
+    val toolLines = remember { mutableStateListOf<ToolLine>() }
 
-    LaunchedEffect(id) { if (id != null) viewModel.loadProjectDetail(id) }
+    LaunchedEffect(id) {
+        viewModel.loadCatalog()
+        if (id != null) viewModel.loadProjectDetail(id)
+    }
     LaunchedEffect(detailState) {
         val s = detailState
         if (id != null && !loaded && s is UiState.Success) {
@@ -41,6 +49,9 @@ fun ProjectFormScreen(
             laborHours = Format.forInput(p.laborHours)
             laborCostPerHour = Format.forInput(p.laborCostPerHour)
             status = p.status
+            materialLines.addAll(p.materials.map { MaterialLine(it.materialId, Format.forInput(it.quantityUsed), it.unit) })
+            machineLines.addAll(p.machines.map { MachineLine(it.machineId, Format.forInput(it.estimatedHours)) })
+            toolLines.addAll(p.tools.map { ToolLine(it.toolId, Format.forInput(it.uses)) })
             loaded = true
         }
     }
@@ -64,12 +75,20 @@ fun ProjectFormScreen(
         error = (operationState as? UiState.Error)?.error?.toFriendlyMessage(),
         onSave = {
             submitted = true
-            if (name.isNotBlank() && validateNumber(laborHours) == null && validateNumber(laborCostPerHour) == null && hours != null && rate != null) {
+            val linesValid = materialLines.all { it.error() == null } &&
+                machineLines.all { it.error() == null } &&
+                toolLines.all { it.error() == null }
+            if (name.isNotBlank() && validateNumber(laborHours) == null && validateNumber(laborCostPerHour) == null &&
+                hours != null && rate != null && linesValid
+            ) {
                 val desc = description.ifBlank { null }
+                val materials = materialLines.map { it.toRequest() }
+                val machines = machineLines.map { it.toRequest() }
+                val tools = toolLines.map { it.toRequest() }
                 if (id != null) {
-                    viewModel.updateProject(id, ProjectUpdateRequest(name.trim(), desc, status, hours, rate))
+                    viewModel.updateProject(id, ProjectUpdateRequest(name.trim(), desc, status, hours, rate, materials, machines, tools))
                 } else {
-                    viewModel.createProject(name.trim(), desc, hours, rate)
+                    viewModel.createProject(ProjectCreateRequest(name.trim(), desc, hours, rate, materials, machines, tools))
                 }
             }
         }
@@ -95,6 +114,40 @@ fun ProjectFormScreen(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+        }
+
+        when (val c = catalogState) {
+            is UiState.Success -> {
+                MaterialLinesCard(
+                    lines = materialLines,
+                    catalog = c.data.materials,
+                    showErrors = submitted,
+                    onChange = { i, line -> materialLines[i] = line },
+                    onAdd = { materialLines.add(MaterialLine()) },
+                    onRemove = { materialLines.removeAt(it) }
+                )
+                MachineLinesCard(
+                    lines = machineLines,
+                    catalog = c.data.machines,
+                    showErrors = submitted,
+                    onChange = { i, line -> machineLines[i] = line },
+                    onAdd = { machineLines.add(MachineLine()) },
+                    onRemove = { machineLines.removeAt(it) }
+                )
+                ToolLinesCard(
+                    lines = toolLines,
+                    catalog = c.data.tools,
+                    showErrors = submitted,
+                    onChange = { i, line -> toolLines[i] = line },
+                    onAdd = { toolLines.add(ToolLine()) },
+                    onRemove = { toolLines.removeAt(it) }
+                )
+            }
+            is UiState.Error -> SectionCard {
+                Text("No se ha podido cargar el catálogo: ${c.error.toFriendlyMessage()}", style = MaterialTheme.typography.bodyMedium)
+                TextButton(onClick = viewModel::loadCatalog) { Text("Reintentar") }
+            }
+            else -> SectionCard { LinearProgressIndicator(Modifier.fillMaxWidth()) }
         }
     }
 }

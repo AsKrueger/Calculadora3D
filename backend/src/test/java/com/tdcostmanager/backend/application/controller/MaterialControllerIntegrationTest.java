@@ -41,7 +41,8 @@ class MaterialControllerIntegrationTest extends BaseIntegrationTest {
                 new BigDecimal("25.0000"),
                 new BigDecimal("1.0000"),
                 UnitType.KG,
-                MaterialCategory.FILAMENT
+                MaterialCategory.FILAMENT,
+                null
         );
 
         // 1. Create
@@ -68,14 +69,16 @@ class MaterialControllerIntegrationTest extends BaseIntegrationTest {
                 new BigDecimal("1.0000"),
                 UnitType.KG,
                 MaterialCategory.FILAMENT,
-                true
+                true,
+                new BigDecimal("1.24")
         );
 
         mockMvc.perform(put("/api/v1/materials/" + id)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("PLA Premium Updated"));
+                .andExpect(jsonPath("$.name").value("PLA Premium Updated"))
+                .andExpect(jsonPath("$.densityGPerMl").value(1.24));
 
         // 4. Deactivate (Logical Delete)
         mockMvc.perform(delete("/api/v1/materials/" + id))
