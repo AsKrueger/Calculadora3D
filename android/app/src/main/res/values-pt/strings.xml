@@ -364,6 +364,11 @@
     <string name="shortcut_import">Importar arquivo</string>
     <string name="shortcut_new_quote">Novo orçamento</string>
     <string name="calc_example">Ver um exemplo</string>
+    <string name="widget_title">Impressões em andamento</string>
+    <string name="widget_description">Veja quando sua impressão termina e comece um cálculo</string>
+    <string name="widget_empty">Nenhuma impressão em andamento. Inicie um temporizador na calculadora.</string>
+    <string name="widget_ends">Termina às %1$s</string>
+    <string name="widget_more">mais %1$d</string>
     <string name="privacy_delete_title">Apagar seus dados</string>
     <string name="privacy_delete_body">Ajustes › Apagar todos os dados elimina tudo deste telefone. Desinstalar o app faz o mesmo.</string>
     <string name="welcome_skip">Pular</string>
