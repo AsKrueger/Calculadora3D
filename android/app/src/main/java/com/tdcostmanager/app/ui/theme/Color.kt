@@ -118,9 +118,9 @@ internal fun fieldColors(dark: Boolean): FieldColors = if (dark) {
     FieldColors(container = Color(0xFFF8FAFC), border = Color(0xFFE2E8F0), label = Color(0xFF334155))
 }
 
-/** Colores de las partidas del desglose de un presupuesto (material, máquina, herramienta, mano de obra, luz). */
+/** Colores de las partidas del coste, en el orden de CostPart: material, luz, desgaste, mano de obra, extras, fallos. */
 internal fun breakdownPalette(dark: Boolean): List<Color> = if (dark) {
-    listOf(Color(0xFFFF8A4C), Color(0xFF7FB2F0), Color(0xFF5ED3C4), Color(0xFFC3CBD3), Color(0xFFF5C451))
+    listOf(Color(0xFFFF8A4C), Color(0xFFF5C451), Color(0xFF7FB2F0), Color(0xFFC3CBD3), Color(0xFF5ED3C4), Color(0xFFFFB4AB))
 } else {
-    listOf(Color(0xFFC2410C), Color(0xFF2F6DB5), Color(0xFF0F766E), Color(0xFF56606B), Color(0xFFC99A06))
+    listOf(Color(0xFFC2410C), Color(0xFFC99A06), Color(0xFF2F6DB5), Color(0xFF56606B), Color(0xFF0F766E), Color(0xFFB3261E))
 }

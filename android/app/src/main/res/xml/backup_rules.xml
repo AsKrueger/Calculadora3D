@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copia automática de Android (Android 11 o anterior) -->
+<full-backup-content>
+    <include domain="database" path="." />
+    <include domain="sharedpref" path="." />
+    <include domain="file" path="datastore/" />
+    <include domain="file" path="images/" />
+</full-backup-content>
