@@ -53,6 +53,54 @@ object Templates {
     )
 }
 
+/** Bobina o botella de una marca conocida, con su precio orientativo de tienda (2026). */
+data class MaterialTemplate(
+    val brand: String,
+    val name: String,
+    val kind: MaterialKind,
+    val price: String,
+    val size: String = "1000",
+    val color: Long = 0xFF1F1F1F
+) {
+    fun toEntity() = MaterialEntity(
+        name = "$brand $name",
+        kind = kind,
+        brand = brand,
+        color = color,
+        unit = kind.unit,
+        packagePrice = BigDecimal(price),
+        packageSize = BigDecimal(size),
+        density = BigDecimal(kind.defaultDensity)
+    )
+}
+
+object MaterialLibrary {
+    val items = listOf(
+        MaterialTemplate("Bambu Lab", "PLA Basic", MaterialKind.PLA, "19.99"),
+        MaterialTemplate("Bambu Lab", "PLA Matte", MaterialKind.PLA, "19.99", color = 0xFFF2F2EE),
+        MaterialTemplate("Bambu Lab", "PETG HF", MaterialKind.PETG, "19.99", color = 0xFF4A6FA5),
+        MaterialTemplate("Flashforge", "PLA", MaterialKind.PLA, "19.90"),
+        MaterialTemplate("Flashforge", "PLA Silk", MaterialKind.PLA, "22.90", color = 0xFFC9A66B),
+        MaterialTemplate("Flashforge", "PETG", MaterialKind.PETG, "19.90", color = 0xFF4A6FA5),
+        MaterialTemplate("Sunlu", "PLA", MaterialKind.PLA, "15.99"),
+        MaterialTemplate("Sunlu", "PLA+", MaterialKind.PLA, "16.99", color = 0xFFF2F2EE),
+        MaterialTemplate("Sunlu", "PETG", MaterialKind.PETG, "16.99", color = 0xFF2E8B57),
+        MaterialTemplate("eSun", "PLA+", MaterialKind.PLA, "19.99"),
+        MaterialTemplate("eSun", "PETG", MaterialKind.PETG, "19.99", color = 0xFF4A6FA5),
+        MaterialTemplate("eSun", "ABS+", MaterialKind.ABS, "19.99", color = 0xFFB23A2E),
+        MaterialTemplate("Polymaker", "PolyTerra PLA", MaterialKind.PLA, "21.99", color = 0xFF2E8B57),
+        MaterialTemplate("Polymaker", "PolyLite ASA", MaterialKind.ASA, "27.99", color = 0xFF8C8C8C),
+        MaterialTemplate("Elegoo", "PLA", MaterialKind.PLA, "15.99"),
+        MaterialTemplate("Elegoo", "PETG Pro", MaterialKind.PETG, "17.99", color = 0xFF4A6FA5),
+        MaterialTemplate("Creality", "Hyper PLA", MaterialKind.PLA, "17.99"),
+        MaterialTemplate("Prusament", "PLA", MaterialKind.PLA, "29.99", color = 0xFFE2561A),
+        MaterialTemplate("Prusament", "PETG", MaterialKind.PETG, "29.99", color = 0xFFE2561A),
+        MaterialTemplate("Overture", "TPU 95A", MaterialKind.TPU, "29.99", color = 0xFF2E8B57),
+        MaterialTemplate("Elegoo", "Standard Resin", MaterialKind.RESIN, "29.99", color = 0xFF8C8C8C),
+        MaterialTemplate("Anycubic", "Standard Resin", MaterialKind.RESIN, "27.99", color = 0xFF8C8C8C)
+    )
+}
+
 /** Carga el catálogo inicial una sola vez, con los nombres en el idioma del usuario. */
 class Seeder(private val context: Context, private val db: AppDatabase) {
 

@@ -32,12 +32,23 @@ Issue #53.
 - [x] Pago único «Quitar anuncios» (Google Play Billing, producto `remove_ads`), recuperado al reinstalar.
 - [x] Petición de valoración dentro de la app tras 3 piezas guardadas, como mucho cada 90 días.
 
+## Fase 11 — Uso diario y Android 16 ✅
+
+Issue #54.
+
+- [x] Calculadora con los bloques avanzados plegados y un resumen de una línea; botón «Ver un ejemplo».
+- [x] Temporizador de impresión: notificación con cuenta atrás y aviso al terminar, aunque la app esté cerrada o el móvil se reinicie.
+- [x] Biblioteca de filamentos y resinas por marca con precio orientativo.
+- [x] Deshacer al borrar piezas y líneas de presupuesto; duplicar presupuestos; autocompletar clientes.
+- [x] Accesos directos del icono: nuevo cálculo, importar archivo y nuevo presupuesto.
+- [x] Precio animado al cambiar.
+- [x] `targetSdk` y `compileSdk` 36 (exigido por Google Play desde agosto de 2026), Android Gradle Plugin 8.13 y Gradle 8.13.
+
 ## Siguientes ideas ⬜
 
-- Widget de cálculo rápido y temporizador de impresión.
+- Widget de cálculo rápido.
 - Etiquetas QR/NFC para las bobinas.
 - Sincronización opcional en la nube reutilizando el backend archivado.
-- `targetSdk` 36 cuando Google Play lo exija para apps nuevas (requiere actualizar el Android Gradle Plugin).
 
 ---
 

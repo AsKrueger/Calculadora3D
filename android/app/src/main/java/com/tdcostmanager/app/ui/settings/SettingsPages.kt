@@ -155,6 +155,9 @@ fun FeedbackScreen(onBack: () -> Unit) {
     }
 }
 
+/** Política de privacidad pública (la misma URL que se declara en Google Play). */
+const val PRIVACY_URL = "https://askrueger.github.io/3d-cost-manager/privacy.html"
+
 @Composable
 fun PrivacyScreen(onBack: () -> Unit) {
     SubScreen(stringResource(R.string.settings_privacy), onBack) {
@@ -167,5 +170,12 @@ fun PrivacyScreen(onBack: () -> Unit) {
         ).forEach { (t, b) ->
             Section(stringResource(t)) { Text(stringResource(b), style = MaterialTheme.typography.bodyMedium) }
         }
+        val context = LocalContext.current
+        OutlinedButton(
+            onClick = {
+                runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_URL))) }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text(stringResource(R.string.privacy_full)) }
     }
 }

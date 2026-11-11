@@ -37,11 +37,16 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,7 +66,6 @@ import com.tdcostmanager.app.R
 import com.tdcostmanager.app.container
 import com.tdcostmanager.app.data.db.OrderStatus
 import com.tdcostmanager.app.data.db.PieceEntity
-import com.tdcostmanager.app.ui.common.ConfirmDialog
 import com.tdcostmanager.app.ui.common.EmptyState
 import com.tdcostmanager.app.ui.common.LocalFmt
 import com.tdcostmanager.app.ui.common.PieceImage
@@ -81,7 +85,9 @@ class PiecesViewModel(app: Application) : AndroidViewModel(app) {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun duplicate(p: PieceEntity, suffix: String) = viewModelScope.launch { c.repository.duplicatePiece(p, suffix) }
-    fun delete(p: PieceEntity) = viewModelScope.launch { c.repository.deletePiece(p) }
+    fun delete(p: PieceEntity) = viewModelScope.launch { c.repository.deletePiece(p, keepImage = true) }
+    fun undoDelete(p: PieceEntity) = viewModelScope.launch { c.repository.restorePiece(p) }
+    fun discardImage(p: PieceEntity) = viewModelScope.launch { c.repository.discardImage(p.image) }
 
     /** Añade la pieza a un pedido (o a uno nuevo) y devuelve el id del pedido. */
     fun addToOrder(p: PieceEntity, orderId: Long?, onDone: (Long) -> Unit) = viewModelScope.launch {
@@ -107,10 +113,12 @@ fun PiecesScreen(
     val fmt = LocalFmt.current
     var query by remember { mutableStateOf("") }
     var toDelete by remember { mutableStateOf<PieceEntity?>(null) }
+    val snackbar = remember { SnackbarHostState() }
     var toOrder by remember { mutableStateOf<PieceEntity?>(null) }
     val copySuffix = stringResource(R.string.pieces_copy_suffix)
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.tab_pieces)) },
@@ -161,14 +169,14 @@ fun PiecesScreen(
         }
     }
 
-    toDelete?.let { p ->
-        ConfirmDialog(
-            title = stringResource(R.string.pieces_delete_title, p.name),
-            body = stringResource(R.string.pieces_delete_body),
-            confirm = stringResource(R.string.action_delete),
-            onConfirm = { vm.delete(p) },
-            onDismiss = { toDelete = null }
-        )
+    val deletedText = stringResource(R.string.pieces_deleted)
+    val undoText = stringResource(R.string.action_undo)
+    LaunchedEffect(toDelete) {
+        val p = toDelete ?: return@LaunchedEffect
+        vm.delete(p)
+        val r = snackbar.showSnackbar(deletedText.format(p.name), actionLabel = undoText, duration = SnackbarDuration.Long)
+        if (r == SnackbarResult.ActionPerformed) vm.undoDelete(p) else vm.discardImage(p)
+        toDelete = null
     }
     toOrder?.let { p ->
         AlertDialog(

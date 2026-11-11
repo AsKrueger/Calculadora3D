@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PictureAsPdf
@@ -63,6 +64,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -119,13 +121,19 @@ class OrderDetailViewModel(private val c: AppContainer, val orderId: Long) : Vie
         if (qty <= 0) c.repository.removeLine(line) else c.repository.updateLine(line.copy(quantity = qty))
     }
     fun remove(line: OrderLineEntity) = viewModelScope.launch { c.repository.removeLine(line) }
+    fun restore(line: OrderLineEntity) = viewModelScope.launch { c.repository.restoreLine(line) }
+    fun duplicate(onDone: (Long) -> Unit) = viewModelScope.launch { onDone(c.repository.duplicateOrder(orderId)) }
+
+    /** Clientes de otros presupuestos, para autocompletar. */
+    val clients = kotlinx.coroutines.flow.flow { emit(c.repository.clients()) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     fun refreshPrices() = viewModelScope.launch { c.repository.refreshOrderPrices(orderId) }
     fun delete(onDone: () -> Unit) = viewModelScope.launch { c.repository.deleteOrder(orderId); onDone() }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun OrderDetailScreen(orderId: Long, onBack: () -> Unit) {
+fun OrderDetailScreen(orderId: Long, onBack: () -> Unit, onOpenOrder: (Long) -> Unit) {
     val context = LocalContext.current
     val vm: OrderDetailViewModel = viewModel(key = "order$orderId") { OrderDetailViewModel(context.container, orderId) }
     val data by vm.order.collectAsStateWithLifecycle()
@@ -142,6 +150,9 @@ fun OrderDetailScreen(orderId: Long, onBack: () -> Unit) {
     val returnedMsg = stringResource(R.string.order_stock_returned)
     val pdfFailed = stringResource(R.string.order_pdf_failed)
     val shareTitle = stringResource(R.string.order_share)
+    val lineRemovedMsg = stringResource(R.string.order_line_removed)
+    val undoText = stringResource(R.string.action_undo)
+    val clients by vm.clients.collectAsStateWithLifecycle()
 
     val d = data
     val o = d?.order
@@ -186,6 +197,11 @@ fun OrderDetailScreen(orderId: Long, onBack: () -> Unit) {
                             text = { Text(stringResource(R.string.order_refresh_prices)) },
                             leadingIcon = { Icon(Icons.Outlined.Refresh, null) },
                             onClick = { menu = false; vm.refreshPrices() }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.order_duplicate)) },
+                            leadingIcon = { Icon(Icons.Outlined.ContentCopy, null) },
+                            onClick = { menu = false; vm.duplicate(onOpenOrder) }
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.order_delete)) },
@@ -251,7 +267,16 @@ fun OrderDetailScreen(orderId: Long, onBack: () -> Unit) {
 
             Section(stringResource(R.string.order_section_client)) {
                 TextInput(stringResource(R.string.order_title_field), title, { title = it; vm.update { o2 -> o2.copy(title = it) } })
-                TextInput(stringResource(R.string.order_client), client, { client = it; vm.update { o2 -> o2.copy(clientName = it) } })
+                ClientField(
+                    value = client,
+                    suggestions = clients,
+                    onValueChange = { client = it; vm.update { o2 -> o2.copy(clientName = it) } },
+                    onPick = { name, mail ->
+                        client = name
+                        if (contact.isBlank()) contact = mail
+                        vm.update { o2 -> o2.copy(clientName = name, clientContact = o2.clientContact.ifBlank { mail }) }
+                    }
+                )
                 TextInput(stringResource(R.string.order_contact), contact, { contact = it; vm.update { o2 -> o2.copy(clientContact = it) } },
                     keyboardType = KeyboardType.Email)
                 OutlinedButton(onClick = { pickDate = true }) {
@@ -277,7 +302,13 @@ fun OrderDetailScreen(orderId: Long, onBack: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 d.lines.sortedBy { it.position }.forEach { line ->
-                    LineRow(line, fmt, onQty = { vm.setQuantity(line, it) }, onRemove = { vm.remove(line) })
+                    LineRow(line, fmt, onQty = { vm.setQuantity(line, it) }, onRemove = {
+                        vm.remove(line)
+                        scope.launch {
+                            val r = snackbar.showSnackbar(lineRemovedMsg.format(line.description), actionLabel = undoText)
+                            if (r == androidx.compose.material3.SnackbarResult.ActionPerformed) vm.restore(line)
+                        }
+                    })
                 }
             }
 
@@ -398,5 +429,54 @@ private fun LineRow(line: OrderLineEntity, fmt: Fmt, onQty: (Int) -> Unit, onRem
             )
         }
         HorizontalDivider()
+    }
+}
+
+/** Nombre del cliente con sugerencias de presupuestos anteriores. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ClientField(
+    value: String,
+    suggestions: List<Pair<String, String>>,
+    onValueChange: (String) -> Unit,
+    onPick: (String, String) -> Unit
+) {
+    var focused by remember { mutableStateOf(false) }
+    val q = com.tdcostmanager.app.ui.pieces.normalize(value.trim())
+    val matches = suggestions.filter { (name, _) ->
+        val n = com.tdcostmanager.app.ui.pieces.normalize(name)
+        n != q && (q.isEmpty() || n.contains(q))
+    }.take(5)
+    androidx.compose.material3.ExposedDropdownMenuBox(
+        expanded = focused && matches.isNotEmpty(),
+        onExpandedChange = {}
+    ) {
+        androidx.compose.material3.OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(stringResource(R.string.order_client)) },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(androidx.compose.material3.MenuAnchorType.PrimaryEditable)
+                .onFocusChanged { focused = it.isFocused }
+        )
+        ExposedDropdownMenu(
+            expanded = focused && matches.isNotEmpty(),
+            onDismissRequest = { focused = false }
+        ) {
+            matches.forEach { (name, mail) ->
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(name)
+                            if (mail.isNotBlank()) Text(mail, style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    },
+                    onClick = { onPick(name, mail); focused = false }
+                )
+            }
+        }
     }
 }

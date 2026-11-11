@@ -69,6 +69,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tdcostmanager.app.R
 import com.tdcostmanager.app.container
 import com.tdcostmanager.app.core.Fmt
+import com.tdcostmanager.app.data.MaterialLibrary
+import com.tdcostmanager.app.data.MaterialTemplate
 import com.tdcostmanager.app.data.PrinterTemplate
 import com.tdcostmanager.app.data.Templates
 import com.tdcostmanager.app.data.db.ChannelEntity
@@ -125,6 +127,7 @@ private sealed interface Editing {
     data class Extra(val e: ExtraEntity?) : Editing
     data class Channel(val ch: ChannelEntity?) : Editing
     data object Templates : Editing
+    data object MaterialTemplates : Editing
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -152,7 +155,7 @@ fun CatalogScreen(vm: CatalogViewModel = viewModel()) {
             FloatingActionButton(onClick = {
                 editing = when (tab) {
                     Tab.PRINTERS -> Editing.Templates
-                    Tab.MATERIALS -> Editing.Material(null)
+                    Tab.MATERIALS -> Editing.MaterialTemplates
                     Tab.EXTRAS -> Editing.Extra(null)
                     Tab.CHANNELS -> Editing.Channel(null)
                 }
@@ -208,6 +211,10 @@ fun CatalogScreen(vm: CatalogViewModel = viewModel()) {
         null -> Unit
         Editing.Templates -> TemplatePicker(
             onPick = { t -> editing = Editing.Printer(t?.toEntity() ?: Templates.GENERIC_FDM.toEntity("")) },
+            onDismiss = { editing = null }
+        )
+        Editing.MaterialTemplates -> MaterialTemplatePicker(
+            onPick = { t -> editing = Editing.Material(t?.toEntity()) },
             onDismiss = { editing = null }
         )
         is Editing.Printer -> PrinterEditor(e.p, onSave = { vm.save(it); editing = null },
@@ -350,6 +357,47 @@ private fun TemplatePicker(onPick: (PrinterTemplate?) -> Unit, onDismiss: () -> 
     )
 }
 
+@Composable
+private fun MaterialTemplatePicker(onPick: (MaterialTemplate?) -> Unit, onDismiss: () -> Unit) {
+    val fmt = LocalFmt.current
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.material_from_library)) },
+        text = {
+            LazyColumn(Modifier.heightIn(max = 460.dp)) {
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.material_blank)) },
+                        leadingContent = { Icon(Icons.Outlined.Add, null) },
+                        colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent),
+                        modifier = Modifier.clickable { onPick(null) }
+                    )
+                    HorizontalDivider()
+                    Text(
+                        stringResource(R.string.material_library_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+                items(MaterialLibrary.items) { t ->
+                    ListItem(
+                        headlineContent = { Text(t.brand + " " + t.name) },
+                        supportingContent = {
+                            Text(fmt.money(BigDecimal(t.price)) + " · " + t.size + if (t.kind.unit == MaterialUnit.ML) " ml" else " g")
+                        },
+                        leadingContent = { Swatch(t.color, 24.dp) },
+                        colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent),
+                        modifier = Modifier.clickable { onPick(t) }
+                    )
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
+    )
+}
+
 /** Diálogo de edición común: campos con scroll, Guardar, y Eliminar si ya existe. */
 @Composable
 private fun EditorDialog(
@@ -455,7 +503,7 @@ private fun MaterialEditor(m: MaterialEntity?, onSave: (MaterialEntity) -> Unit,
     val valid = name.isNotBlank() && d(price) != null && (d(size) ?: BigDecimal.ZERO).signum() > 0 &&
         (d(density) ?: BigDecimal.ZERO).signum() > 0 && (!track || (d(stock) != null && d(low) != null))
     EditorDialog(
-        title = stringResource(if (m == null) R.string.material_new else R.string.material_edit),
+        title = stringResource(if (m == null || m.id == 0L) R.string.material_new else R.string.material_edit),
         canSave = valid,
         onSave = {
             val base = m ?: MaterialEntity(name = "", packagePrice = BigDecimal.ZERO, packageSize = BigDecimal.ONE, density = BigDecimal.ONE)
@@ -465,7 +513,7 @@ private fun MaterialEditor(m: MaterialEntity?, onSave: (MaterialEntity) -> Unit,
         },
         onDismiss = onDismiss,
         deleteName = m?.name,
-        onDelete = m?.let { { onDelete(it.id) } }
+        onDelete = m?.takeIf { it.id != 0L }?.let { { onDelete(it.id) } }
     ) {
         TextInput(stringResource(R.string.field_name), name, { name = it })
         Picker(

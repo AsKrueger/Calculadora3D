@@ -24,12 +24,12 @@ val testAppId = "ca-app-pub-3940256099942544~3347511713"
 
 android {
     namespace = "com.tdcostmanager.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.tdcostmanager.app"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 2
         versionName = "2.0.0"
 

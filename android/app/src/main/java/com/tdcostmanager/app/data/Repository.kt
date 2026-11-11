@@ -49,13 +49,45 @@ class Repository(
         )
     }
 
-    suspend fun deletePiece(piece: PieceEntity) {
+    /** Borra la pieza. La foto se conserva si [keepImage], para poder deshacer el borrado. */
+    suspend fun deletePiece(piece: PieceEntity, keepImage: Boolean = false) {
         db.withTransaction {
             db.orders().detachPiece(piece.id)
             db.pieces().delete(piece)
         }
-        images.delete(piece.image)
+        if (!keepImage) images.delete(piece.image)
     }
+
+    suspend fun restorePiece(piece: PieceEntity) = db.pieces().insertAll(listOf(piece))
+
+    /** Borra la foto de una pieza cuyo borrado ya no se va a deshacer. */
+    suspend fun discardImage(ref: String?) {
+        if (ref != null && ref !in db.pieces().images()) images.delete(ref)
+    }
+
+    suspend fun restoreLine(line: OrderLineEntity) {
+        db.orders().insertAllLines(listOf(line))
+        touch(line.orderId)
+    }
+
+    /** Copia un presupuesto con sus líneas como borrador nuevo. Devuelve su id. */
+    suspend fun duplicateOrder(orderId: Long): Long = db.withTransaction {
+        val o = db.orders().byId(orderId) ?: return@withTransaction orderId
+        val now = System.currentTimeMillis()
+        val id = db.orders().insert(
+            o.copy(id = 0, number = db.orders().nextNumber(), status = OrderStatus.DRAFT, stockDeducted = false,
+                dueDate = null, createdAt = now, updatedAt = now)
+        )
+        db.orders().lines(orderId).forEach { db.orders().insertLine(it.copy(id = 0, orderId = id)) }
+        id
+    }
+
+    /** Clientes de presupuestos anteriores, el más reciente primero, sin repetir. */
+    suspend fun clients(): List<Pair<String, String>> =
+        db.orders().all().sortedByDescending { it.updatedAt }
+            .filter { it.clientName.isNotBlank() }
+            .distinctBy { it.clientName.trim().lowercase() }
+            .map { it.clientName.trim() to it.clientContact.trim() }
 
     suspend fun newOrder(title: String = ""): Long =
         db.orders().insert(OrderEntity(number = db.orders().nextNumber(), title = title))

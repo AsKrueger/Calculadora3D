@@ -24,6 +24,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
@@ -98,6 +101,26 @@ private fun MainNav() {
     val pending by context.container.pendingImport.collectAsState()
     LaunchedEffect(pending) { if (pending != null) nav.goTo(TopLevel.CALC.route) }
 
+    // Accesos directos del icono
+    val shortcut by context.container.pendingShortcut.collectAsState()
+    LaunchedEffect(shortcut) {
+        val action = shortcut ?: return@LaunchedEffect
+        // Al abrir desde el icono la navegación aún no está montada: se espera a que lo esté.
+        // Se consume después, y de forma atómica: si esta pantalla muere antes (Android reinicia
+        // la tarea), la acción sigue pendiente para la nueva.
+        snapshotFlow { nav.currentBackStackEntry }.filterNotNull().first()
+        if (!context.container.pendingShortcut.compareAndSet(action, null)) return@LaunchedEffect
+        when (action) {
+            com.tdcostmanager.app.MainActivity.SHORTCUT_NEW_CALC -> { calc.newCalculation(); nav.goTo(TopLevel.CALC.route) }
+            com.tdcostmanager.app.MainActivity.SHORTCUT_IMPORT -> { nav.goTo(TopLevel.CALC.route); calc.requestImport() }
+            com.tdcostmanager.app.MainActivity.SHORTCUT_NEW_QUOTE -> {
+                val id = context.container.repository.newOrder()
+                nav.goTo(TopLevel.ORDERS.route)
+                nav.navigate("order/$id")
+            }
+        }
+    }
+
     Scaffold(
         bottomBar = {
             if (showBar) NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, tonalElevation = 0.dp) {
@@ -132,7 +155,11 @@ private fun MainNav() {
                 OrdersScreen(onOpen = { id -> nav.navigate("order/$id") })
             }
             composable("order/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) { entry ->
-                OrderDetailScreen(entry.arguments?.getLong("id") ?: 0L, onBack = { nav.popBackStack() })
+                OrderDetailScreen(
+                    entry.arguments?.getLong("id") ?: 0L,
+                    onBack = { nav.popBackStack() },
+                    onOpenOrder = { id -> nav.navigate("order/$id") { popUpTo("orders") } }
+                )
             }
             composable(TopLevel.CATALOG.route) { CatalogScreen() }
             composable(TopLevel.SETTINGS.route) {

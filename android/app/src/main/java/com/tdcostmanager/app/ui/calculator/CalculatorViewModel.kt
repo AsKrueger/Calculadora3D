@@ -161,6 +161,20 @@ class CalculatorViewModel(app: Application) : AndroidViewModel(app) {
 
     fun edit(transform: (CalcForm) -> CalcForm) = form.update(transform)
 
+    /** Pide a la pantalla que abra el selector de archivos (desde un acceso directo). */
+    private val importRequests = Channel<Unit>(Channel.CONFLATED)
+    val importRequestFlow = importRequests.receiveAsFlow()
+    fun requestImport() { importRequests.trySend(Unit) }
+
+    /** Rellena una pieza de ejemplo para ver la app en acción sin teclear nada. */
+    fun loadExample() = form.update { f ->
+        f.copy(
+            hours = "3", minutes = "20", perPlate = "1",
+            materials = f.materials.take(1).map { it.copy(amount = "85") }.ifEmpty { listOf(MatRow(key(), null, "85")) },
+            prep = "10", post = "5"
+        )
+    }
+
     /** Formulario limpio con los valores por defecto de Ajustes y del catálogo. */
     fun newCalculation() {
         viewModelScope.launch {

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icono de acceso directo del lanzador -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path android:fillColor="#1F252C" android:pathData="M24,0a24,24 0 1,1 0,48a24,24 0 1,1 0,-48z" />
+    <group android:translateX="12" android:translateY="12">
+        <path android:fillColor="#FF8A4C" android:pathData="M6,2h9l5,5v13a2,2 0 0,1 -2,2H6a2,2 0 0,1 -2,-2V4a2,2 0 0,1 2,-2z M14,3.5V8h4.5z M8,11h8v2H8z M8,15h8v2H8z M8,7h4v2H8z" />
+    </group>
+</vector>

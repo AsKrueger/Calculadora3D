@@ -10,6 +10,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.graphics.drawable.IconCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.tdcostmanager.app.core.Ads
 import com.tdcostmanager.app.core.Billing
@@ -19,12 +22,20 @@ import com.tdcostmanager.app.ui.theme.AppTheme
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        private const val ACTION_PREFIX = "com.tdcostmanager.app.shortcut."
+        const val SHORTCUT_NEW_CALC = "new_calc"
+        const val SHORTCUT_IMPORT = "import"
+        const val SHORTCUT_NEW_QUOTE = "new_quote"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         handleIntent(intent)
+        publishShortcuts()
 
         setContent {
             val settings by container.settings.settings.collectAsState(initial = null)
@@ -49,8 +60,31 @@ class MainActivity : AppCompatActivity() {
         handleIntent(intent)
     }
 
-    /** Un G-code o 3MF abierto o compartido con la app. */
+    /** Accesos directos al mantener pulsado el icono, en el idioma actual. */
+    private fun publishShortcuts() {
+        fun shortcut(id: String, label: Int, icon: Int) = ShortcutInfoCompat.Builder(this, id)
+            .setShortLabel(getString(label))
+            .setIcon(IconCompat.createWithResource(this, icon))
+            .setIntent(Intent(this, MainActivity::class.java).setAction(ACTION_PREFIX + id))
+            .build()
+        runCatching {
+            ShortcutManagerCompat.setDynamicShortcuts(
+                this,
+                listOf(
+                    shortcut(SHORTCUT_NEW_CALC, R.string.shortcut_new_calc, R.drawable.ic_shortcut_calc),
+                    shortcut(SHORTCUT_IMPORT, R.string.shortcut_import, R.drawable.ic_shortcut_import),
+                    shortcut(SHORTCUT_NEW_QUOTE, R.string.shortcut_new_quote, R.drawable.ic_shortcut_quote)
+                )
+            )
+        }
+    }
+
+    /** Un G-code o 3MF abierto o compartido con la app, o un acceso directo. */
     private fun handleIntent(intent: Intent?) {
+        intent?.action?.takeIf { it.startsWith(ACTION_PREFIX) }?.let {
+            container.pendingShortcut.value = it.removePrefix(ACTION_PREFIX)
+            return
+        }
         val uri: Uri? = when (intent?.action) {
             Intent.ACTION_VIEW -> intent.data
             Intent.ACTION_SEND -> if (Build.VERSION.SDK_INT >= 33)
