@@ -33,7 +33,7 @@ class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory
                 HealthViewModel(HealthRepository()) as T
             }
             modelClass.isAssignableFrom(ProjectViewModel::class.java) -> {
-                ProjectViewModel(ProjectRepository()) as T
+                ProjectViewModel(ProjectRepository(), MaterialRepository(), MachineRepository(), ToolRepository()) as T
             }
             modelClass.isAssignableFrom(MaterialViewModel::class.java) -> {
                 MaterialViewModel(MaterialRepository()) as T

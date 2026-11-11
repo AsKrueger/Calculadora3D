@@ -2,7 +2,7 @@ package com.tdcostmanager.backend.domain.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 
 @Entity
@@ -24,7 +24,7 @@ public class ProjectTool {
     private Tool tool;
 
     @NotNull
-    @PositiveOrZero
+    @Positive
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal uses;
 

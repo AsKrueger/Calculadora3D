@@ -2,6 +2,7 @@ package com.tdcostmanager.backend.domain.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 
@@ -44,6 +45,11 @@ public class Material {
     @Column(nullable = false)
     private boolean active = true;
 
+    // Opcional: permite usar en masa un material comprado en volumen, y al revés
+    @Positive
+    @Column(name = "density_g_per_ml", precision = 19, scale = 6)
+    private BigDecimal densityGPerMl;
+
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false, updatable = false)
@@ -77,4 +83,7 @@ public class Material {
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+
+    public BigDecimal getDensityGPerMl() { return densityGPerMl; }
+    public void setDensityGPerMl(BigDecimal densityGPerMl) { this.densityGPerMl = densityGPerMl; }
 }

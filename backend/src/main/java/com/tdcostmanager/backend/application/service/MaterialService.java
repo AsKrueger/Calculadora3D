@@ -45,6 +45,7 @@ public class MaterialService {
         material.setQuantity(request.quantity());
         material.setUnit(request.unit());
         material.setCategory(request.category());
+        material.setDensityGPerMl(request.densityGPerMl());
         material.setActive(true);
         material.setOwner(currentUserProvider.getCurrentUser());
 
@@ -60,6 +61,7 @@ public class MaterialService {
         material.setQuantity(request.quantity());
         material.setUnit(request.unit());
         material.setCategory(request.category());
+        material.setDensityGPerMl(request.densityGPerMl());
         material.setActive(request.active());
 
         return mapToResponse(repository.save(material));
@@ -86,7 +88,8 @@ public class MaterialService {
                 material.getQuantity(),
                 material.getUnit(),
                 material.getCategory(),
-                material.isActive()
+                material.isActive(),
+                material.getDensityGPerMl()
         );
     }
 }

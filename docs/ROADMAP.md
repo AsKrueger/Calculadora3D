@@ -56,13 +56,15 @@ La app funcionaba, pero no se podía enseñar: sin tema propio, formatos de prog
 - [x] Login y registro según el diseño de referencia: logo con degradado, campos con etiqueta y botón en degradado, reutilizables (Issue #49).
 - [x] Lista de proyectos según el diseño de referencia, con el precio del último presupuesto (una sola consulta para todo el listado), búsqueda sin tildes y orden (Issue #51).
 
-## Fase 5 — Proyectos editables y validaciones coherentes ⬜
+## Fase 5 — Proyectos editables y validaciones coherentes ✅
 
 Issue #45.
 
-- [ ] Permitir añadir, modificar y quitar líneas (materiales, máquinas, herramientas) en `ProjectUpdateRequest` y `Project`.
-- [ ] Exigir cantidad mayor que 0 en la API y en la base de datos (`CHECK quantity > 0`), para que falle al guardar y no al presupuestar.
-- [ ] Conversión entre unidades de masa y volumen mediante la densidad del material (p. ej. resina comprada en litros y usada en gramos).
+- [x] `ProjectUpdateRequest` admite las listas de materiales, máquinas y herramientas: cada lista enviada sustituye a la actual y una lista `null` no cambia. `Project` tiene operaciones de dominio para sustituir líneas (no en proyectos archivados).
+- [x] Cantidad mayor que 0 en la API, en las entidades y en la base de datos (`V8__Positive_Quantities_And_Density.sql`); las líneas con cantidad 0 existentes se eliminan, porque no aportaban coste.
+- [x] Densidad opcional (`density_g_per_ml`) en los materiales: `UnitConverter` convierte entre masa y volumen cuando existe (p. ej. resina comprada en litros y usada en gramos).
+- [x] La compatibilidad de unidades se comprueba al guardar el proyecto, con un mensaje claro, y no al presupuestar.
+- [x] Android: editor de líneas en el formulario de proyecto (crear y editar), densidad en el formulario de material y desplegables reescritos.
 
 ## Fase 6 — Rendimiento y robustez ⬜
 

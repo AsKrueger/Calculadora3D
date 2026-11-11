@@ -97,7 +97,7 @@ public final class CostCalculator {
             BigDecimal unitPrice = mat.purchasePrice()
                     .divide(mat.quantity(), INTERNAL_SCALE, RoundingMode.HALF_UP);
 
-            BigDecimal normalizedQuantity = UnitConverter.convert(mat.quantityUsed(), mat.unit(), mat.materialUnit());
+            BigDecimal normalizedQuantity = UnitConverter.convert(mat.quantityUsed(), mat.unit(), mat.materialUnit(), mat.densityGPerMl());
             
             BigDecimal cost = normalizedQuantity.multiply(unitPrice);
             total = total.add(cost);

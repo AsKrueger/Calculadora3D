@@ -15,5 +15,6 @@ public record MaterialUpdateRequest(
     @NotNull @Positive BigDecimal quantity,
     @NotNull UnitType unit,
     @NotNull MaterialCategory category,
-    @NotNull Boolean active
+    @NotNull Boolean active,
+    @Positive BigDecimal densityGPerMl
 ) {}

@@ -76,6 +76,18 @@ class CostCalculatorTest {
     }
 
     @Test
+    void shouldUseDensityToCostAMaterialBoughtByVolumeAndUsedByMass() {
+        // Resina: 34 € el litro, densidad 1,1 g/ml. 110 g son 0,1 L, es decir, 3,40 €
+        var resin = new CostCalculationInput.MaterialInput(
+                new BigDecimal("110"), UnitType.G, new BigDecimal("34"), BigDecimal.ONE, UnitType.L, "Resina", new BigDecimal("1.1"));
+        CostCalculationInput input = new CostCalculationInput(BigDecimal.ZERO, BigDecimal.ZERO, List.of(resin), List.of(), List.of());
+
+        CostCalculationResult result = CostCalculator.calculate(input, testDateTime, BigDecimal.ZERO, BigDecimal.ZERO, (dt) -> BigDecimal.ONE);
+
+        assertThat(result.materialCost()).isEqualByComparingTo("3.4000");
+    }
+
+    @Test
     void shouldNotAskForElectricityPriceWhenNoEnergyIsConsumed() {
         CostCalculationInput input = new CostCalculationInput(
                 BigDecimal.ONE, BigDecimal.TEN, List.of(), List.of(), List.of()

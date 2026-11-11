@@ -13,7 +13,8 @@ data class MaterialResponse(
     val quantity: Double,
     val unit: UnitType,
     val category: MaterialCategory,
-    val active: Boolean
+    val active: Boolean,
+    val densityGPerMl: Double? = null
 )
 
 @Serializable
@@ -23,7 +24,8 @@ data class MaterialCreateRequest(
     val purchasePrice: Double,
     val quantity: Double,
     val unit: UnitType,
-    val category: MaterialCategory
+    val category: MaterialCategory,
+    val densityGPerMl: Double? = null
 )
 
 @Serializable
@@ -34,5 +36,6 @@ data class MaterialUpdateRequest(
     val quantity: Double,
     val unit: UnitType,
     val category: MaterialCategory,
-    val active: Boolean
+    val active: Boolean,
+    val densityGPerMl: Double? = null
 )

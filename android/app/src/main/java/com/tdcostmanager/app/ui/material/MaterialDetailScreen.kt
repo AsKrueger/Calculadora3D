@@ -73,6 +73,7 @@ fun MaterialDetailScreen(
                     }
                     HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
                     InfoRow("Coste por ${m.unit.symbol}", m.unitCostLabel(), emphasize = true)
+                    m.densityGPerMl?.let { InfoRow("Densidad", "${Format.number(it, 3)} g/ml") }
                 }
                 if (!m.description.isNullOrBlank()) {
                     SectionCard(title = "Descripción") {
