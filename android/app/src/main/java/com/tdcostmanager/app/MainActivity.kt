@@ -12,6 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.tdcostmanager.app.core.Ads
+import com.tdcostmanager.app.core.Billing
 import com.tdcostmanager.app.data.settings.ThemeMode
 import com.tdcostmanager.app.ui.AppRoot
 import com.tdcostmanager.app.ui.theme.AppTheme
@@ -39,6 +40,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        Billing.start(this)
         Ads.start(this)
     }
 

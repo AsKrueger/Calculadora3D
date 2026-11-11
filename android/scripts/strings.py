@@ -275,8 +275,6 @@ S = {
  "settings_general": ("General", "General"),
  "settings_language": ("Language", "Idioma"),
  "lang_system": ("Same as phone", "El del teléfono"),
- "lang_es": ("Español", "Español"),
- "lang_en": ("English", "English"),
  "settings_currency": ("Currency", "Moneda"),
  "settings_theme": ("Appearance", "Apariencia"),
  "theme_system": ("Same as phone", "La del teléfono"),
@@ -398,6 +396,24 @@ S = {
  "seed_extra_bag": ("Zip bag", "Bolsa zip"),
  "seed_channel_direct": ("Direct sale", "Venta directa"),
  "seed_channel_shop": ("Online shop (card payment)", "Tienda online (pago con tarjeta)"),
+
+ # Comparador de canales, gráfico, CSV y quitar anuncios
+ "channels_compare_title": ("Price on each channel", "Precio en cada canal"),
+ "channels_compare_help": ("What to charge on each one to keep the same profit. Tap one to use it.", "Lo que hay que cobrar en cada uno para ganar lo mismo. Toca uno para usarlo."),
+ "channels_compare_help_fixed": ("What you keep at this price on each channel. Tap one to use it.", "Lo que te queda a este precio en cada canal. Toca uno para usarlo."),
+ "channels_compare_row": ("Fees %1$s · you keep %2$s", "Comisión %1$s · te quedan %2$s"),
+ "channels_compare_impossible": ("No price gives a profit here", "Aquí ningún precio deja beneficio"),
+ "channels_compare_best_price": ("Cheapest", "Más barato"),
+ "channels_compare_best_profit": ("Best profit", "Más beneficio"),
+ "chart_title": ("Last 6 months", "Últimos 6 meses"),
+ "settings_csv": ("Export to spreadsheet", "Exportar a hoja de cálculo"),
+ "settings_csv_help": ("Quotes and pieces as CSV, for Excel or your accountant", "Presupuestos y piezas en CSV, para Excel o tu gestoría"),
+ "csv_orders_file": ("quotes-%1$s.csv", "presupuestos-%1$s.csv"),
+ "csv_pieces_file": ("pieces-%1$s.csv", "piezas-%1$s.csv"),
+ "remove_ads": ("Remove ads", "Quitar anuncios"),
+ "remove_ads_help": ("One-time payment of %1$s. No subscription.", "Pago único de %1$s. Sin suscripción."),
+ "remove_ads_done": ("Ads removed", "Anuncios quitados"),
+ "remove_ads_done_help": ("Thank you for supporting the app", "Gracias por apoyar la app"),
 }
 
 PLURALS = {
@@ -409,6 +425,13 @@ PLURALS = {
                    {"one": "%1$d foto copiada a la app", "other": "%1$d fotos copiadas a la app"}),
 }
 
+ARRAYS = {
+ "csv_orders_header": (["Number", "Date", "Status", "Item", "Client", "Units", "Subtotal", "Discount", "Shipping", "Total", "Cost", "Profit"],
+                       ["Número", "Fecha", "Estado", "Concepto", "Cliente", "Unidades", "Subtotal", "Descuento", "Envío", "Total", "Coste", "Beneficio"]),
+ "csv_pieces_header": (["Piece", "Printer", "Hours per plate", "Pieces per plate", "Material per plate", "Cost per piece", "Price per piece", "Profit per piece", "Updated"],
+                       ["Pieza", "Impresora", "Horas por placa", "Piezas por placa", "Material por placa", "Coste por pieza", "Precio por pieza", "Beneficio por pieza", "Actualizada"]),
+}
+
 def esc(v):
     v = escape(v)
     v = v.replace("'", "\\'").replace('"', '\\"')
@@ -416,25 +439,55 @@ def esc(v):
         v = "\\" + v
     return v
 
-def write(path, idx):
+NL = chr(10)
+
+def write(path, strings, plurals, arrays, default):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     out = ['<?xml version="1.0" encoding="utf-8"?>',
            '<!-- Generado por android/scripts/strings.py: edita los textos allí, no aquí. -->',
            '<resources>']
-    for k, v in S.items():
-        attrs = ' translatable="false"' if k == "app_name" and idx == 0 else ''
-        if k == "app_name" and idx == 1:
+    for k, v in strings.items():
+        if k == "app_name" and not default:
             continue
-        out.append(f'    <string name="{k}"{attrs}>{esc(v[idx])}</string>')
-    for k, v in PLURALS.items():
+        attrs = ' translatable="false"' if k == "app_name" else ''
+        out.append(f'    <string name="{k}"{attrs}>{esc(v)}</string>')
+    for k, v in plurals.items():
         out.append(f'    <plurals name="{k}">')
-        for q, t in v[idx].items():
+        for q, t in v.items():
             out.append(f'        <item quantity="{q}">{esc(t)}</item>')
         out.append('    </plurals>')
+    for k, v in arrays.items():
+        out.append(f'    <string-array name="{k}">')
+        for t in v:
+            out.append(f'        <item>{esc(t)}</item>')
+        out.append('    </string-array>')
     out.append('</resources>')
-    open(path, "w", encoding="utf-8").write("\n".join(out) + "\n")
+    open(path, "w", encoding="utf-8").write(NL.join(out) + NL)
 
 res = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "app", "src", "main", "res")
-write(os.path.join(res, "values", "strings.xml"), 0)
-write(os.path.join(res, "values-es", "strings.xml"), 1)
-print(len(S), "strings")
+
+def pick(i):
+    return ({k: v[i] for k, v in S.items()}, {k: v[i] for k, v in PLURALS.items()}, {k: v[i] for k, v in ARRAYS.items()})
+
+langs = {"values": pick(0), "values-es": pick(1)}
+
+# Idiomas extra: i18n/<código>.py con S, PLURALS y ARRAYS. Deben tener exactamente las mismas claves que el inglés.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "i18n"))
+import importlib
+for code in ["pt", "fr", "de", "it"]:
+    try:
+        m = importlib.import_module(code)
+    except ModuleNotFoundError:
+        continue
+    missing = (set(S) - {"app_name"}) - set(m.S)
+    extra = set(m.S) - set(S)
+    if missing or extra or set(m.PLURALS) != set(PLURALS) or set(m.ARRAYS) != set(ARRAYS):
+        sys.exit(f"{code}: faltan {sorted(missing)} sobran {sorted(extra)}")
+    for k, v in m.ARRAYS.items():
+        if len(v) != len(ARRAYS[k][0]):
+            sys.exit(f"{code}: {k} debe tener {len(ARRAYS[k][0])} elementos")
+    langs["values-" + code] = (m.S, m.PLURALS, m.ARRAYS)
+
+for folder, (st, pl, ar) in langs.items():
+    write(os.path.join(res, folder, "strings.xml"), st, pl, ar, folder == "values")
+print(len(S), "textos en", len(langs), "idiomas")

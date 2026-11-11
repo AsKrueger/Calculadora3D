@@ -130,6 +130,10 @@ dependencies {
     implementation("com.google.android.gms:play-services-ads:23.6.0")
     implementation("com.google.android.ump:user-messaging-platform:3.1.0")
 
+    // Pago único «Quitar anuncios» y valoración dentro de la app
+    implementation("com.android.billingclient:billing-ktx:7.1.1")
+    implementation("com.google.android.play:review-ktx:2.0.2")
+
     testImplementation("junit:junit:4.13.2")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

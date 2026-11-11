@@ -108,6 +108,10 @@ fun OrdersScreen(onOpen: (Long) -> Unit, vm: OrdersViewModel = viewModel()) {
                     onNext = { month = YearMonth.parse(month).plusMonths(1).toString() }
                 )
             }
+            if (list.any { it.order.status.isWon }) item {
+                val end = YearMonth.parse(month)
+                SalesChart((5 downTo 0).map { OrderMath.summary(end.minusMonths(it.toLong()), list) })
+            }
             if (list.isEmpty()) {
                 item {
                     EmptyState(

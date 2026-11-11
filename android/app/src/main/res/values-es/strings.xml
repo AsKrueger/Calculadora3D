@@ -249,8 +249,6 @@
     <string name="settings_general">General</string>
     <string name="settings_language">Idioma</string>
     <string name="lang_system">El del teléfono</string>
-    <string name="lang_es">Español</string>
-    <string name="lang_en">English</string>
     <string name="settings_currency">Moneda</string>
     <string name="settings_theme">Apariencia</string>
     <string name="theme_system">La del teléfono</string>
@@ -368,6 +366,22 @@
     <string name="seed_extra_bag">Bolsa zip</string>
     <string name="seed_channel_direct">Venta directa</string>
     <string name="seed_channel_shop">Tienda online (pago con tarjeta)</string>
+    <string name="channels_compare_title">Precio en cada canal</string>
+    <string name="channels_compare_help">Lo que hay que cobrar en cada uno para ganar lo mismo. Toca uno para usarlo.</string>
+    <string name="channels_compare_help_fixed">Lo que te queda a este precio en cada canal. Toca uno para usarlo.</string>
+    <string name="channels_compare_row">Comisión %1$s · te quedan %2$s</string>
+    <string name="channels_compare_impossible">Aquí ningún precio deja beneficio</string>
+    <string name="channels_compare_best_price">Más barato</string>
+    <string name="channels_compare_best_profit">Más beneficio</string>
+    <string name="chart_title">Últimos 6 meses</string>
+    <string name="settings_csv">Exportar a hoja de cálculo</string>
+    <string name="settings_csv_help">Presupuestos y piezas en CSV, para Excel o tu gestoría</string>
+    <string name="csv_orders_file">presupuestos-%1$s.csv</string>
+    <string name="csv_pieces_file">piezas-%1$s.csv</string>
+    <string name="remove_ads">Quitar anuncios</string>
+    <string name="remove_ads_help">Pago único de %1$s. Sin suscripción.</string>
+    <string name="remove_ads_done">Anuncios quitados</string>
+    <string name="remove_ads_done_help">Gracias por apoyar la app</string>
     <plurals name="summary_pending">
         <item quantity="one">%1$d presupuesto esperando respuesta</item>
         <item quantity="other">%1$d presupuestos esperando respuesta</item>
@@ -380,4 +394,29 @@
         <item quantity="one">%1$d foto copiada a la app</item>
         <item quantity="other">%1$d fotos copiadas a la app</item>
     </plurals>
+    <string-array name="csv_orders_header">
+        <item>Número</item>
+        <item>Fecha</item>
+        <item>Estado</item>
+        <item>Concepto</item>
+        <item>Cliente</item>
+        <item>Unidades</item>
+        <item>Subtotal</item>
+        <item>Descuento</item>
+        <item>Envío</item>
+        <item>Total</item>
+        <item>Coste</item>
+        <item>Beneficio</item>
+    </string-array>
+    <string-array name="csv_pieces_header">
+        <item>Pieza</item>
+        <item>Impresora</item>
+        <item>Horas por placa</item>
+        <item>Piezas por placa</item>
+        <item>Material por placa</item>
+        <item>Coste por pieza</item>
+        <item>Precio por pieza</item>
+        <item>Beneficio por pieza</item>
+        <item>Actualizada</item>
+    </string-array>
 </resources>

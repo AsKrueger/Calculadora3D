@@ -21,12 +21,21 @@ Issue #52. Análisis de competencia y plan: https://claude.ai/artifact/7r8fuRGTN
 - [x] Barra de anuncios AdMob arriba, solo visible con anuncio cargado; consentimiento UMP.
 - [x] Release con R8, firma por `keystore.properties` y sin tráfico en claro.
 
+## Fase 10 — Ventaja competitiva ✅
+
+Issue #53.
+
+- [x] Comparador de canales: precio y beneficio en todos los canales a la vez; tocar uno lo elige.
+- [x] Gráfico de ventas y beneficio de los últimos 6 meses.
+- [x] Exportación a CSV de presupuestos y piezas (separador y decimales según el idioma, BOM para Excel).
+- [x] Portugués, francés, alemán e italiano; el generador de textos comprueba que todos los idiomas tengan las mismas claves.
+- [x] Pago único «Quitar anuncios» (Google Play Billing, producto `remove_ads`), recuperado al reinstalar.
+- [x] Petición de valoración dentro de la app tras 3 piezas guardadas, como mucho cada 90 días.
+
 ## Siguientes ideas ⬜
 
-- Pago único «Quitar anuncios» con Google Play Billing.
 - Widget de cálculo rápido y temporizador de impresión.
 - Etiquetas QR/NFC para las bobinas.
-- Más idiomas (portugués, francés, alemán, italiano).
 - Sincronización opcional en la nube reutilizando el backend archivado.
 - `targetSdk` 36 cuando Google Play lo exija para apps nuevas (requiere actualizar el Android Gradle Plugin).
 
