@@ -34,6 +34,12 @@ import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.StarRate
 import androidx.compose.material.icons.outlined.WifiOff
+import androidx.compose.material.icons.outlined.TableChart
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.core.content.FileProvider
+import com.tdcostmanager.app.container
+import com.tdcostmanager.app.core.CsvExport
+import kotlinx.coroutines.launch
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
@@ -66,6 +72,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tdcostmanager.app.BuildConfig
 import com.tdcostmanager.app.R
 import com.tdcostmanager.app.core.Ads
+import com.tdcostmanager.app.core.Billing
+import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.Favorite
 import com.tdcostmanager.app.core.Fmt
 import com.tdcostmanager.app.core.calc.PriceRounding
 import com.tdcostmanager.app.data.settings.AppSettings
@@ -78,6 +87,11 @@ import com.tdcostmanager.app.ui.common.Section
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.Currency
+
+/** Idiomas de la app, cada uno con su propio nombre. */
+val LANGUAGES = listOf(
+    "es" to "Español", "en" to "English", "pt" to "Português", "fr" to "Français", "de" to "Deutsch", "it" to "Italiano"
+)
 
 val CURRENCIES = listOf(
     "EUR", "USD", "GBP", "MXN", "ARS", "COP", "CLP", "PEN", "UYU", "BRL", "CAD", "AUD", "CHF", "SEK", "NOK", "DKK", "PLN", "JPY", "INR"
@@ -99,8 +113,11 @@ fun SettingsScreen(
     val printers by vm.printers.collectAsStateWithLifecycle()
     val channels by vm.channels.collectAsStateWithLifecycle()
     val privacyRequired by Ads.privacyOptionsRequired.collectAsState()
+    val adsRemoved by Billing.adsRemoved.collectAsState()
+    val removeAdsProduct by Billing.product.collectAsState()
     val fmt = LocalFmt.current
     val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     var confirmClear by remember { mutableStateOf(false) }
     var confirmRestore by remember { mutableStateOf<Uri?>(null) }
 
@@ -130,12 +147,12 @@ fun SettingsScreen(
             if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
 
             Section(stringResource(R.string.settings_general)) {
-                val languages = listOf("" to R.string.lang_system, "es" to R.string.lang_es, "en" to R.string.lang_en)
+                val languages = listOf("" to stringResource(R.string.lang_system)) + LANGUAGES
                 val current = vm.currentLanguage()
                 Picker(
                     stringResource(R.string.settings_language), languages,
                     languages.firstOrNull { it.first == current } ?: languages.first(),
-                    labelOf = { stringResource(it.second) },
+                    labelOf = { it.second },
                     onSelect = { vm.setLanguage(it.first) },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -196,6 +213,18 @@ fun SettingsScreen(
                 SettingRow(Icons.Outlined.Backup, stringResource(R.string.settings_backup), stringResource(R.string.settings_backup_help)) {
                     exporter.launch("cost3d-backup-${LocalDate.now()}.zip")
                 }
+                SettingRow(Icons.Outlined.TableChart, stringResource(R.string.settings_csv), stringResource(R.string.settings_csv_help)) {
+                    scope.launch {
+                        val files = CsvExport.export(context, context.container.db, fmt.locale)
+                        val uris = ArrayList(files.map { FileProvider.getUriForFile(context, context.packageName + ".files", it) })
+                        val send = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+                            type = "text/csv"
+                            putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        context.startActivity(Intent.createChooser(send, context.getString(R.string.settings_csv)))
+                    }
+                }
                 SettingRow(Icons.Outlined.Restore, stringResource(R.string.settings_restore), stringResource(R.string.settings_restore_help)) {
                     importer.launch(arrayOf("application/zip", "application/octet-stream"))
                 }
@@ -204,6 +233,14 @@ fun SettingsScreen(
             }
 
             Section(stringResource(R.string.settings_help)) {
+                if (adsRemoved) SettingRow(Icons.Outlined.Favorite, stringResource(R.string.remove_ads_done),
+                    stringResource(R.string.remove_ads_done_help), onClick = null)
+                else removeAdsProduct?.let { p ->
+                    SettingRow(Icons.Outlined.Block, stringResource(R.string.remove_ads),
+                        stringResource(R.string.remove_ads_help, p.oneTimePurchaseOfferDetails?.formattedPrice ?: "")) {
+                        (context as? Activity)?.let(Billing::buy)
+                    }
+                }
                 SettingRow(Icons.AutoMirrored.Outlined.Send, stringResource(R.string.settings_feedback),
                     stringResource(R.string.settings_feedback_help), onClick = onFeedback)
                 SettingRow(Icons.Outlined.StarRate, stringResource(R.string.settings_rate), stringResource(R.string.settings_rate_help)) {

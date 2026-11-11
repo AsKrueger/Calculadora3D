@@ -91,7 +91,8 @@ object Ads {
 @Composable
 fun AdBar(modifier: Modifier = Modifier) {
     val ready by Ads.ready.collectAsState()
-    if (!ready || !BuildConfig.ADS_ENABLED) return
+    val removed by Billing.adsRemoved.collectAsState()
+    if (!ready || removed || !BuildConfig.ADS_ENABLED) return
     var loaded by remember { mutableStateOf(false) }
     val context = LocalContext.current
 

@@ -94,6 +94,7 @@ fun CalculatorScreen(
     val f = state.form
     val fmt = LocalFmt.current
     val snackbar = remember { SnackbarHostState() }
+    val context = androidx.compose.ui.platform.LocalContext.current
     val scroll = rememberScrollState()
     val scope = rememberCoroutineScope()
     var breakdownY by remember { mutableStateOf(0) }
@@ -107,6 +108,7 @@ fun CalculatorScreen(
             when (e) {
                 is CalcEvent.Message -> snackbar.showSnackbar(e.text)
                 is CalcEvent.Saved -> {
+                    (context as? android.app.Activity)?.let(com.tdcostmanager.app.core.Review::onPieceSaved)
                     val r = snackbar.showSnackbar(savedText.format(e.name), actionLabel = seePieces)
                     if (r == androidx.compose.material3.SnackbarResult.ActionPerformed) onOpenPieces()
                 }
@@ -177,6 +179,9 @@ fun CalculatorScreen(
 
             Box(Modifier.onGloballyPositioned { breakdownY = it.positionInParent().y.toInt() }) {
                 Breakdown(state)
+            }
+            if (state.hasInput && state.catalog.channels.size > 1) {
+                ChannelComparison(state) { id -> vm.edit { it.copy(channelId = id) } }
             }
 
             Section(stringResource(R.string.calc_section_piece)) {
@@ -517,6 +522,73 @@ private fun Breakdown(state: CalcUi) {
                 fmt.money(r.price * n),
                 hint = stringResource(R.string.calc_plate_hint, fmt.money(r.totalCost * n), fmt.money(r.profit * n))
             )
+        }
+    }
+}
+
+/**
+ * El mismo cálculo en todos los canales a la vez: a cuánto hay que vender en cada uno para ganar lo
+ * mismo (o, con precio fijo, cuánto queda en cada uno). Tocar un canal lo elige.
+ */
+@Composable
+private fun ChannelComparison(state: CalcUi, onSelect: (Long) -> Unit) {
+    val fmt = LocalFmt.current
+    val rows = remember(state.form, state.catalog, state.settings) {
+        state.catalog.channels.map { ch ->
+            ch to CalculatorViewModel.compute(state.form.copy(channelId = ch.id), state.catalog, state.settings)
+        }
+    }
+    val fixed = state.form.mode == PricingMode.FIXED_PRICE
+    val best = rows.filter { it.second?.feasible == true }.let { list ->
+        if (fixed) list.maxByOrNull { it.second!!.profit } else list.minByOrNull { it.second!!.price }
+    }?.first?.id
+    Section(stringResource(R.string.channels_compare_title)) {
+        Text(
+            stringResource(if (fixed) R.string.channels_compare_help_fixed else R.string.channels_compare_help),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        rows.forEach { (ch, r) ->
+            val selected = ch.id == state.form.channelId
+            Surface(
+                onClick = { onSelect(ch.id) },
+                shape = MaterialTheme.shapes.medium,
+                color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                ch.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1,
+                                overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false)
+                            )
+                            if (ch.id == best && rows.size > 1) {
+                                Spacer(Modifier.width(8.dp))
+                                com.tdcostmanager.app.ui.common.Chip(
+                                    stringResource(if (fixed) R.string.channels_compare_best_profit else R.string.channels_compare_best_price),
+                                    com.tdcostmanager.app.ui.theme.Tone.Success
+                                )
+                            }
+                        }
+                        Text(
+                            when {
+                                r == null || !r.feasible -> stringResource(R.string.channels_compare_impossible)
+                                else -> stringResource(R.string.channels_compare_row, fmt.money(r.channelFees), fmt.money(r.profit))
+                            },
+                            style = MaterialTheme.typography.bodySmall.tabular(),
+                            color = if (r != null && r.profit.signum() < 0) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        if (r != null && r.feasible) fmt.money(r.price) else "—",
+                        style = MaterialTheme.typography.titleMedium.tabular(),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
     }
 }

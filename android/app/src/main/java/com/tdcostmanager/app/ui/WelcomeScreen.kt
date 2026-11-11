@@ -50,6 +50,7 @@ import com.tdcostmanager.app.ui.common.NumberField
 import com.tdcostmanager.app.ui.common.Picker
 import com.tdcostmanager.app.ui.common.Section
 import com.tdcostmanager.app.ui.settings.CURRENCIES
+import com.tdcostmanager.app.ui.settings.LANGUAGES
 import com.tdcostmanager.app.ui.settings.SettingsViewModel
 import com.tdcostmanager.app.ui.settings.currencyLabel
 import java.math.BigDecimal
@@ -107,12 +108,11 @@ fun WelcomeScreen(vm: SettingsViewModel = viewModel()) {
             )
 
             Section(stringResource(R.string.welcome_step_language)) {
-                val languages = listOf("es" to R.string.lang_es, "en" to R.string.lang_en)
                 val current = vm.currentLanguage().ifEmpty { fmt.locale.language }
                 Picker(
-                    stringResource(R.string.settings_language), languages,
-                    languages.firstOrNull { it.first == current },
-                    labelOf = { stringResource(it.second) },
+                    stringResource(R.string.settings_language), LANGUAGES,
+                    LANGUAGES.firstOrNull { it.first == current },
+                    labelOf = { it.second },
                     onSelect = { vm.setLanguage(it.first) },
                     modifier = Modifier.fillMaxWidth()
                 )

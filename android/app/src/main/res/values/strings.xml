@@ -250,8 +250,6 @@
     <string name="settings_general">General</string>
     <string name="settings_language">Language</string>
     <string name="lang_system">Same as phone</string>
-    <string name="lang_es">Español</string>
-    <string name="lang_en">English</string>
     <string name="settings_currency">Currency</string>
     <string name="settings_theme">Appearance</string>
     <string name="theme_system">Same as phone</string>
@@ -369,6 +367,22 @@
     <string name="seed_extra_bag">Zip bag</string>
     <string name="seed_channel_direct">Direct sale</string>
     <string name="seed_channel_shop">Online shop (card payment)</string>
+    <string name="channels_compare_title">Price on each channel</string>
+    <string name="channels_compare_help">What to charge on each one to keep the same profit. Tap one to use it.</string>
+    <string name="channels_compare_help_fixed">What you keep at this price on each channel. Tap one to use it.</string>
+    <string name="channels_compare_row">Fees %1$s · you keep %2$s</string>
+    <string name="channels_compare_impossible">No price gives a profit here</string>
+    <string name="channels_compare_best_price">Cheapest</string>
+    <string name="channels_compare_best_profit">Best profit</string>
+    <string name="chart_title">Last 6 months</string>
+    <string name="settings_csv">Export to spreadsheet</string>
+    <string name="settings_csv_help">Quotes and pieces as CSV, for Excel or your accountant</string>
+    <string name="csv_orders_file">quotes-%1$s.csv</string>
+    <string name="csv_pieces_file">pieces-%1$s.csv</string>
+    <string name="remove_ads">Remove ads</string>
+    <string name="remove_ads_help">One-time payment of %1$s. No subscription.</string>
+    <string name="remove_ads_done">Ads removed</string>
+    <string name="remove_ads_done_help">Thank you for supporting the app</string>
     <plurals name="summary_pending">
         <item quantity="one">%1$d quote waiting for an answer</item>
         <item quantity="other">%1$d quotes waiting for an answer</item>
@@ -381,4 +395,29 @@
         <item quantity="one">%1$d photo copied into the app</item>
         <item quantity="other">%1$d photos copied into the app</item>
     </plurals>
+    <string-array name="csv_orders_header">
+        <item>Number</item>
+        <item>Date</item>
+        <item>Status</item>
+        <item>Item</item>
+        <item>Client</item>
+        <item>Units</item>
+        <item>Subtotal</item>
+        <item>Discount</item>
+        <item>Shipping</item>
+        <item>Total</item>
+        <item>Cost</item>
+        <item>Profit</item>
+    </string-array>
+    <string-array name="csv_pieces_header">
+        <item>Piece</item>
+        <item>Printer</item>
+        <item>Hours per plate</item>
+        <item>Pieces per plate</item>
+        <item>Material per plate</item>
+        <item>Cost per piece</item>
+        <item>Price per piece</item>
+        <item>Profit per piece</item>
+        <item>Updated</item>
+    </string-array>
 </resources>
