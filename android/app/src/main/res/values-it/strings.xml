@@ -341,6 +341,7 @@
     <string name="privacy_network_body">Oltre agli annunci, l’app si collega a Red Eléctrica (Spagna) solo quando tocchi il pulsante del prezzo dell’elettricità di oggi. Non vengono inviati dati personali.</string>
     <string name="privacy_feedback_title">Commenti</string>
     <string name="privacy_feedback_body">I commenti si inviano con la tua app email, quindi vedi esattamente cosa viene inviato. Il tuo indirizzo serve solo per risponderti.</string>
+    <string name="privacy_full">Leggi l’informativa sulla privacy completa</string>
     <string name="privacy_delete_title">Elimina i tuoi dati</string>
     <string name="privacy_delete_body">Impostazioni › Elimina tutti i dati cancella tutto da questo telefono. Disinstallare l’app fa lo stesso.</string>
     <string name="welcome_skip">Salta</string>

@@ -83,7 +83,7 @@ La versión de depuración se instala como `com.tdcostmanager.app.debug`, junto 
    Sin ellos, la release usa los identificadores de prueba de Google (no generan ingresos).
 3. **Quitar anuncios:** en Play Console, crea un producto integrado (no suscripción) con el ID `remove_ads` y su precio. Hasta que exista, la opción no aparece en Ajustes.
 4. `./gradlew bundleRelease` y sube el `.aab` a Google Play.
-5. Google Play pide una URL pública con la política de privacidad: el texto de la pantalla «Privacidad» de la app sirve de base.
+5. **Web:** la política de privacidad está en https://askrueger.github.io/3d-cost-manager/privacy.html (úsala en Google Play) y el `app-ads.txt` de AdMob en https://askrueger.github.io/app-ads.txt. Ambos viven en el repositorio [`AsKrueger.github.io`](https://github.com/AsKrueger/AsKrueger.github.io). En la ficha de Google Play, el sitio web del desarrollador debe ser `https://askrueger.github.io`.
 
 El correo que recibe los comentarios de los usuarios está en `FEEDBACK_EMAIL`, en [`android/app/build.gradle.kts`](android/app/build.gradle.kts).
 

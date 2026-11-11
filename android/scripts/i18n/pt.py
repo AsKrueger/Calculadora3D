@@ -147,6 +147,7 @@ S = {
  "privacy_network_body": "Além dos anúncios, o app só se conecta à Red Eléctrica (Espanha) quando você toca no botão do preço da energia de hoje. Nenhum dado pessoal é enviado.",
  "privacy_feedback_title": "Comentários",
  "privacy_feedback_body": "Os comentários são enviados com seu próprio app de e-mail, então você vê exatamente o que é enviado. Seu e-mail só é usado para responder.",
+ "privacy_full": "Ler a política de privacidade completa",
  "privacy_delete_title": "Apagar seus dados",
  "privacy_delete_body": "Ajustes › Apagar todos os dados elimina tudo deste telefone. Desinstalar o app faz o mesmo.",
 

@@ -147,6 +147,7 @@ S = {
  "privacy_network_body": "Außer für Werbung verbindet sich die App nur mit Red Eléctrica (Spanien), wenn du auf die Schaltfläche für den heutigen Strompreis tippst. Es werden keine persönlichen Daten gesendet.",
  "privacy_feedback_title": "Feedback",
  "privacy_feedback_body": "Feedback wird mit deiner eigenen E-Mail-App gesendet, du siehst also genau, was verschickt wird. Deine Adresse wird nur für die Antwort verwendet.",
+ "privacy_full": "Vollständige Datenschutzerklärung lesen",
  "privacy_delete_title": "Deine Daten löschen",
  "privacy_delete_body": "Einstellungen › Alle Daten löschen entfernt alles von diesem Telefon. Das Deinstallieren der App tut dasselbe.",
 

@@ -342,6 +342,7 @@
     <string name="privacy_network_body">Besides ads, the app only connects to Red Eléctrica (Spain) when you tap the button to get today\'s electricity price. No personal data is sent.</string>
     <string name="privacy_feedback_title">Feedback</string>
     <string name="privacy_feedback_body">Feedback is sent with your own email app, so you see exactly what is sent. Your email address is used only to reply to you.</string>
+    <string name="privacy_full">Read the full privacy policy</string>
     <string name="privacy_delete_title">Delete your data</string>
     <string name="privacy_delete_body">Settings › Delete all data removes everything from this phone. Uninstalling the app does the same.</string>
     <string name="welcome_skip">Skip</string>

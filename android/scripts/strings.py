@@ -367,6 +367,7 @@ S = {
  "privacy_network_body": ("Besides ads, the app only connects to Red Eléctrica (Spain) when you tap the button to get today's electricity price. No personal data is sent.", "Además de los anuncios, la app solo se conecta a Red Eléctrica cuando pulsas el botón del precio de la luz de hoy. No se envía ningún dato personal."),
  "privacy_feedback_title": ("Feedback", "Comentarios"),
  "privacy_feedback_body": ("Feedback is sent with your own email app, so you see exactly what is sent. Your email address is used only to reply to you.", "Los comentarios se envían con tu propia app de correo, así que ves exactamente lo que se envía. Tu correo solo se usa para responderte."),
+ "privacy_full": ("Read the full privacy policy", "Leer la política de privacidad completa"),
  "privacy_delete_title": ("Delete your data", "Borrar tus datos"),
  "privacy_delete_body": ("Settings › Delete all data removes everything from this phone. Uninstalling the app does the same.", "Ajustes › Borrar todos los datos elimina todo de este teléfono. Desinstalar la app hace lo mismo."),
 

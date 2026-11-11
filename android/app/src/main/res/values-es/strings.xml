@@ -341,6 +341,7 @@
     <string name="privacy_network_body">Además de los anuncios, la app solo se conecta a Red Eléctrica cuando pulsas el botón del precio de la luz de hoy. No se envía ningún dato personal.</string>
     <string name="privacy_feedback_title">Comentarios</string>
     <string name="privacy_feedback_body">Los comentarios se envían con tu propia app de correo, así que ves exactamente lo que se envía. Tu correo solo se usa para responderte.</string>
+    <string name="privacy_full">Leer la política de privacidad completa</string>
     <string name="privacy_delete_title">Borrar tus datos</string>
     <string name="privacy_delete_body">Ajustes › Borrar todos los datos elimina todo de este teléfono. Desinstalar la app hace lo mismo.</string>
     <string name="welcome_skip">Saltar</string>
