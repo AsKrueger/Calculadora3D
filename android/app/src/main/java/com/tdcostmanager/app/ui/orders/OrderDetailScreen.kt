@@ -317,7 +317,8 @@ fun OrderDetailScreen(orderId: Long, onBack: () -> Unit, onOpenOrder: (Long) -> 
                     NumberField(stringResource(R.string.order_discount), discount, {
                         discount = it
                         vm.update { o2 -> o2.copy(discountPercent = Fmt.parse(it) ?: BigDecimal.ZERO) }
-                    }, Modifier.weight(1f), suffix = "%")
+                    }, Modifier.weight(1f), suffix = "%",
+                        isError = (Fmt.parse(discount) ?: BigDecimal.ZERO) > BigDecimal(100))
                     NumberField(stringResource(R.string.order_shipping), shipping, {
                         shipping = it
                         vm.update { o2 -> o2.copy(shipping = Fmt.parse(it) ?: BigDecimal.ZERO) }

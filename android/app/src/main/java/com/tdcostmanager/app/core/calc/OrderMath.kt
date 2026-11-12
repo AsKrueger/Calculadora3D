@@ -29,19 +29,25 @@ data class OrderTotals(
 
 object OrderMath {
 
+    private val HUNDRED = BigDecimal(100)
+
     fun totals(order: OrderEntity, lines: List<OrderLineEntity>): OrderTotals {
         val subtotal = lines.fold(BigDecimal.ZERO) { a, l -> a + l.unitPrice * BigDecimal(l.quantity) }
-        val discount = subtotal.multiply(order.discountPercent.max(BigDecimal.ZERO))
-            .divide(BigDecimal(100), 2, RoundingMode.HALF_UP)
-        val total = subtotal - discount + order.shipping.max(BigDecimal.ZERO)
+        // El descuento va de 0 a 100 %: con más, el total y el beneficio saldrían negativos
+        val discountPercent = order.discountPercent.max(BigDecimal.ZERO).min(HUNDRED)
+        val discount = subtotal.multiply(discountPercent)
+            .divide(HUNDRED, 2, RoundingMode.HALF_UP)
+        // Un envío negativo no se suma al total, así que tampoco se muestra ni se exporta
+        val shipping = order.shipping.max(BigDecimal.ZERO)
+        val total = subtotal - discount + shipping
         val cost = lines.fold(BigDecimal.ZERO) { a, l -> a + l.unitCost * BigDecimal(l.quantity) }
         val lineProfit = lines.fold(BigDecimal.ZERO) { a, l -> a + l.unitProfit * BigDecimal(l.quantity) }
         val vat = lines.maxOfOrNull { it.vatPercent } ?: BigDecimal.ZERO
-        val discountNet = discount.divide(BigDecimal.ONE + vat.divide(BigDecimal(100), 6, RoundingMode.HALF_UP), 4, RoundingMode.HALF_UP)
+        val discountNet = discount.divide(BigDecimal.ONE + vat.divide(HUNDRED, 6, RoundingMode.HALF_UP), 4, RoundingMode.HALF_UP)
         return OrderTotals(
             subtotal = subtotal.setScale(2, RoundingMode.HALF_UP),
             discount = discount,
-            shipping = order.shipping.setScale(2, RoundingMode.HALF_UP),
+            shipping = shipping.setScale(2, RoundingMode.HALF_UP),
             total = total.setScale(2, RoundingMode.HALF_UP),
             cost = cost.setScale(2, RoundingMode.HALF_UP),
             profit = (lineProfit - discountNet).setScale(2, RoundingMode.HALF_UP),
