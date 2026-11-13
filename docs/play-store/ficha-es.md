@@ -41,6 +41,7 @@ Abre o comparte un G-code o 3MF (Flash Studio, OrcaSlicer, Bambu Studio, PrusaSl
 
 ★ PARA EL DÍA A DÍA
 • Temporizador: te avisa cuando termina la impresión
+• Widget en la pantalla de inicio con la cuenta atrás
 • Stock de bobinas con aviso cuando quedan pocos gramos
 • Biblioteca de filamentos de Bambu Lab, Flashforge, Sunlu, eSun, Polymaker, Prusament…
 • Plantillas de impresoras: Flashforge, Bambu Lab, Prusa, Creality, Elegoo, Anycubic
@@ -48,12 +49,12 @@ Abre o comparte un G-code o 3MF (Flash Studio, OrcaSlicer, Bambu Studio, PrusaSl
 ★ TUS DATOS SON TUYOS
 Sin cuentas y sin conexión: todo se guarda en tu móvil. Copia de seguridad en un archivo cuando quieras.
 
-Gratis, con un pequeño anuncio arriba que puedes quitar con un pago único, sin suscripciones.
+Gratis, sin anuncios y sin suscripciones.
 Disponible en español, inglés, portugués, francés, alemán e italiano.
 ```
 
 ## Notas de la versión
 
 ```
-Primera versión: calculadora de costes y precios, importación de G-code y 3MF, presupuestos en PDF, temporizador de impresión y 6 idiomas.
+Primera versión: calculadora de costes y precios, importación de G-code y 3MF, presupuestos en PDF, temporizador de impresión, widget y 6 idiomas.
 ```

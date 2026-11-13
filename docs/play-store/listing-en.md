@@ -41,6 +41,7 @@ Open or share a G-code or 3MF (Flash Studio, OrcaSlicer, Bambu Studio, PrusaSlic
 
 ★ FOR EVERY DAY
 • Print timer that notifies you when the print is done
+• Home screen widget with the countdown
 • Spool stock with a low-filament warning
 • Filament library: Bambu Lab, Flashforge, Sunlu, eSun, Polymaker, Prusament…
 • Printer templates: Flashforge, Bambu Lab, Prusa, Creality, Elegoo, Anycubic
@@ -48,12 +49,12 @@ Open or share a G-code or 3MF (Flash Studio, OrcaSlicer, Bambu Studio, PrusaSlic
 ★ YOUR DATA IS YOURS
 No account, works offline: everything stays on your phone. Back up to a file whenever you want.
 
-Free, with a small banner at the top you can remove with a one-time payment. No subscriptions.
+Free, with no ads and no subscriptions.
 Available in English, Spanish, Portuguese, French, German and Italian.
 ```
 
 ## Release notes
 
 ```
-First release: cost and price calculator, G-code and 3MF import, PDF quotes, print timer and 6 languages.
+First release: cost and price calculator, G-code and 3MF import, PDF quotes, print timer, widget and 6 languages.
 ```

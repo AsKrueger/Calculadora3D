@@ -69,6 +69,8 @@ fun WelcomeScreen(vm: SettingsViewModel = viewModel()) {
     var labor by rememberSaveable { mutableStateOf(fmt.input(BigDecimal(15))) }
     var vat by rememberSaveable { mutableStateOf(if (spain) "21" else "0") }
 
+    val symbol = runCatching { java.util.Currency.getInstance(currency).getSymbol(fmt.locale) }.getOrDefault("")
+
     LaunchedEffect(pvpc) { pvpc?.let { energy = fmt.input(it.average) } }
 
     fun finish(skip: Boolean) = vm.finishOnboarding(
@@ -136,14 +138,14 @@ fun WelcomeScreen(vm: SettingsViewModel = viewModel()) {
 
             Section(stringResource(R.string.welcome_step_costs)) {
                 NumberField(stringResource(R.string.settings_energy), energy, { energy = it }, Modifier.fillMaxWidth(),
-                    suffix = "/kWh", supporting = stringResource(R.string.settings_energy_help))
+                    suffix = symbol + "/kWh", supporting = stringResource(R.string.settings_energy_help))
                 if (spain || currency == "EUR") FilledTonalButton(onClick = { vm.loadPvpc(apply = false) }) {
                     Icon(Icons.Outlined.Bolt, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.pvpc_button))
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    NumberField(stringResource(R.string.calc_rate), labor, { labor = it }, Modifier.weight(1f), suffix = "/h")
+                    NumberField(stringResource(R.string.calc_rate), labor, { labor = it }, Modifier.weight(1f), suffix = symbol + "/h")
                     NumberField(stringResource(R.string.calc_vat), vat, { vat = it }, Modifier.weight(1f), suffix = "%")
                 }
                 Text(stringResource(R.string.welcome_costs_help), style = MaterialTheme.typography.bodySmall,

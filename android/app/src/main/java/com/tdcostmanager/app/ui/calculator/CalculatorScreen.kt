@@ -68,6 +68,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tdcostmanager.app.R
+import com.tdcostmanager.app.core.Fmt
 import com.tdcostmanager.app.core.calc.CostPart
 import com.tdcostmanager.app.core.calc.CostResult
 import com.tdcostmanager.app.core.calc.PricingMode
@@ -398,7 +399,7 @@ private fun LaborSection(state: CalcUi, vm: CalculatorViewModel) {
         summary = listOf(
             stringResource(R.string.calc_prep) + " " + dash(f.prep) + " min",
             stringResource(R.string.calc_post) + " " + dash(f.post) + " min",
-            dash(f.laborRate) + " " + fmt.currencySymbol + "/h",
+            (Fmt.parse(f.laborRate)?.let(fmt::money) ?: "—") + "/h",
             stringResource(R.string.calc_failure) + " " + dash(f.failure) + " %"
         ).joinToString(" · "),
         expanded = open,
@@ -415,7 +416,7 @@ private fun LaborSection(state: CalcUi, vm: CalculatorViewModel) {
         NumberField(
             stringResource(R.string.calc_failure), f.failure, { v -> vm.edit { it.copy(failure = v) } },
             Modifier.fillMaxWidth(), suffix = "%", supporting = stringResource(R.string.calc_failure_help),
-            isError = (com.tdcostmanager.app.core.Fmt.parse(f.failure) ?: BigDecimal.ZERO) > BigDecimal(90)
+            isError = (Fmt.parse(f.failure) ?: BigDecimal.ZERO) > BigDecimal(90)
         )
     }
 }

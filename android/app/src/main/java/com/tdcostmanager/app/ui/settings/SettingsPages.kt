@@ -161,10 +161,11 @@ const val PRIVACY_URL = "https://askrueger.github.io/3d-cost-manager/privacy.htm
 @Composable
 fun PrivacyScreen(onBack: () -> Unit) {
     SubScreen(stringResource(R.string.settings_privacy), onBack) {
-        listOf(
+        val ads = BuildConfig.ADS_ENABLED
+        listOfNotNull(
             R.string.privacy_local_title to R.string.privacy_local_body,
-            R.string.privacy_ads_title to R.string.privacy_ads_body,
-            R.string.privacy_network_title to R.string.privacy_network_body,
+            if (ads) R.string.privacy_ads_title to R.string.privacy_ads_body else null,
+            R.string.privacy_network_title to if (ads) R.string.privacy_network_body else R.string.privacy_network_body_noads,
             R.string.privacy_feedback_title to R.string.privacy_feedback_body,
             R.string.privacy_delete_title to R.string.privacy_delete_body
         ).forEach { (t, b) ->

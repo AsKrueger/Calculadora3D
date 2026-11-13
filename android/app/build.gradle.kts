@@ -15,10 +15,15 @@ val keystoreProps = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 
-// AdMob: los identificadores reales se ponen en ~/.gradle/gradle.properties o en android/gradle.properties.
-// Sin ellos se usan los identificadores de prueba de Google, que nunca generan ingresos ni infracciones.
-val admobAppId = (findProperty("ADMOB_APP_ID") as String?) ?: "ca-app-pub-3940256099942544~3347511713"
-val admobBannerId = (findProperty("ADMOB_BANNER_ID") as String?) ?: "ca-app-pub-3940256099942544/9214589741"
+// AdMob: los identificadores reales se ponen en ~/.gradle/gradle.properties (ADMOB_APP_ID y ADMOB_BANNER_ID).
+// La release solo lleva anuncios si existen: sin ellos sale sin barra, sin consentimiento, sin «Quitar anuncios»
+// y sin el permiso de ID de publicidad. La versión de depuración siempre usa los anuncios de prueba de Google.
+val admobAppId = findProperty("ADMOB_APP_ID") as String?
+val admobBannerId = findProperty("ADMOB_BANNER_ID") as String?
+val releaseAds = !admobAppId.isNullOrBlank() && !admobBannerId.isNullOrBlank()
+if (admobAppId.isNullOrBlank() != admobBannerId.isNullOrBlank()) {
+    throw GradleException("AdMob a medias: define ADMOB_APP_ID y ADMOB_BANNER_ID, o ninguno de los dos para publicar sin anuncios.")
+}
 val testBannerId = "ca-app-pub-3940256099942544/9214589741"
 val testAppId = "ca-app-pub-3940256099942544~3347511713"
 
@@ -31,7 +36,7 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 2
-        versionName = "2.0.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -39,7 +44,6 @@ android {
         }
 
         buildConfigField("String", "FEEDBACK_EMAIL", "\"alonsoamadorsanchez@gmail.com\"")
-        buildConfigField("boolean", "ADS_ENABLED", "true")
     }
 
     androidResources {
@@ -62,13 +66,16 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             manifestPlaceholders["admobAppId"] = testAppId
+            buildConfigField("boolean", "ADS_ENABLED", "true")
             buildConfigField("String", "ADMOB_BANNER_ID", "\"$testBannerId\"")
         }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            manifestPlaceholders["admobAppId"] = admobAppId
-            buildConfigField("String", "ADMOB_BANNER_ID", "\"$admobBannerId\"")
+            // Sin anuncios el SDK no se inicia; el ID de prueba solo evita que falle al instalar
+            manifestPlaceholders["admobAppId"] = if (releaseAds) admobAppId!! else testAppId
+            buildConfigField("boolean", "ADS_ENABLED", releaseAds.toString())
+            buildConfigField("String", "ADMOB_BANNER_ID", "\"${if (releaseAds) admobBannerId else ""}\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -77,6 +84,9 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
+    }
+    if (!releaseAds) {
+        sourceSets.getByName("release").manifest.srcFile("src/noads/AndroidManifest.xml")
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

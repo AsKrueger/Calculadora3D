@@ -44,9 +44,26 @@ Issue #54.
 - [x] Precio animado al cambiar.
 - [x] `targetSdk` y `compileSdk` 36 (exigido por Google Play desde agosto de 2026), Android Gradle Plugin 8.13 y Gradle 8.13.
 
+## Fase 12 — Preparar el lanzamiento ✅
+
+Issue #55.
+
+- [x] Widget de pantalla de inicio: impresión en curso con cuenta atrás (la mueve el sistema, sin gastar batería) y botones de nuevo cálculo e importar; textos en el idioma de la app.
+- [x] Fichas de Google Play en español, inglés, portugués, francés, alemán e italiano, dentro de los límites de caracteres.
+- [x] Capturas en español (6) y en inglés (3), sin iconos ni marcas de terceros.
+- [x] Versión 1.0.0 para el primer lanzamiento.
+
+## Fase 13 — Primera versión pública sin anuncios ✅
+
+Issue #56.
+
+- [x] La release solo lleva anuncios si existen `ADMOB_APP_ID` y `ADMOB_BANNER_ID`; si solo existe uno, la compilación falla.
+- [x] Sin anuncios: sin barra, sin consentimiento, sin «Quitar anuncios», sin el SDK de anuncios arrancando y sin los permisos de ID de publicidad ni de compras.
+- [x] Pantalla y política de privacidad, fichas de la tienda y guía de «Seguridad de los datos» coherentes con la versión sin anuncios.
+- [x] Revisión de código: importes con los decimales de cada moneda (0 en yenes) y símbolo de moneda en la bienvenida.
+
 ## Siguientes ideas ⬜
 
-- Widget de cálculo rápido.
 - Etiquetas QR/NFC para las bobinas.
 - Sincronización opcional en la nube reutilizando el backend archivado.
 

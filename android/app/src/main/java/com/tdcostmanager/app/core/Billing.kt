@@ -37,6 +37,8 @@ object Billing {
     private lateinit var appContext: Context
 
     fun start(context: Context) {
+        // «Quitar anuncios» solo tiene sentido en una versión con anuncios
+        if (!com.tdcostmanager.app.BuildConfig.ADS_ENABLED) return
         appContext = context.applicationContext
         // Arranque inmediato con lo último conocido; Google Play lo confirma después
         _adsRemoved.value = appContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_OWNED, false)

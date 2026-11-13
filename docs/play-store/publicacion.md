@@ -21,14 +21,15 @@ Respuestas listas para copiar en Play Console. El orden es el de la pantalla «P
 Toda la funcionalidad está disponible sin restricciones (no hay inicio de sesión).
 
 ### Anuncios
-Sí, la app contiene anuncios.
+**Primera versión: No, la app no contiene anuncios.** (La release se compila sin anuncios mientras no existan `ADMOB_APP_ID` y `ADMOB_BANNER_ID`.)
+Cuando se publique la actualización con anuncios, cambia esta respuesta a **Sí**.
 
 ### Clasificación de contenido (cuestionario IARC)
 - Categoría: **Todas las demás tipos de apps** (utilidad / productividad).
 - Violencia, sexo, lenguaje, drogas, juego con dinero real: **No** a todo.
 - ¿Los usuarios pueden interactuar o compartir contenido entre ellos? **No** (los PDF se comparten con apps externas, no dentro de la app).
 - ¿Comparte la ubicación del usuario con otros? **No**.
-- ¿Permite compras digitales? **Sí** («Quitar anuncios»).
+- ¿Permite compras digitales? **No** en la primera versión (pasará a **Sí** cuando llegue «Quitar anuncios»).
 - Resultado esperado: PEGI 3 / Everyone.
 
 ### Público objetivo
@@ -39,11 +40,13 @@ Sí, la app contiene anuncios.
 No es una app de noticias.
 
 ### Seguridad de los datos
-Según la [guía de Google para el SDK de anuncios](https://developers.google.com/admob/android/privacy/play-data-disclosure):
 
-- ¿La app recoge o comparte datos de usuario? **Sí** (lo hace el SDK de Google Mobile Ads).
-- ¿Se cifran en tránsito? **Sí**.
-- ¿Pueden los usuarios pedir que se eliminen? **No** (la app no guarda datos en servidores; los datos de anuncios los gestiona Google).
+**Primera versión (sin anuncios):**
+- ¿La app recoge o comparte alguno de los tipos de datos de usuario obligatorios? **No.**
+- Motivo: piezas, presupuestos, clientes y fotos se quedan en el móvil y nunca salen de él; el precio de la luz se pide a Red Eléctrica sin enviar datos personales; los comentarios se envían con la app de correo del usuario. La release sin anuncios no incluye el permiso de ID de publicidad ni arranca el SDK de anuncios.
+- Pregunta del ID de publicidad («¿Tu app usa el ID de publicidad?»): **No.**
+
+**Actualización con anuncios** (cuando se active AdMob), según la [guía de Google para el SDK de anuncios](https://developers.google.com/admob/android/privacy/play-data-disclosure):
 
 | Tipo de datos | Recogido | Compartido | Uso | Opcional |
 | :--- | :--- | :--- | :--- | :--- |
@@ -52,7 +55,7 @@ Según la [guía de Google para el SDK de anuncios](https://developers.google.co
 | Información y rendimiento de la app › Registros de fallos y diagnósticos | Sí | Sí | Analíticas, Prevención de fraude | No |
 | Dispositivo u otros identificadores › ID de publicidad | Sí | Sí | Publicidad, Analíticas, Prevención de fraude | No |
 
-No se declara nada más: piezas, presupuestos, clientes y fotos se quedan en el móvil y nunca salen de él. Los comentarios se envían con la app de correo del usuario.
+Y entonces: cifrado en tránsito **Sí**; ID de publicidad **Sí** (publicidad).
 
 ### Categoría y contacto
 - Categoría: **Herramientas**.
@@ -62,11 +65,18 @@ No se declara nada más: piezas, presupuestos, clientes y fotos se quedan en el 
 
 ## 3. Ficha de Play Store
 
-- Textos: [`ficha-es.md`](ficha-es.md) y [`listing-en.md`](listing-en.md) (añade «Inglés (Estados Unidos)» como traducción).
-- Icono 512 × 512 y gráfico de funciones 1024 × 500: en [`graficos/`](graficos/).
-- Capturas de teléfono (mínimo 2, recomendado 4–8): en [`graficos/`](graficos/).
+- Textos: [`ficha-es.md`](ficha-es.md) (idioma predeterminado). Añade como traducciones, en «Gestionar traducciones › Añadir tus propias traducciones»:
+  - Inglés (Estados Unidos): [`listing-en.md`](listing-en.md)
+  - Portugués (Brasil) y Portugués (Portugal): [`listing-pt.md`](listing-pt.md)
+  - Francés (Francia): [`listing-fr.md`](listing-fr.md)
+  - Alemán (Alemania): [`listing-de.md`](listing-de.md)
+  - Italiano (Italia): [`listing-it.md`](listing-it.md)
+- Icono 512 × 512 (`icono-512.png`) y gráfico de funciones 1024 × 500 (`grafico-funciones.png`): en [`graficos/`](graficos/).
+- Capturas de teléfono en [`graficos/`](graficos/), en este orden:
+  - Español: `captura-es-1` a `captura-es-6`.
+  - Inglés (y, de momento, el resto de traducciones): `captura-en-1` a `captura-en-3`.
 
-## 4. Producto «Quitar anuncios»
+## 4. Producto «Quitar anuncios» (solo en la actualización con anuncios)
 
 Monetizar › Productos › Productos integrados › Crear producto:
 - ID: `remove_ads` (exactamente así)

@@ -17,23 +17,26 @@ class Fmt(val locale: Locale, currencyCode: String) {
 
     val currency: Currency = runCatching { Currency.getInstance(currencyCode) }.getOrDefault(Currency.getInstance("EUR"))
 
+    /** Decimales de la moneda: 2 en euros o dólares, 0 en yenes o pesos chilenos. */
+    private val digits = currency.defaultFractionDigits.coerceAtLeast(0)
+
     private val moneyFmt = (NumberFormat.getCurrencyInstance(locale) as DecimalFormat).apply {
         currency = this@Fmt.currency
-        minimumFractionDigits = 2
-        maximumFractionDigits = 2
+        minimumFractionDigits = digits
+        maximumFractionDigits = digits
     }
 
     val currencySymbol: String get() = currency.getSymbol(locale)
 
     fun money(value: BigDecimal?): String =
-        value?.let { moneyFmt.format(it.setScale(2, RoundingMode.HALF_UP)) } ?: "—"
+        value?.let { moneyFmt.format(it.setScale(digits, RoundingMode.HALF_UP)) } ?: "—"
 
     /** Importes pequeños (coste por gramo) con más decimales. */
     fun moneyPrecise(value: BigDecimal): String {
         val f = (NumberFormat.getCurrencyInstance(locale) as DecimalFormat).apply {
             currency = this@Fmt.currency
-            minimumFractionDigits = 2
-            maximumFractionDigits = 4
+            minimumFractionDigits = digits
+            maximumFractionDigits = digits + 2
         }
         return f.format(value)
     }

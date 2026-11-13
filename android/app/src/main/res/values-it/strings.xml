@@ -364,6 +364,12 @@
     <string name="shortcut_import">Importa file</string>
     <string name="shortcut_new_quote">Nuovo preventivo</string>
     <string name="calc_example">Vedi un esempio</string>
+    <string name="widget_title">Stampe in corso</string>
+    <string name="widget_description">Guarda quando finisce la stampa e avvia un calcolo</string>
+    <string name="widget_empty">Nessuna stampa in corso. Avvia un timer dal calcolatore.</string>
+    <string name="widget_ends">Finisce alle %1$s</string>
+    <string name="widget_more">altre %1$d</string>
+    <string name="privacy_network_body_noads">L’app si collega a internet solo quando tocchi il pulsante del prezzo dell’elettricità di oggi, fornito da Red Eléctrica (Spagna). Non vengono inviati dati personali.</string>
     <string name="privacy_delete_title">Elimina i tuoi dati</string>
     <string name="privacy_delete_body">Impostazioni › Elimina tutti i dati cancella tutto da questo telefono. Disinstallare l’app fa lo stesso.</string>
     <string name="welcome_skip">Salta</string>
