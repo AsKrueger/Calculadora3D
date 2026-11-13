@@ -175,6 +175,7 @@ S = {
  "widget_empty": "Nessuna stampa in corso. Avvia un timer dal calcolatore.",
  "widget_ends": "Finisce alle %1$s",
  "widget_more": "altre %1$d",
+ "privacy_network_body_noads": "L’app si collega a internet solo quando tocchi il pulsante del prezzo dell’elettricità di oggi, fornito da Red Eléctrica (Spagna). Non vengono inviati dati personali.",
  "privacy_delete_title": "Elimina i tuoi dati",
  "privacy_delete_body": "Impostazioni › Elimina tutti i dati cancella tutto da questo telefono. Disinstallare l’app fa lo stesso.",
 

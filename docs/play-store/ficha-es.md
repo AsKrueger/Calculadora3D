@@ -49,7 +49,7 @@ Abre o comparte un G-code o 3MF (Flash Studio, OrcaSlicer, Bambu Studio, PrusaSl
 ★ TUS DATOS SON TUYOS
 Sin cuentas y sin conexión: todo se guarda en tu móvil. Copia de seguridad en un archivo cuando quieras.
 
-Gratis, con un pequeño anuncio arriba que puedes quitar con un pago único, sin suscripciones.
+Gratis, sin anuncios y sin suscripciones.
 Disponible en español, inglés, portugués, francés, alemán e italiano.
 ```
 

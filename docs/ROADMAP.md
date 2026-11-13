@@ -53,6 +53,15 @@ Issue #55.
 - [x] Capturas en español (6) y en inglés (3), sin iconos ni marcas de terceros.
 - [x] Versión 1.0.0 para el primer lanzamiento.
 
+## Fase 13 — Primera versión pública sin anuncios ✅
+
+Issue #56.
+
+- [x] La release solo lleva anuncios si existen `ADMOB_APP_ID` y `ADMOB_BANNER_ID`; si solo existe uno, la compilación falla.
+- [x] Sin anuncios: sin barra, sin consentimiento, sin «Quitar anuncios», sin el SDK de anuncios arrancando y sin los permisos de ID de publicidad ni de compras.
+- [x] Pantalla y política de privacidad, fichas de la tienda y guía de «Seguridad de los datos» coherentes con la versión sin anuncios.
+- [x] Revisión de código: importes con los decimales de cada moneda (0 en yenes) y símbolo de moneda en la bienvenida.
+
 ## Siguientes ideas ⬜
 
 - Etiquetas QR/NFC para las bobinas.

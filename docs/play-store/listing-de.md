@@ -48,7 +48,7 @@ Lege Aufschlag, Wunschgewinn oder Festpreis fest. Die App rechnet die Gebühren 
 ★ DEINE DATEN GEHÖREN DIR
 Ohne Konto und offline: alles bleibt auf deinem Telefon. Backup als Datei, wann du willst.
 
-Kostenlos, mit einem kleinen Banner oben, das du per Einmalzahlung entfernen kannst. Kein Abo.
+Kostenlos, ohne Werbung und ohne Abo.
 ```
 
 ## Versionshinweise

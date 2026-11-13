@@ -370,6 +370,7 @@
     <string name="widget_empty">No print running. Start a timer from the calculator.</string>
     <string name="widget_ends">Finishes at %1$s</string>
     <string name="widget_more">%1$d more</string>
+    <string name="privacy_network_body_noads">The app only connects to the internet when you tap the button to get today\'s electricity price from Red Eléctrica (Spain). No personal data is sent.</string>
     <string name="privacy_delete_title">Delete your data</string>
     <string name="privacy_delete_body">Settings › Delete all data removes everything from this phone. Uninstalling the app does the same.</string>
     <string name="welcome_skip">Skip</string>

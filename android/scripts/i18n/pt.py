@@ -175,6 +175,7 @@ S = {
  "widget_empty": "Nenhuma impressão em andamento. Inicie um temporizador na calculadora.",
  "widget_ends": "Termina às %1$s",
  "widget_more": "mais %1$d",
+ "privacy_network_body_noads": "O app só se conecta à internet quando você toca no botão do preço da energia de hoje, fornecido pela Red Eléctrica (Espanha). Nenhum dado pessoal é enviado.",
  "privacy_delete_title": "Apagar seus dados",
  "privacy_delete_body": "Ajustes › Apagar todos os dados elimina tudo deste telefone. Desinstalar o app faz o mesmo.",
 

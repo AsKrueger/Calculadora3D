@@ -175,6 +175,7 @@ S = {
  "widget_empty": "Kein laufender Druck. Starte einen Timer im Rechner.",
  "widget_ends": "Fertig um %1$s",
  "widget_more": "%1$d weitere",
+ "privacy_network_body_noads": "Die App verbindet sich nur mit dem Internet, wenn du auf die Schaltfläche für den heutigen Strompreis von Red Eléctrica (Spanien) tippst. Es werden keine persönlichen Daten gesendet.",
  "privacy_delete_title": "Deine Daten löschen",
  "privacy_delete_body": "Einstellungen › Alle Daten löschen entfernt alles von diesem Telefon. Das Deinstallieren der App tut dasselbe.",
 

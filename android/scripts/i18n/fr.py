@@ -175,6 +175,7 @@ S = {
  "widget_empty": "Aucune impression en cours. Lancez un minuteur depuis la calculatrice.",
  "widget_ends": "Fin à %1$s",
  "widget_more": "%1$d de plus",
+ "privacy_network_body_noads": "L’app ne se connecte à internet que lorsque vous touchez le bouton du prix de l’électricité du jour, fourni par Red Eléctrica (Espagne). Aucune donnée personnelle n’est envoyée.",
  "privacy_delete_title": "Effacer vos données",
  "privacy_delete_body": "Réglages › Effacer toutes les données supprime tout de ce téléphone. Désinstaller l’app fait de même.",
 

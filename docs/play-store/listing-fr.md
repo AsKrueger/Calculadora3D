@@ -48,7 +48,7 @@ Ouvrez ou partagez un G-code ou un 3MF (Flash Studio, OrcaSlicer, Bambu Studio, 
 ★ VOS DONNÉES VOUS APPARTIENNENT
 Sans compte et hors ligne : tout reste sur votre téléphone. Sauvegarde dans un fichier quand vous voulez.
 
-Gratuit, avec une petite bannière en haut que vous pouvez retirer par un paiement unique, sans abonnement.
+Gratuit, sans publicité et sans abonnement.
 ```
 
 ## Notes de version

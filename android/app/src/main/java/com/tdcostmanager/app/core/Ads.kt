@@ -80,6 +80,7 @@ object Ads {
     }
 
     fun showPrivacyOptions(activity: Activity) {
+        if (!::consent.isInitialized) return
         UserMessagingPlatform.showPrivacyOptionsForm(activity) { updatePrivacyState() }
     }
 }

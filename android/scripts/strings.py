@@ -395,6 +395,7 @@ S = {
  "widget_empty": ("No print running. Start a timer from the calculator.", "Ninguna impresión en marcha. Pon un temporizador desde la calculadora."),
  "widget_ends": ("Finishes at %1$s", "Termina a las %1$s"),
  "widget_more": ("%1$d more", "%1$d más"),
+ "privacy_network_body_noads": ("The app only connects to the internet when you tap the button to get today's electricity price from Red Eléctrica (Spain). No personal data is sent.", "La app solo se conecta a internet cuando pulsas el botón del precio de la luz de hoy, que da Red Eléctrica. No se envía ningún dato personal."),
  "privacy_delete_title": ("Delete your data", "Borrar tus datos"),
  "privacy_delete_body": ("Settings › Delete all data removes everything from this phone. Uninstalling the app does the same.", "Ajustes › Borrar todos los datos elimina todo de este teléfono. Desinstalar la app hace lo mismo."),
 

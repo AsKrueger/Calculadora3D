@@ -49,7 +49,7 @@ Open or share a G-code or 3MF (Flash Studio, OrcaSlicer, Bambu Studio, PrusaSlic
 ★ YOUR DATA IS YOURS
 No account, works offline: everything stays on your phone. Back up to a file whenever you want.
 
-Free, with a small banner at the top you can remove with a one-time payment. No subscriptions.
+Free, with no ads and no subscriptions.
 Available in English, Spanish, Portuguese, French, German and Italian.
 ```
 

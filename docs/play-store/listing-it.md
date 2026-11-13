@@ -48,7 +48,7 @@ Apri o condividi un G-code o un 3MF (Flash Studio, OrcaSlicer, Bambu Studio, Pru
 ★ I TUOI DATI SONO TUOI
 Senza account e offline: tutto resta sul tuo telefono. Backup su file quando vuoi.
 
-Gratis, con un piccolo banner in alto che puoi rimuovere con un pagamento unico, senza abbonamenti.
+Gratis, senza pubblicità e senza abbonamenti.
 ```
 
 ## Note di rilascio
