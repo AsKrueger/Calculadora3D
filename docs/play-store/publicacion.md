@@ -62,9 +62,16 @@ No se declara nada más: piezas, presupuestos, clientes y fotos se quedan en el 
 
 ## 3. Ficha de Play Store
 
-- Textos: [`ficha-es.md`](ficha-es.md) y [`listing-en.md`](listing-en.md) (añade «Inglés (Estados Unidos)» como traducción).
-- Icono 512 × 512 y gráfico de funciones 1024 × 500: en [`graficos/`](graficos/).
-- Capturas de teléfono (mínimo 2, recomendado 4–8): en [`graficos/`](graficos/).
+- Textos: [`ficha-es.md`](ficha-es.md) (idioma predeterminado). Añade como traducciones, en «Gestionar traducciones › Añadir tus propias traducciones»:
+  - Inglés (Estados Unidos): [`listing-en.md`](listing-en.md)
+  - Portugués (Brasil) y Portugués (Portugal): [`listing-pt.md`](listing-pt.md)
+  - Francés (Francia): [`listing-fr.md`](listing-fr.md)
+  - Alemán (Alemania): [`listing-de.md`](listing-de.md)
+  - Italiano (Italia): [`listing-it.md`](listing-it.md)
+- Icono 512 × 512 (`icono-512.png`) y gráfico de funciones 1024 × 500 (`grafico-funciones.png`): en [`graficos/`](graficos/).
+- Capturas de teléfono en [`graficos/`](graficos/), en este orden:
+  - Español: `captura-es-1` a `captura-es-6`.
+  - Inglés (y, de momento, el resto de traducciones): `captura-en-1` a `captura-en-3`.
 
 ## 4. Producto «Quitar anuncios»
 

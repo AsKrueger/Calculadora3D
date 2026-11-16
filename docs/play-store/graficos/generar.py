@@ -102,7 +102,7 @@ def shot(name, eyebrow, title, image, offset=0, dark=False):
     render(name, 1080, 1920, f'''
 <div class="s{' dark' if dark else ''}"><div class="layers"></div>
   <div class="head"><div class="eyebrow"><i></i>{eyebrow}</div><h1>{title}</h1></div>
-  <div class="phone"><div class="screen"><img src="{img(image)}" style="margin-top:-{offset}px"></div></div>
+  <div class="phone"><div class="screen"{' style="height:1137px"' if 'widget' in image else ''}><img src="{img(image)}" style="margin-top:-{offset}px"></div></div>
 </div>''', SHOT_CSS)
 
 SETS = {
@@ -112,6 +112,12 @@ SETS = {
   ("3", "Tu taller", "Presupuestos, ventas<br>y <em>beneficio</em> del mes", "n_chart.png", 0, True),
   ("4", "Importa y listo", "Abre el G-code o 3MF<br>y se <em>rellena solo</em>", "es_calc5.png", 0, False),
   ("5", "Temporizador", "Te avisa cuando<br><em>termina</em> de imprimir", "u_timer.png", 0, True),
+  ("6", "Widget", "Tu impresión, de un<br>vistazo en <em>el inicio</em>", "es_widget.png", 0, True),
+ ],
+ "en": [
+  ("1", "Real cost", "Know what each piece<br><em>really</em> costs you", "en_breakdown.png", 0, False),
+  ("2", "Price per channel", "Charge right on Etsy,<br>eBay <em>or your shop</em>", "en_channels.png", 0, False),
+  ("3", "Home screen widget", "Your print at a glance,<br>with a <em>countdown</em>", "en_widget.png", 0, True),
  ],
 }
 for lang, items in SETS.items():

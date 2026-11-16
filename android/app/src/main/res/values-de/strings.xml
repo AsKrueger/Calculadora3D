@@ -364,6 +364,11 @@
     <string name="shortcut_import">Datei importieren</string>
     <string name="shortcut_new_quote">Neues Angebot</string>
     <string name="calc_example">Beispiel ansehen</string>
+    <string name="widget_title">Laufende Drucke</string>
+    <string name="widget_description">Sieh, wann dein Druck fertig ist, und starte eine Berechnung</string>
+    <string name="widget_empty">Kein laufender Druck. Starte einen Timer im Rechner.</string>
+    <string name="widget_ends">Fertig um %1$s</string>
+    <string name="widget_more">%1$d weitere</string>
     <string name="privacy_delete_title">Deine Daten löschen</string>
     <string name="privacy_delete_body">Einstellungen › Alle Daten löschen entfernt alles von diesem Telefon. Das Deinstallieren der App tut dasselbe.</string>
     <string name="welcome_skip">Überspringen</string>

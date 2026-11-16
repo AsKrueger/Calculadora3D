@@ -23,7 +23,7 @@ import com.tdcostmanager.app.ui.theme.AppTheme
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        private const val ACTION_PREFIX = "com.tdcostmanager.app.shortcut."
+        const val ACTION_PREFIX = "com.tdcostmanager.app.shortcut."
         const val SHORTCUT_NEW_CALC = "new_calc"
         const val SHORTCUT_IMPORT = "import"
         const val SHORTCUT_NEW_QUOTE = "new_quote"
@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
 
         handleIntent(intent)
         publishShortcuts()
+        com.tdcostmanager.app.core.PrintsWidget.refresh(this)
 
         setContent {
             val settings by container.settings.settings.collectAsState(initial = null)
