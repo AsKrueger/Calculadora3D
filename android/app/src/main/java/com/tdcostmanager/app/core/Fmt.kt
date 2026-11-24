@@ -67,9 +67,13 @@ class Fmt(val locale: Locale, currencyCode: String) {
             .format(Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()))
 
     companion object {
-        /** Acepta coma o punto decimal y espacios. Null si no es un número. */
+        /**
+         * Acepta coma o punto decimal y espacios. Null si no es un número.
+         * Quita cualquier espacio, también el fino (U+202F) que usa el francés como separador de miles
+         * y el de no separación (U+00A0) del portugués, para que se pueda pegar un importe ya formateado.
+         */
         fun parse(text: String): BigDecimal? {
-            val t = text.trim().replace(" ", "").replace(' '.toString(), "")
+            val t = text.filterNot { it.isWhitespace() }
             if (t.isEmpty()) return null
             val normalized = if (t.contains(',') && t.contains('.')) {
                 // «1.234,5» o «1,234.5»: el último separador es el decimal
